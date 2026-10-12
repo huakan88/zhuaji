@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/theme/app_tokens.dart';
 import '../../core/widgets/common.dart';
+import '../../core/widgets/paw_icon.dart';
 import '../../state/app_controller.dart';
 import '../records/record_sheets.dart';
 
@@ -62,11 +63,11 @@ class _AppShellState extends State<AppShell> {
                     ),
                     child: Row(
                       children: [
-                        _item(0, Icons.home_outlined, Icons.home_rounded, '首页'),
-                        _item(1, Icons.favorite_border_rounded, Icons.favorite_rounded, '健康'),
+                        _item(0, Icons.home_outlined, '首页'),
+                        _item(1, Icons.favorite_border_rounded, '健康'),
                         const SizedBox(width: 76),
-                        _item(2, Icons.kitchen_outlined, Icons.kitchen_rounded, '粮仓'),
-                        _item(3, Icons.person_outline_rounded, Icons.person_rounded, '我的'),
+                        _item(2, Icons.kitchen_outlined, '粮仓'),
+                        _item(3, Icons.person_outline_rounded, '我的'),
                       ],
                     ),
                   ),
@@ -83,7 +84,9 @@ class _AppShellState extends State<AppShell> {
                         child: const SizedBox(
                           width: 62,
                           height: 62,
-                          child: Icon(Icons.pets_rounded, color: Colors.white, size: 30),
+                          child: Center(
+                            child: PawIcon(size: 30, color: Colors.white),
+                          ),
                         ),
                       ),
                     ),
@@ -95,7 +98,7 @@ class _AppShellState extends State<AppShell> {
     );
   }
 
-  Widget _item(int index, IconData idle, IconData active, String label) {
+  Widget _item(int index, IconData icon, String label) {
     final selected = widget.shell.currentIndex == index;
     final color = selected ? AppColors.coralDeep : AppColors.muted;
     return Expanded(
@@ -104,7 +107,7 @@ class _AppShellState extends State<AppShell> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(selected ? active : idle, color: color, size: 24),
+            Icon(icon, color: color, size: 24),
             const SizedBox(height: 2),
             Text(label, style: TextStyle(fontSize: 11, color: color)),
           ],

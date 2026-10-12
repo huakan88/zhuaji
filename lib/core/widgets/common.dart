@@ -6,6 +6,7 @@ import '../../domain/dates.dart';
 import '../copy.dart';
 import '../format.dart';
 import '../theme/app_tokens.dart';
+import 'paw_icon.dart';
 
 class AppScope extends InheritedNotifier<Listenable> {
   const AppScope({
@@ -197,7 +198,7 @@ class CatImage extends StatelessWidget {
       return const ColoredBox(
         color: AppColors.cream,
         child: Center(
-          child: Icon(Icons.pets_rounded, color: AppColors.coralDeep, size: 42),
+          child: PawIcon(size: 42, color: AppColors.coralDeep),
         ),
       );
     }

@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../core/format.dart';
 import '../../core/theme/app_tokens.dart';
 import '../../core/widgets/common.dart';
+import '../../core/widgets/paw_icon.dart';
 import '../../core/widgets/weight_chart.dart';
 import '../../domain/models.dart';
 import '../../state/app_controller.dart';
@@ -364,11 +365,12 @@ class _Greeting extends StatelessWidget {
           Container(
             width: 36,
             height: 36,
+            alignment: Alignment.center,
             decoration: const BoxDecoration(
               color: AppColors.tintCoral,
               shape: BoxShape.circle,
             ),
-            child: const Icon(Icons.pets_rounded, size: 18, color: AppColors.coralDeep),
+            child: const PawIcon(size: 18, color: AppColors.coralDeep),
           ),
           const SizedBox(width: 10),
           Expanded(
