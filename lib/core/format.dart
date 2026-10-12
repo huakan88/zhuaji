@@ -1,0 +1,70 @@
+import '../domain/dates.dart';
+import '../domain/models.dart';
+
+String formatDate(DateTime date) => '${date.year}年${date.month}月${date.day}日';
+
+String formatMonthDay(DateTime date) => '${date.month}/${date.day}';
+
+String formatClock(int hour, int minute) =>
+    '${hour.toString().padLeft(2, '0')}:${minute.toString().padLeft(2, '0')}';
+
+String sexLabel(CatSex sex) => switch (sex) {
+  CatSex.male => '公',
+  CatSex.female => '母',
+  CatSex.unknown => '未知',
+};
+
+String goalLabel(CareGoal goal) => goal == CareGoal.loss ? '减重' : '维持';
+
+String formLabel(FoodForm form) => switch (form) {
+  FoodForm.dry => '干粮',
+  FoodForm.wet => '湿粮',
+  FoodForm.freezeDried => '冻干',
+  FoodForm.treat => '零食',
+};
+
+String dewormLabel(DewormKind kind) =>
+    kind == DewormKind.internal ? '体内驱虫' : '体外驱虫';
+
+String slotLabel(MealSlot slot) => switch (slot) {
+  MealSlot.breakfast => '早餐',
+  MealSlot.dinner => '晚餐',
+  MealSlot.extra => '加餐',
+};
+
+String sourceLabel(DateSource source) => switch (source) {
+  DateSource.gs1 => 'GS1 码',
+  DateSource.ocr => '文字识别',
+  DateSource.manual => '手动填写',
+  DateSource.none => '未记录',
+};
+
+String ageLabel(DateTime? birthday, DateTime now) {
+  if (birthday == null) return '年龄未填';
+  var months =
+      (now.year - birthday.year) * 12 + now.month - birthday.month;
+  if (now.day < birthday.day) months -= 1;
+  if (months < 1) return '未满 1 个月';
+  if (months < 12) return '$months 个月';
+  final years = months ~/ 12;
+  final rest = months % 12;
+  if (rest == 0) return '$years 岁';
+  return '$years 岁 $rest 个月';
+}
+
+String countdownLabel(int days) {
+  if (days < 0) return '已过期 ${-days} 天';
+  if (days == 0) return '今天到期';
+  return '还剩 $days 天';
+}
+
+String countdownOf(DateTime date, DateTime now) =>
+    countdownLabel(calendarDaysUntil(now, date));
+
+bool isSameDay(DateTime a, DateTime b) =>
+    a.year == b.year && a.month == b.month && a.day == b.day;
+
+bool isKitten(DateTime? birthday, DateTime now) {
+  if (birthday == null) return false;
+  return now.difference(birthday).inDays < 365;
+}
