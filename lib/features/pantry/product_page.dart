@@ -167,8 +167,18 @@ class _ProductPageState extends State<ProductPage> {
       ),
     );
     if (source == null || !mounted) return;
-    final file = await ImagePicker().pickImage(source: source, imageQuality: 85);
-    if (file == null || !mounted) return;
+    final XFile? file;
+    try {
+      file = await ImagePicker().pickImage(source: source, imageQuality: 85);
+    } catch (_) {
+      if (mounted) showMessage(context, '没有打开相机或相册，可以改用手动填写');
+      return;
+    }
+    if (!mounted) return;
+    if (file == null) {
+      showMessage(context, '没有拿到照片，可以改用手动填写');
+      return;
+    }
     OcrDateParseResult parsed;
     try {
       parsed = await _ocr.readFile(file.path);

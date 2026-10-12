@@ -5,6 +5,7 @@ import '../../core/format.dart';
 import '../../core/theme/app_tokens.dart';
 import '../../core/widgets/common.dart';
 import '../../services/photo_store.dart';
+import '../../domain/models.dart';
 import '../../state/app_controller.dart';
 
 class PhotoPage extends StatelessWidget {
@@ -56,11 +57,14 @@ class PhotoPage extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(Radii.m),
-                      child: AspectRatio(
-                        aspectRatio: 4 / 3,
-                        child: CatImage(path: photo.path),
+                    GestureDetector(
+                      onTap: () => _showPhoto(context, photo),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(Radii.m),
+                        child: AspectRatio(
+                          aspectRatio: 4 / 3,
+                          child: CatImage(path: photo.path),
+                        ),
                       ),
                     ),
                     const SizedBox(height: 8),
@@ -71,9 +75,22 @@ class PhotoPage extends StatelessWidget {
                     ),
                     Align(
                       alignment: Alignment.centerRight,
-                      child: TextButton(
-                        onPressed: () => app.removePhoto(photo.id),
-                        child: const Text('删除'),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          TextButton(
+                            onPressed: () => _showPhoto(context, photo),
+                            child: const Text('查看'),
+                          ),
+                          TextButton(
+                            onPressed: () async {
+                              if (await confirmDelete(context, '删除这张体态照片？')) {
+                                await app.removePhoto(photo.id);
+                              }
+                            },
+                            child: const Text('删除'),
+                          ),
+                        ],
                       ),
                     ),
                   ],
@@ -106,6 +123,26 @@ class PhotoPage extends StatelessWidget {
     );
   }
 
+  void _showPhoto(BuildContext context, CatPhoto photo) {
+    showDialog<void>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('体态照片'),
+        content: Text(
+          '${formatDate(photo.takenAt)}'
+          '${photo.weightKg == null ? '' : '\n${photo.weightKg!.toStringAsFixed(2)} kg'}'
+          '${photo.note.isEmpty ? '' : '\n${photo.note}'}',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('关闭'),
+          ),
+        ],
+      ),
+    );
+  }
+
   Future<void> _add(BuildContext context, AppController app) async {
     final source = await showModalBottomSheet<ImageSource>(
       context: context,
@@ -126,9 +163,18 @@ class PhotoPage extends StatelessWidget {
       ),
     );
     if (source == null) return;
-    final file = await ImagePicker().pickImage(source: source, maxWidth: 1600, imageQuality: 85);
-    if (file == null) return;
-    final stored = await PhotoStore().persist(file.path);
-    await app.addPhoto(path: stored, weightKg: app.latestWeight?.weightKg, note: '体态记录');
+    try {
+      final file = await ImagePicker().pickImage(source: source, maxWidth: 1600, imageQuality: 85);
+      if (file == null) {
+        if (context.mounted) showMessage(context, '没有拿到照片，可以稍后再试');
+        return;
+      }
+      final stored = await PhotoStore().persist(file.path);
+      await app.addPhoto(path: stored, weightKg: app.latestWeight?.weightKg, note: '体态记录');
+    } catch (_) {
+      if (context.mounted) {
+        showMessage(context, '没有拿到照片，可以稍后再试');
+      }
+    }
   }
 }

@@ -398,5 +398,12 @@ Future<bool> confirmDelete(BuildContext context, String title) async {
 }
 
 void showMessage(BuildContext context, String text) {
-  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(text)));
+  final messenger = ScaffoldMessenger.of(context);
+  messenger.hideCurrentSnackBar();
+  messenger.showSnackBar(
+    SnackBar(
+      content: Text(text),
+      behavior: SnackBarBehavior.floating,
+    ),
+  );
 }

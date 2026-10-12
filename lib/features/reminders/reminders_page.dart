@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../core/format.dart';
 import '../../core/theme/app_tokens.dart';
@@ -35,7 +36,18 @@ class RemindersPage extends StatelessWidget {
               Padding(
                 padding: const EdgeInsets.only(bottom: 8),
                 child: SoftCard(
-                  child: Row(
+                  child: InkWell(
+                    onTap: () {
+                      switch (item.channel) {
+                        case ReminderChannel.health:
+                          context.go('/health');
+                        case ReminderChannel.feeding:
+                          context.push('/feeding');
+                        case ReminderChannel.food:
+                          context.go('/pantry');
+                      }
+                    },
+                    child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Icon(_icon(item.channel), color: AppColors.olive),
@@ -57,6 +69,7 @@ class RemindersPage extends StatelessWidget {
                         ),
                       ),
                     ],
+                  ),
                   ),
                 ),
               ),

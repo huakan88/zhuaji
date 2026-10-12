@@ -21,7 +21,11 @@ Future<void> main() async {
   }
 
   final notifications = NotificationService();
-  await notifications.init();
+  try {
+    await notifications.init();
+  } catch (error, stack) {
+    debugPrint('通知初始化失败，记录仍会保存：$error\n$stack');
+  }
   final controller = AppController(
     repo: DriftCareRepository(AppDatabase.defaults()),
     notifications: notifications,

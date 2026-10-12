@@ -2,8 +2,10 @@ import 'dart:io';
 import 'dart:ui' as ui;
 
 import 'package:flutter/rendering.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:maokangji/app.dart';
+import 'package:maokangji/core/widgets/paw_icon.dart';
 import 'package:maokangji/data/db/app_database.dart';
 import 'package:maokangji/data/repositories/drift_care_repository.dart';
 import 'package:maokangji/services/coat_recognizer.dart';
@@ -37,6 +39,12 @@ void main() {
     await _frames(tester);
     await _shot(tester, 'health');
 
+    await tester.tap(find.text('互动'));
+    await _frames(tester);
+    await _shot(tester, 'health-notes');
+    await tester.tap(find.text('成长'));
+    await _frames(tester);
+
     await tester.tap(find.text('粮仓').last);
     await _frames(tester);
     await _shot(tester, 'pantry');
@@ -54,6 +62,44 @@ void main() {
     await tester.tap(find.text('橘座').first);
     await _frames(tester);
     await _shot(tester, 'profile');
+
+    await tester.tap(find.byTooltip('返回'));
+    await _frames(tester);
+    await tester.tap(find.text('提醒').first);
+    await _frames(tester);
+    await _shot(tester, 'reminders');
+
+    await tester.tap(find.byTooltip('返回'));
+    await _frames(tester);
+    await tester.tap(find.text('首页'));
+    await _frames(tester);
+    await tester.tap(find.byType(PawIcon).last);
+    await _frames(tester);
+    await _shot(tester, 'quick-add');
+
+    await tester.tap(find.text('记体重'));
+    await _frames(tester);
+    await _shot(tester, 'weight-sheet');
+    Navigator.of(tester.element(find.text('记录体重'))).pop();
+    await _frames(tester);
+
+    await tester.tap(find.text('喂食'));
+    await _frames(tester);
+    await _shot(tester, 'feeding');
+
+    await tester.tap(find.byTooltip('返回'));
+    await _frames(tester);
+    await tester.tap(find.text('扫码'));
+    await _frames(tester);
+    await _shot(tester, 'scan');
+
+    await tester.tap(find.byTooltip('返回'));
+    await _frames(tester);
+    await tester.tap(find.text('我的'));
+    await _frames(tester);
+    await tester.tap(find.text('添加'));
+    await _frames(tester);
+    await _shot(tester, 'cat-form');
   });
 }
 

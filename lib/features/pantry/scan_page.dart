@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
@@ -17,13 +19,13 @@ class ScanPage extends StatefulWidget {
 }
 
 class _ScanPageState extends State<ScanPage> {
-  final _camera = MobileScannerController();
+  MobileScannerController? _camera;
   final _manual = TextEditingController();
   var _handled = false;
 
   @override
   void dispose() {
-    _camera.dispose();
+    _camera?.dispose();
     _manual.dispose();
     super.dispose();
   }
@@ -35,19 +37,7 @@ class _ScanPageState extends State<ScanPage> {
       appBar: AppBar(title: Text(gs1 ? '扫描日期码' : '扫描商品条码')),
       body: Column(
         children: [
-          Expanded(
-            child: MobileScanner(
-              controller: _camera,
-              onDetect: (capture) {
-                final raw = capture.barcodes
-                    .map((code) => code.rawValue)
-                    .whereType<String>()
-                    .where((value) => value.trim().isNotEmpty)
-                    .firstOrNull;
-                if (raw != null) _finish(raw);
-              },
-            ),
-          ),
+          Expanded(child: _cameraPane()),
           Padding(
             padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
             child: Column(
@@ -77,11 +67,46 @@ class _ScanPageState extends State<ScanPage> {
     );
   }
 
+  Widget _cameraPane() {
+    const fallback = Center(
+      child: Padding(
+        padding: EdgeInsets.all(24),
+        child: Text(
+          '相机暂时不可用。可以在下面手动输入条码或 GS1 内容。',
+          textAlign: TextAlign.center,
+        ),
+      ),
+    );
+    // Widget tests have no camera implementation. Manual entry still works.
+    if (Platform.environment['FLUTTER_TEST'] == 'true') return fallback;
+    final camera = _camera ??= MobileScannerController();
+    return MobileScanner(
+      controller: camera,
+      errorBuilder: (context, error) => fallback,
+      onDetect: (capture) {
+        final raw = capture.barcodes
+            .map((code) => code.rawValue)
+            .whereType<String>()
+            .where((value) => value.trim().isNotEmpty)
+            .firstOrNull;
+        if (raw != null) _finish(raw);
+      },
+    );
+  }
+
   Future<void> _finish(String raw) async {
     final value = raw.trim();
-    if (_handled || value.isEmpty) return;
+    if (_handled) return;
+    if (value.isEmpty) {
+      showMessage(context, '先扫到一条内容，或在下面输入');
+      return;
+    }
     _handled = true;
-    await _camera.stop();
+    try {
+      await _camera?.stop();
+    } catch (_) {
+      // 相机没起来时仍然可以用手动结果。
+    }
     if (!mounted) return;
     if (widget.mode == 'gs1') {
       context.pop(value);

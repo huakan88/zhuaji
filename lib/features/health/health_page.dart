@@ -142,6 +142,19 @@ class _HealthPageState extends State<HealthPage> {
           child: const Text('记体重'),
         ),
       ),
+      const SizedBox(height: 16),
+      const SectionHeader(title: '称重记录'),
+      for (final item in app.catWeights.reversed.take(6))
+        _record(
+          title: '${item.weightKg.toStringAsFixed(2)} kg',
+          detail: formatDate(item.loggedOn),
+          onTap: () => showWeightSheet(context),
+          onDelete: () async {
+            if (await confirmDelete(context, '删除这次称重？')) {
+              await app.removeWeight(item.id);
+            }
+          },
+        ),
     ];
   }
 
@@ -260,7 +273,9 @@ class _HealthPageState extends State<HealthPage> {
           padding: const EdgeInsets.only(bottom: 8),
           child: SoftCard(
             padding: const EdgeInsets.all(14),
-            child: Row(
+            child: InkWell(
+              onTap: () => _openTask(context, task.title),
+              child: Row(
               children: [
                 Icon(
                   task.done ? Icons.check_circle_rounded : Icons.circle_outlined,
@@ -278,6 +293,7 @@ class _HealthPageState extends State<HealthPage> {
                 ),
               ],
             ),
+            ),
           ),
         ),
       const SizedBox(height: 8),
@@ -286,6 +302,19 @@ class _HealthPageState extends State<HealthPage> {
         _record(
           title: item.content,
           detail: formatDate(item.notedOn),
+          onTap: () => showDialog<void>(
+            context: context,
+            builder: (dialogContext) => AlertDialog(
+              title: const Text('这条笔记'),
+              content: Text(item.content),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(dialogContext),
+                  child: const Text('关闭'),
+                ),
+              ],
+            ),
+          ),
           onDelete: () async {
             if (await confirmDelete(context, '删除这条笔记？')) {
               await app.removeNote(item.id);
@@ -302,6 +331,17 @@ class _HealthPageState extends State<HealthPage> {
         child: const Text('去记喂食'),
       ),
     ];
+  }
+
+  void _openTask(BuildContext context, String title) {
+    switch (title) {
+      case '今日喂食':
+        context.push('/feeding');
+      case '一周体重':
+        showWeightSheet(context);
+      case '疫苗日期':
+        setState(() => _tab = 1);
+    }
   }
 
   Widget _record({

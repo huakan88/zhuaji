@@ -157,18 +157,29 @@ class _CatFormPageState extends State<CatFormPage> {
   }
 
   Future<void> _pick(ImageSource source) async {
-    final file = await ImagePicker().pickImage(
-      source: source,
-      maxWidth: 1600,
-      imageQuality: 85,
-    );
-    if (file == null) return;
-    final stored = file.path.startsWith('asset:')
-        ? file.path
-        : await _photos.persist(file.path);
-    if (!mounted) return;
-    setState(() => _avatar = stored);
-    await _recognize();
+    try {
+      final file = await ImagePicker().pickImage(
+        source: source,
+        maxWidth: 1600,
+        imageQuality: 85,
+      );
+      if (file == null) {
+        if (!mounted) return;
+        setState(() => _hint = '没有打开相机或相册，可以稍后再试');
+        showMessage(context, '没有打开相机或相册，可以稍后再试');
+        return;
+      }
+      final stored = file.path.startsWith('asset:')
+          ? file.path
+          : await _photos.persist(file.path);
+      if (!mounted) return;
+      setState(() => _avatar = stored);
+      await _recognize();
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _hint = '没有打开相机或相册，可以稍后再试');
+      showMessage(context, '没有打开相机或相册，可以稍后再试');
+    }
   }
 
   Future<void> _recognize() async {

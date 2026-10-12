@@ -217,17 +217,28 @@ class AppController extends ChangeNotifier {
     }
   }
 
+  var _selectEpoch = 0;
+
   Future<void> selectCat(int id) async {
+    final epoch = ++_selectEpoch;
     activeCatId = id;
+    notifyListeners();
     await repo.setSetting('activeCatId', '$id');
-    photos = await repo.photosOf(id);
+    if (epoch != _selectEpoch) return;
+    final nextPhotos = await repo.photosOf(id);
+    if (epoch != _selectEpoch) return;
+    photos = nextPhotos;
     notifyListeners();
   }
 
   Future<void> enableNotifications() async {
-    await notifications.requestPermissions();
-    await repo.setSetting('notifAsked', '1');
-    await _reschedule();
+    try {
+      await notifications.requestPermissions();
+      await repo.setSetting('notifAsked', '1');
+      await _reschedule();
+    } catch (error, stack) {
+      debugPrint('通知权限没有打开：$error\n$stack');
+    }
   }
 
   Future<int> saveCat(CatDraft draft) async {

@@ -170,7 +170,9 @@ class HomePage extends StatelessWidget {
                       separatorBuilder: (_, _) => const SizedBox(width: 10),
                       itemBuilder: (context, index) {
                         final photo = app.photos[app.photos.length - 1 - index];
-                        return ClipRRect(
+                        return GestureDetector(
+                          onTap: () => context.push('/photos'),
+                          child: ClipRRect(
                           borderRadius: BorderRadius.circular(Radii.m),
                           child: SizedBox(
                             width: 112,
@@ -193,6 +195,7 @@ class HomePage extends StatelessWidget {
                               ],
                             ),
                           ),
+                        ),
                         );
                       },
                     ),

@@ -124,6 +124,7 @@ class _AppShellState extends State<AppShell> {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(Radii.xl)),
       ),
+      isScrollControlled: true,
       builder: (sheetContext) {
         final actions = [
           (Icons.restaurant_outlined, '记喂食', () => context.push('/feeding')),
@@ -135,66 +136,71 @@ class _AppShellState extends State<AppShell> {
           (Icons.edit_note_outlined, '写笔记', () => showNoteSheet(context)),
           (Icons.swap_horiz_rounded, '开始换粮', () => context.push('/feeding')),
         ];
-        return Padding(
-          padding: const EdgeInsets.fromLTRB(20, 12, 20, 28),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Center(
-                child: Container(
-                  width: 40,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: AppColors.line,
-                    borderRadius: BorderRadius.circular(99),
+        final maxHeight = MediaQuery.sizeOf(sheetContext).height * 0.72;
+        return ConstrainedBox(
+          constraints: BoxConstraints(maxHeight: maxHeight),
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(20, 12, 20, 28),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Center(
+                  child: Container(
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: AppColors.line,
+                      borderRadius: BorderRadius.circular(99),
+                    ),
                   ),
                 ),
-              ),
-              const SizedBox(height: 16),
-              Text(
-                app.active == null ? '先添加一只猫' : '给${app.active!.name}记一笔',
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.w700,
+                const SizedBox(height: 16),
+                Text(
+                  app.active == null ? '先添加一只猫' : '给${app.active!.name}记一笔',
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 16),
-              GridView.count(
-                crossAxisCount: 4,
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                mainAxisSpacing: 8,
-                children: [
-                  for (final action in actions)
-                    InkWell(
-                      onTap: () {
-                        Navigator.pop(sheetContext);
-                        if (app.active == null && action.$2 != '扫条码') {
-                          context.push('/cat-form');
-                          return;
-                        }
-                        action.$3();
-                      },
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Container(
-                            width: 48,
-                            height: 48,
-                            decoration: const BoxDecoration(
-                              color: AppColors.tintCoral,
-                              shape: BoxShape.circle,
+                const SizedBox(height: 16),
+                GridView.count(
+                  crossAxisCount: 4,
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  mainAxisSpacing: 8,
+                  childAspectRatio: 0.86,
+                  children: [
+                    for (final action in actions)
+                      InkWell(
+                        onTap: () {
+                          Navigator.pop(sheetContext);
+                          if (app.active == null && action.$2 != '扫条码') {
+                            context.push('/cat-form');
+                            return;
+                          }
+                          action.$3();
+                        },
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Container(
+                              width: 48,
+                              height: 48,
+                              decoration: const BoxDecoration(
+                                color: AppColors.tintCoral,
+                                shape: BoxShape.circle,
+                              ),
+                              child: Icon(action.$1, color: AppColors.ink),
                             ),
-                            child: Icon(action.$1, color: AppColors.ink),
-                          ),
-                          const SizedBox(height: 6),
-                          Text(action.$2, style: const TextStyle(fontSize: 12)),
-                        ],
+                            const SizedBox(height: 6),
+                            Text(action.$2, style: const TextStyle(fontSize: 12)),
+                          ],
+                        ),
                       ),
-                    ),
-                ],
-              ),
-            ],
+                  ],
+                ),
+              ],
+            ),
           ),
         );
       },

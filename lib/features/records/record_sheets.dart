@@ -22,7 +22,8 @@ Future<void> showWeightSheet(BuildContext context) async {
   final input = TextEditingController(
     text: app.latestWeight?.weightKg.toStringAsFixed(2) ?? '',
   );
-  await _sheet(
+  try {
+    await _sheet(
     context,
     title: '记录体重',
     child: TextField(
@@ -34,20 +35,23 @@ Future<void> showWeightSheet(BuildContext context) async {
     onSubmit: () async {
       final kg = double.tryParse(input.text);
       if (kg == null || kg <= 0 || kg > 20) {
-        showMessage(context, '请填写 0 到 20 kg 之间的体重');
-        return false;
+        return '请填写 0 到 20 kg 之间的体重';
       }
       await app.addWeight(kg);
-      return true;
+      return null;
     },
   );
+  } finally {
+    input.dispose();
+  }
 }
 
 Future<void> showNoteSheet(BuildContext context) async {
   final app = AppScope.of<AppController>(context);
   if (app.active == null) return;
   final input = TextEditingController();
-  await _sheet(
+  try {
+    await _sheet(
     context,
     title: '健康笔记',
     child: TextField(
@@ -56,11 +60,14 @@ Future<void> showNoteSheet(BuildContext context) async {
       decoration: const InputDecoration(hintText: '食欲、精神、排便，或者你想记住的小事'),
     ),
     onSubmit: () async {
-      if (input.text.trim().isEmpty) return false;
+      if (input.text.trim().isEmpty) return '先写一点内容';
       await app.addNote(input.text);
-      return true;
+      return null;
     },
   );
+  } finally {
+    input.dispose();
+  }
 }
 
 Future<void> showVaccineSheet(BuildContext context, {VaccineRecord? existing}) async {
@@ -72,7 +79,8 @@ Future<void> showVaccineSheet(BuildContext context, {VaccineRecord? existing}) a
   final notes = TextEditingController(text: existing?.notes ?? '');
   var given = existing?.givenOn ?? app.now;
   var due = existing?.nextDue ?? app.now.add(const Duration(days: 365));
-  await _sheet(
+  try {
+    await _sheet(
     context,
     title: existing == null ? '添加疫苗' : '编辑疫苗',
     child: StatefulBuilder(
@@ -95,7 +103,7 @@ Future<void> showVaccineSheet(BuildContext context, {VaccineRecord? existing}) a
       ),
     ),
     onSubmit: () async {
-      if (name.text.trim().isEmpty) return false;
+      if (name.text.trim().isEmpty) return '先写疫苗名称';
       await app.saveVaccine(
         VaccineDraft(
           id: existing?.id,
@@ -107,9 +115,14 @@ Future<void> showVaccineSheet(BuildContext context, {VaccineRecord? existing}) a
           notes: notes.text,
         ),
       );
-      return true;
+      return null;
     },
   );
+  } finally {
+    name.dispose();
+    clinic.dispose();
+    notes.dispose();
+  }
 }
 
 Future<void> showDewormSheet(BuildContext context, {DewormRecord? existing}) async {
@@ -121,7 +134,8 @@ Future<void> showDewormSheet(BuildContext context, {DewormRecord? existing}) asy
   var kind = existing?.kind ?? DewormKind.internal;
   var given = existing?.givenOn ?? app.now;
   var due = existing?.nextDue ?? app.now.add(const Duration(days: 90));
-  await _sheet(
+  try {
+    await _sheet(
     context,
     title: existing == null ? '添加驱虫' : '编辑驱虫',
     child: StatefulBuilder(
@@ -153,7 +167,7 @@ Future<void> showDewormSheet(BuildContext context, {DewormRecord? existing}) asy
       ),
     ),
     onSubmit: () async {
-      if (product.text.trim().isEmpty) return false;
+      if (product.text.trim().isEmpty) return '先写药品名称';
       await app.saveDeworm(
         DewormDraft(
           id: existing?.id,
@@ -165,9 +179,13 @@ Future<void> showDewormSheet(BuildContext context, {DewormRecord? existing}) asy
           notes: notes.text,
         ),
       );
-      return true;
+      return null;
     },
   );
+  } finally {
+    product.dispose();
+    notes.dispose();
+  }
 }
 
 Future<void> showVisitSheet(BuildContext context, {VetRecord? existing}) async {
@@ -180,7 +198,8 @@ Future<void> showVisitSheet(BuildContext context, {VetRecord? existing}) async {
   final treatment = TextEditingController(text: existing?.treatment ?? '');
   final notes = TextEditingController(text: existing?.notes ?? '');
   var date = existing?.visitedOn ?? app.now;
-  await _sheet(
+  try {
+    await _sheet(
     context,
     title: existing == null ? '就医记录' : '编辑就医',
     child: StatefulBuilder(
@@ -203,7 +222,7 @@ Future<void> showVisitSheet(BuildContext context, {VetRecord? existing}) async {
       ),
     ),
     onSubmit: () async {
-      if (reason.text.trim().isEmpty) return false;
+      if (reason.text.trim().isEmpty) return '先写就医原因';
       await app.saveVisit(
         VetDraft(
           id: existing?.id,
@@ -216,9 +235,16 @@ Future<void> showVisitSheet(BuildContext context, {VetRecord? existing}) async {
           notes: notes.text,
         ),
       );
-      return true;
+      return null;
     },
   );
+  } finally {
+    reason.dispose();
+    clinic.dispose();
+    diagnosis.dispose();
+    treatment.dispose();
+    notes.dispose();
+  }
 }
 
 Future<void> showFeedingSheet(BuildContext context) async {
@@ -230,7 +256,8 @@ Future<void> showFeedingSheet(BuildContext context) async {
   var form = FoodForm.dry;
   var slot = MealSlot.breakfast;
   int? productId;
-  await _sheet(
+  try {
+    await _sheet(
     context,
     title: '记一餐',
     child: StatefulBuilder(
@@ -297,8 +324,7 @@ Future<void> showFeedingSheet(BuildContext context) async {
       final amount = double.tryParse(grams.text);
       final name = custom.text.trim().isEmpty ? '未命名食物' : custom.text.trim();
       if (amount == null || amount <= 0 || amount > 500) {
-        showMessage(context, '克数请填 0 到 500');
-        return false;
+        return '克数请填 0 到 500';
       }
       final product = productId == null ? null : app.productById(productId!);
       final kcal = product?.kcalPer100g == null
@@ -316,16 +342,20 @@ Future<void> showFeedingSheet(BuildContext context) async {
           slot: slot,
         ),
       );
-      return true;
+      return null;
     },
   );
+  } finally {
+    grams.dispose();
+    custom.dispose();
+  }
 }
 
 Future<void> _sheet(
   BuildContext context, {
   required String title,
   required Widget child,
-  required Future<bool> Function() onSubmit,
+  required Future<String?> Function() onSubmit,
 }) {
   return showModalBottomSheet<void>(
     context: context,
@@ -335,36 +365,50 @@ Future<void> _sheet(
       borderRadius: BorderRadius.vertical(top: Radius.circular(Radii.xl)),
     ),
     builder: (sheetContext) {
+      var error = '';
       return Padding(
         padding: EdgeInsets.fromLTRB(
           20,
           16,
           20,
-          20 + MediaQuery.viewInsetsOf(sheetContext).bottom,
+          24 + MediaQuery.viewInsetsOf(sheetContext).bottom,
         ),
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Text(
-                title,
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.w700,
-                ),
+        child: StatefulBuilder(
+          builder: (context, setLocal) {
+            return SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text(
+                    title,
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  child,
+                  if (error.isNotEmpty) ...[
+                    const SizedBox(height: 12),
+                    Text(error, style: const TextStyle(color: AppColors.danger)),
+                  ],
+                  const SizedBox(height: 16),
+                  FilledButton(
+                    onPressed: () async {
+                      final message = await onSubmit();
+                      if (!sheetContext.mounted) return;
+                      if (message == null) {
+                        Navigator.pop(sheetContext);
+                      } else {
+                        setLocal(() => error = message);
+                      }
+                    },
+                    child: const Text('保存'),
+                  ),
+                ],
               ),
-              const SizedBox(height: 16),
-              child,
-              const SizedBox(height: 16),
-              FilledButton(
-                onPressed: () async {
-                  final ok = await onSubmit();
-                  if (ok && sheetContext.mounted) Navigator.pop(sheetContext);
-                },
-                child: const Text('保存'),
-              ),
-            ],
-          ),
+            );
+          },
         ),
       );
     },

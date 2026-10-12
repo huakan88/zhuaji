@@ -67,6 +67,11 @@ class _PantryPageState extends State<PantryPage> {
                 onChanged: (value) => setState(() => _query = value),
               ),
               const SizedBox(height: Space.x3),
+              if (products.isEmpty)
+                const EmptyHint(
+                  title: '没有这款',
+                  body: '换个词，或者扫一条新条码自己补上。',
+                ),
               for (final product in products)
                 Padding(
                   padding: const EdgeInsets.only(bottom: 8),

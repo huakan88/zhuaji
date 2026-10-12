@@ -62,6 +62,24 @@ class FeedingPage extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 child: ListTile(
                   contentPadding: EdgeInsets.zero,
+                  onTap: () => showDialog<void>(
+                    context: context,
+                    builder: (dialogContext) => AlertDialog(
+                      title: const Text('这餐记录'),
+                      content: Text(
+                        '${slotLabel(meal.slot)} · ${meal.foodName}\n'
+                        '${formatDate(meal.loggedAt)} ${formatClock(meal.loggedAt.hour, meal.loggedAt.minute)}\n'
+                        '${meal.grams.round()} g'
+                        '${meal.kcal == null ? '' : '\n约 ${meal.kcal!.round()} kcal'}',
+                      ),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(dialogContext),
+                          child: const Text('关闭'),
+                        ),
+                      ],
+                    ),
+                  ),
                   title: Text('${slotLabel(meal.slot)} · ${meal.foodName}'),
                   subtitle: Text(
                     '${formatDate(meal.loggedAt)} ${formatClock(meal.loggedAt.hour, meal.loggedAt.minute)} · ${meal.grams.round()} g'
@@ -69,7 +87,11 @@ class FeedingPage extends StatelessWidget {
                   ),
                   trailing: IconButton(
                     icon: const Icon(Icons.delete_outline),
-                    onPressed: () => app.removeFeeding(meal.id),
+                    onPressed: () async {
+                      if (await confirmDelete(context, '删除这餐记录？')) {
+                        await app.removeFeeding(meal.id);
+                      }
+                    },
                   ),
                 ),
               ),
@@ -148,7 +170,11 @@ class FeedingPage extends StatelessWidget {
             )
           else
             OutlinedButton(
-              onPressed: () => app.removeTransition(plan.id),
+              onPressed: () async {
+                if (await confirmDelete(context, '结束这次换粮？')) {
+                  await app.removeTransition(plan.id);
+                }
+              },
               child: const Text('结束这次换粮'),
             ),
           const SizedBox(height: Space.x4),
@@ -161,26 +187,37 @@ class FeedingPage extends StatelessWidget {
   Future<void> _start(BuildContext context, AppController app) async {
     final from = TextEditingController();
     final to = TextEditingController();
-    final ok = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('开始换粮'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(controller: from, decoration: const InputDecoration(labelText: '原来的粮')),
-            const SizedBox(height: 12),
-            TextField(controller: to, decoration: const InputDecoration(labelText: '新的粮')),
+    try {
+      final ok = await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('开始换粮'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(controller: from, decoration: const InputDecoration(labelText: '原来的粮')),
+              const SizedBox(height: 12),
+              TextField(controller: to, decoration: const InputDecoration(labelText: '新的粮')),
+            ],
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('取消')),
+            FilledButton(onPressed: () => Navigator.pop(context, true), child: const Text('开始')),
           ],
         ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('取消')),
-          FilledButton(onPressed: () => Navigator.pop(context, true), child: const Text('开始')),
-        ],
-      ),
-    );
-    if (ok == true && from.text.trim().isNotEmpty && to.text.trim().isNotEmpty) {
-      await app.startTransition(fromFood: from.text, toFood: to.text);
+      );
+      if (!context.mounted) return;
+      final fromFood = from.text.trim();
+      final toFood = to.text.trim();
+      if (ok != true) return;
+      if (fromFood.isEmpty || toFood.isEmpty) {
+        showMessage(context, '两种粮的名字都要填');
+        return;
+      }
+      await app.startTransition(fromFood: fromFood, toFood: toFood);
+    } finally {
+      from.dispose();
+      to.dispose();
     }
   }
 }

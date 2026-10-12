@@ -6,6 +6,7 @@ import '../../core/theme/app_tokens.dart';
 import '../../core/widgets/common.dart';
 import '../../core/widgets/weight_chart.dart';
 import '../../domain/dates.dart';
+import '../../domain/models.dart';
 import '../../state/app_controller.dart';
 
 class CatProfilePage extends StatelessWidget {
@@ -20,13 +21,19 @@ class CatProfilePage extends StatelessWidget {
     if (cat == null) {
       return const Scaffold(body: Center(child: Text('这只猫已经不在名单里')));
     }
+    if (app.activeCatId != cat.id) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (app.activeCatId != cat.id) app.selectCat(cat.id);
+      });
+    }
+    final ownPhotos = app.activeCatId == cat.id ? app.photos : const <CatPhoto>[];
     final weights = app.weights.where((item) => item.catId == cat.id).toList();
     final vaccines = app.vaccines.where((item) => item.catId == cat.id).length;
     final deworms = app.deworms.where((item) => item.catId == cat.id).length;
     final points = <DateTime>[
       cat.createdAt,
       for (final item in weights) item.loggedOn,
-      for (final item in app.photos) item.takenAt,
+      for (final item in ownPhotos) item.takenAt,
     ];
     final earliest = points.map(dateOnly).reduce((a, b) => a.isBefore(b) ? a : b);
     final days = dateOnly(app.now).difference(earliest).inDays;
@@ -107,10 +114,10 @@ class CatProfilePage extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 child: Row(
                   children: [
-                    _stat('记录天数', '$recordDays'),
-                    _stat('疫苗', '$vaccines'),
-                    _stat('驱虫', '$deworms'),
-                    _stat('体重', latest == null ? '—' : latest.toStringAsFixed(1)),
+                    _stat('记录天数', '$recordDays', () => context.go('/health')),
+                    _stat('疫苗', '$vaccines', () => context.go('/health')),
+                    _stat('驱虫', '$deworms', () => context.go('/health')),
+                    _stat('体重', latest == null ? '—' : latest.toStringAsFixed(1), () => context.go('/health')),
                   ],
                 ),
               ),
@@ -143,17 +150,17 @@ class CatProfilePage extends StatelessWidget {
                 const SizedBox(height: 10),
                 SizedBox(
                   height: 108,
-                  child: app.photos.isEmpty
+                  child: ownPhotos.isEmpty
                       ? const Align(
                           alignment: Alignment.centerLeft,
                           child: Text('还没有体态照片', style: TextStyle(color: AppColors.muted)),
                         )
                       : ListView.separated(
                           scrollDirection: Axis.horizontal,
-                          itemCount: app.photos.length,
+                          itemCount: ownPhotos.length,
                           separatorBuilder: (_, _) => const SizedBox(width: 10),
                           itemBuilder: (context, index) {
-                            final photo = app.photos[app.photos.length - 1 - index];
+                            final photo = ownPhotos[ownPhotos.length - 1 - index];
                             return ClipRRect(
                               borderRadius: BorderRadius.circular(Radii.m),
                               child: SizedBox(
@@ -213,14 +220,17 @@ class CatProfilePage extends StatelessWidget {
     );
   }
 
-  Widget _stat(String label, String value) {
+  Widget _stat(String label, String value, VoidCallback onTap) {
     return Expanded(
-      child: Column(
-        children: [
-          Text(value, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
-          const SizedBox(height: 4),
-          Text(label, style: const TextStyle(color: AppColors.muted, fontSize: 12)),
-        ],
+      child: InkWell(
+        onTap: onTap,
+        child: Column(
+          children: [
+            Text(value, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
+            const SizedBox(height: 4),
+            Text(label, style: const TextStyle(color: AppColors.muted, fontSize: 12)),
+          ],
+        ),
       ),
     );
   }
