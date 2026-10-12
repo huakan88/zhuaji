@@ -65,7 +65,7 @@ ThemeData buildAppTheme() {
       style: OutlinedButton.styleFrom(
         foregroundColor: AppColors.ink,
         minimumSize: const Size(0, 48),
-        side: const BorderSide(color: AppColors.ink),
+        side: const BorderSide(color: AppColors.line, width: 1.2),
         shape: const StadiumBorder(),
         textStyle: const TextStyle(
           fontFamily: family,

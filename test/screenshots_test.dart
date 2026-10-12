@@ -49,9 +49,9 @@ void main() {
     await _frames(tester);
     await tester.tap(find.text('我的'));
     await _frames(tester);
-    await _shot(tester, 'cats');
+    await _shot(tester, 'me');
 
-    await tester.tap(find.text('橘座'));
+    await tester.tap(find.text('橘座').first);
     await _frames(tester);
     await _shot(tester, 'profile');
   });

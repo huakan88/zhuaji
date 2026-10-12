@@ -81,10 +81,10 @@ class DriftCareRepository implements CareRepository {
     );
     await addPhoto(
       catId: orangeId,
-      path: 'asset:assets/cats/cat-gray.jpg',
+      path: 'asset:assets/cats/cat-diary.jpg',
       takenAt: today.subtract(const Duration(days: 7)),
       weightKg: 4.35,
-      note: '示例照片 · 最近体态（占位图，不是同一只猫的真实对比）',
+      note: '示例照片 · 最近体态',
     );
     await addPhoto(
       catId: creamId,

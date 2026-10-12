@@ -4,6 +4,8 @@ import 'package:go_router/go_router.dart';
 import '../../core/format.dart';
 import '../../core/theme/app_tokens.dart';
 import '../../core/widgets/common.dart';
+import '../../core/widgets/weight_chart.dart';
+import '../../domain/models.dart';
 import '../../state/app_controller.dart';
 import '../records/record_sheets.dart';
 
@@ -29,96 +31,26 @@ class HomePage extends StatelessWidget {
       );
     }
     final cat = app.active!;
-    final calories = app.calories;
+    final happy = app.careScore >= 4;
     return Scaffold(
       body: SafeArea(
         child: ListView(
-          padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
+          padding: const EdgeInsets.fromLTRB(20, 8, 20, 120),
           children: [
             Row(
               children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        formatDate(app.now),
-                        style: const TextStyle(color: AppColors.muted, fontSize: 13),
-                      ),
-                      const Text(
-                        '爪记',
-                        style: TextStyle(fontSize: 28, fontWeight: FontWeight.w700),
-                      ),
-                    ],
-                  ),
-                ),
+                Expanded(child: _CatMenu(app: app, cat: cat)),
                 IconButton(
                   onPressed: () => context.push('/reminders'),
                   icon: const Icon(Icons.notifications_none_rounded),
                 ),
               ],
             ),
-            const SizedBox(height: Space.x3),
-            SizedBox(
-              height: 92,
-              child: ListView.separated(
-                scrollDirection: Axis.horizontal,
-                itemCount: app.cats.length + 1,
-                separatorBuilder: (_, _) => const SizedBox(width: 14),
-                itemBuilder: (context, index) {
-                  if (index == app.cats.length) {
-                    return GestureDetector(
-                      onTap: () => context.push('/cat-form'),
-                      child: const Column(
-                        children: [
-                          SizedBox(
-                            width: 64,
-                            height: 64,
-                            child: DecoratedBox(
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: AppColors.cream,
-                              ),
-                              child: Icon(Icons.add_rounded),
-                            ),
-                          ),
-                          SizedBox(height: 6),
-                          Text('添加', style: TextStyle(fontSize: 12)),
-                        ],
-                      ),
-                    );
-                  }
-                  final item = app.cats[index];
-                  final selected = item.id == cat.id;
-                  return GestureDetector(
-                    onTap: () => app.selectCat(item.id),
-                    child: Column(
-                      children: [
-                        CatAvatar(
-                          path: item.avatarPath,
-                          size: 64,
-                          selected: selected,
-                          ring: ringPalette[index % ringPalette.length],
-                        ),
-                        const SizedBox(height: 6),
-                        Text(
-                          item.name,
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: selected ? FontWeight.w700 : FontWeight.w400,
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-                },
-              ),
-            ),
-            const SizedBox(height: Space.x4),
+            const SizedBox(height: 8),
             ClipRRect(
               borderRadius: BorderRadius.circular(Radii.xl),
               child: SizedBox(
-                height: 300,
+                height: 460,
                 child: Stack(
                   fit: StackFit.expand,
                   children: [
@@ -128,163 +60,53 @@ class HomePage extends StatelessWidget {
                         gradient: LinearGradient(
                           begin: Alignment.topCenter,
                           end: Alignment.bottomCenter,
-                          colors: [Color(0x00000000), Color(0xCC1E1E1E)],
+                          colors: [Color(0x00000000), Color(0x661E1E1E)],
                         ),
                       ),
                     ),
                     Positioned(
-                      left: 16,
-                      right: 16,
-                      bottom: 16,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            cat.name,
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 28,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Wrap(
-                            spacing: 8,
-                            runSpacing: 8,
-                            children: [
-                              if (cat.breed != null)
-                                TagChip(label: cat.breed!, tint: Colors.white),
-                              if (cat.coatColor != null)
-                                TagChip(
-                                  label: cat.coatColor!,
-                                  tint: AppColors.green,
-                                ),
-                              TagChip(
-                                label: ageLabel(cat.birthday, app.now),
-                                tint: Colors.white,
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 12),
-                          Row(
-                            children: [
-                              _stat('今日状态', app.mood),
-                              const SizedBox(width: 8),
-                              _stat(
-                                '体重',
-                                app.latestWeight == null
-                                    ? '未记'
-                                    : '${app.latestWeight!.weightKg.toStringAsFixed(2)} kg',
-                              ),
-                              const SizedBox(width: 8),
-                              _stat('今日进食', '${app.todayGrams.round()} g'),
-                            ],
-                          ),
-                        ],
+                      left: 14,
+                      top: 14,
+                      child: _FloatBadge(
+                        icon: Icons.favorite_rounded,
+                        label: happy ? '心情 开心' : '心情 ${app.mood}',
                       ),
+                    ),
+                    Positioned(
+                      left: 14,
+                      top: 52,
+                      child: _FloatBadge(
+                        icon: Icons.health_and_safety_outlined,
+                        label: app.careScore >= 3 ? '健康 良好' : '健康 留意',
+                      ),
+                    ),
+                    Positioned(
+                      left: 14,
+                      right: 14,
+                      bottom: 14,
+                      child: _Greeting(app: app, happy: happy),
                     ),
                   ],
                 ),
               ),
             ),
-            const SizedBox(height: Space.x5),
-            Row(
-              children: [
-                _quick(context, Icons.restaurant_outlined, '喂食', const Color(0xFFFFF1EA), () => context.push('/feeding')),
-                _quick(context, Icons.favorite_border_rounded, '健康', const Color(0xFFF4F8EA), () => context.go('/health')),
-                _quick(context, Icons.qr_code_scanner_rounded, '扫码', const Color(0xFFF6F1E8), () => context.push('/scan')),
-                _quick(context, Icons.monitor_weight_outlined, '体重', const Color(0xFFFFF1EA), () => showWeightSheet(context)),
-                _quick(context, Icons.notifications_none_rounded, '提醒', const Color(0xFFF4F8EA), () => context.push('/reminders')),
-              ],
-            ),
-            const SizedBox(height: Space.x5),
-            const SectionHeader(title: '今日照护'),
-            const SizedBox(height: Space.x3),
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  flex: 6,
-                  child: SoftCard(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        for (final task in app.todayTasks) ...[
-                          Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Icon(
-                                task.done
-                                    ? Icons.check_circle_rounded
-                                    : Icons.circle_outlined,
-                                color: task.done ? AppColors.olive : AppColors.muted,
-                                size: 20,
-                              ),
-                              const SizedBox(width: 8),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      task.title,
-                                      style: const TextStyle(fontWeight: FontWeight.w600),
-                                    ),
-                                    Text(
-                                      task.detail,
-                                      style: const TextStyle(
-                                        color: AppColors.muted,
-                                        fontSize: 12,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 12),
-                        ],
-                      ],
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  flex: 5,
-                  child: Column(
-                    children: [
-                      _mini(
-                        '下次疫苗',
-                        app.nextVaccine?.name ?? '还没记录',
-                        app.nextVaccine?.nextDue == null
-                            ? '点健康页添加'
-                            : formatDate(app.nextVaccine!.nextDue!),
-                        () => context.go('/health'),
-                      ),
-                      const SizedBox(height: 12),
-                      _mini(
-                        '临期猫粮',
-                        app.nearestExpiry?.product.name ?? '粮仓是空的',
-                        app.nearestExpiry?.item.expiryDate == null
-                            ? '扫一条码开始'
-                            : countdownOf(app.nearestExpiry!.item.expiryDate!, app.now),
-                        () => context.go('/pantry'),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: Space.x4),
+            const SizedBox(height: 14),
             SoftCard(
-              color: AppColors.cream,
+              padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
                     children: [
-                      const Text('照护指数', style: TextStyle(fontWeight: FontWeight.w700)),
+                      Text(
+                        '照护 Lv.${app.careScore + 1}',
+                        style: const TextStyle(fontWeight: FontWeight.w700),
+                      ),
                       const Spacer(),
-                      TagChip(label: app.careLevel, tint: AppColors.green),
+                      Text(
+                        '亲密 ${app.careScore}/5',
+                        style: const TextStyle(color: AppColors.muted, fontSize: 12),
+                      ),
                     ],
                   ),
                   const SizedBox(height: 10),
@@ -293,41 +115,126 @@ class HomePage extends StatelessWidget {
                     child: LinearProgressIndicator(
                       minHeight: 8,
                       value: app.careScore / 5,
-                      backgroundColor: Colors.white,
-                      color: AppColors.olive,
+                      backgroundColor: AppColors.cream,
+                      color: AppColors.sage,
                     ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    calories == null
-                        ? '记下体重后，这里会给出每日热量估算。'
-                        : '${calories.summary}。${calories.assumedKcal ? '未关联粮食品牌时按示例 380 kcal/100g 估算。' : ''}',
-                    style: const TextStyle(color: AppColors.muted, fontSize: 12, height: 1.4),
                   ),
                 ],
               ),
             ),
-            const SizedBox(height: Space.x4),
+            const SizedBox(height: 18),
+            Row(
+              children: [
+                _quick(context, Icons.restaurant_outlined, '喂食', AppColors.tintCoral, () => context.push('/feeding')),
+                _quick(context, Icons.favorite_border_rounded, '健康', AppColors.tintGreen, () => context.go('/health')),
+                _quick(context, Icons.qr_code_scanner_rounded, '扫码', AppColors.cream, () => context.push('/scan')),
+                _quick(context, Icons.monitor_weight_outlined, '体重', AppColors.tintCoral, () => showWeightSheet(context)),
+              ],
+            ),
+            const SizedBox(height: 22),
+            const SectionHeader(title: '成长记录'),
+            const SizedBox(height: 10),
+            SoftCard(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    app.latestWeight == null
+                        ? '还没有体重'
+                        : '最近 ${app.latestWeight!.weightKg.toStringAsFixed(2)} kg',
+                    style: const TextStyle(fontWeight: FontWeight.w700),
+                  ),
+                  const SizedBox(height: 8),
+                  WeightChart(weights: app.catWeights, compact: true),
+                ],
+              ),
+            ),
+            const SizedBox(height: 18),
+            SectionHeader(
+              title: '最近日记',
+              action: '全部',
+              onAction: () => context.push('/photos'),
+            ),
+            const SizedBox(height: 10),
+            SizedBox(
+              height: 112,
+              child: app.photos.isEmpty
+                  ? const Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text('还没有体态照片', style: TextStyle(color: AppColors.muted)),
+                    )
+                  : ListView.separated(
+                      scrollDirection: Axis.horizontal,
+                      itemCount: app.photos.length,
+                      separatorBuilder: (_, _) => const SizedBox(width: 10),
+                      itemBuilder: (context, index) {
+                        final photo = app.photos[app.photos.length - 1 - index];
+                        return ClipRRect(
+                          borderRadius: BorderRadius.circular(Radii.m),
+                          child: SizedBox(
+                            width: 112,
+                            child: Stack(
+                              fit: StackFit.expand,
+                              children: [
+                                CatImage(path: photo.path),
+                                Positioned(
+                                  left: 8,
+                                  bottom: 8,
+                                  child: Text(
+                                    formatMonthDay(photo.takenAt),
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+            ),
+            const SizedBox(height: 18),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  flex: 6,
+                  child: _BigCard(app: app),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  flex: 5,
+                  child: Column(
+                    children: [
+                      _SmallCard(
+                        title: '驱虫',
+                        headline: app.nextExternal == null && app.nextInternal == null
+                            ? '还没记录'
+                            : '体内 ${app.nextInternal?.nextDue == null ? '—' : formatMonthDay(app.nextInternal!.nextDue!)}',
+                        detail: app.nextExternal?.nextDue == null
+                            ? '点健康页补上'
+                            : '体外 ${formatMonthDay(app.nextExternal!.nextDue!)}',
+                        onTap: () => context.go('/health'),
+                      ),
+                      const SizedBox(height: 12),
+                      _SmallCard(
+                        title: '临期猫粮',
+                        headline: app.nearestExpiry?.product.name ?? '粮仓是空的',
+                        detail: app.nearestExpiry?.item.expiryDate == null
+                            ? '扫一条码开始'
+                            : countdownOf(app.nearestExpiry!.item.expiryDate!, app.now),
+                        onTap: () => context.go('/pantry'),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
             const DisclaimerBanner(),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _stat(String label, String value) {
-    return Expanded(
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-        decoration: BoxDecoration(
-          color: const Color(0xCCFFFFFF),
-          borderRadius: BorderRadius.circular(Radii.m),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(label, style: const TextStyle(fontSize: 11, color: AppColors.muted)),
-            Text(value, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
           ],
         ),
       ),
@@ -344,27 +251,226 @@ class HomePage extends StatelessWidget {
     return Expanded(
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(Radii.l),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 4),
-          child: Column(
-            children: [
-              Container(
-                width: 48,
-                height: 48,
-                decoration: BoxDecoration(color: tint, shape: BoxShape.circle),
-                child: Icon(icon, color: AppColors.ink),
+        borderRadius: BorderRadius.circular(20),
+        child: Column(
+          children: [
+            Container(
+              width: 56,
+              height: 56,
+              decoration: BoxDecoration(
+                color: tint,
+                shape: BoxShape.circle,
+                boxShadow: softShadow,
               ),
-              const SizedBox(height: 6),
-              Text(label, style: const TextStyle(fontSize: 12)),
+              child: Icon(icon, color: AppColors.ink, size: 24),
+            ),
+            const SizedBox(height: 8),
+            Text(label, style: const TextStyle(fontSize: 12)),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _CatMenu extends StatelessWidget {
+  const _CatMenu({required this.app, required this.cat});
+
+  final AppController app;
+  final CatProfile cat;
+
+  @override
+  Widget build(BuildContext context) {
+    return PopupMenuButton<int>(
+      offset: const Offset(0, 48),
+      onSelected: (id) {
+        if (id == -1) {
+          context.push('/cat-form');
+          return;
+        }
+        app.selectCat(id);
+      },
+      itemBuilder: (context) => [
+        for (final item in app.cats)
+          PopupMenuItem(value: item.id, child: Text(item.name)),
+        const PopupMenuItem(value: -1, child: Text('添加猫咪')),
+      ],
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                cat.name,
+                style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w700),
+              ),
+              const Icon(Icons.keyboard_arrow_down_rounded, size: 28),
+            ],
+          ),
+          Text(
+            ageLabel(cat.birthday, app.now),
+            style: const TextStyle(color: AppColors.muted, fontSize: 13),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _FloatBadge extends StatelessWidget {
+  const _FloatBadge({required this.icon, required this.label});
+
+  final IconData icon;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: const Color(0xF7FFFFFF),
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 14, color: AppColors.coralDeep),
+          const SizedBox(width: 4),
+          Text(label, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
+        ],
+      ),
+    );
+  }
+}
+
+class _Greeting extends StatelessWidget {
+  const _Greeting({required this.app, required this.happy});
+
+  final AppController app;
+  final bool happy;
+
+  @override
+  Widget build(BuildContext context) {
+    final fed = app.todayFeedings.isNotEmpty;
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: const Color(0xF7FFFFFF),
+        borderRadius: BorderRadius.circular(Radii.l),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 36,
+            height: 36,
+            decoration: const BoxDecoration(
+              color: AppColors.tintCoral,
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(Icons.pets_rounded, size: 18, color: AppColors.coralDeep),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  happy ? '今天过得很开心' : '今天想多陪一会儿',
+                  style: const TextStyle(fontWeight: FontWeight.w700),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  fed
+                      ? '已经记下 ${app.todayGrams.round()} g，想和你玩逗猫棒。'
+                      : '还没记下今天的一餐。',
+                  style: const TextStyle(color: AppColors.muted, fontSize: 12),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _BigCard extends StatelessWidget {
+  const _BigCard({required this.app});
+
+  final AppController app;
+
+  @override
+  Widget build(BuildContext context) {
+    final due = app.nextVaccine?.nextDue;
+    return GestureDetector(
+      onTap: () => context.go('/health'),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(Radii.l),
+        child: SizedBox(
+          height: 210,
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              CatImage(path: app.photos.isEmpty ? app.active?.avatarPath : app.photos.last.path),
+              const DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [Color(0x00000000), Color(0xCC2C2A28)],
+                  ),
+                ),
+              ),
+              Positioned(
+                left: 12,
+                right: 12,
+                bottom: 12,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      '下次疫苗',
+                      style: TextStyle(color: Colors.white70, fontSize: 12),
+                    ),
+                    Text(
+                      app.nextVaccine?.name ?? '还没记录',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 16,
+                      ),
+                    ),
+                    Text(
+                      due == null ? '到健康页补上日期' : formatDate(due),
+                      style: const TextStyle(color: Colors.white, fontSize: 12),
+                    ),
+                  ],
+                ),
+              ),
             ],
           ),
         ),
       ),
     );
   }
+}
 
-  Widget _mini(String title, String headline, String detail, VoidCallback onTap) {
+class _SmallCard extends StatelessWidget {
+  const _SmallCard({
+    required this.title,
+    required this.headline,
+    required this.detail,
+    required this.onTap,
+  });
+
+  final String title;
+  final String headline;
+  final String detail;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
     return SoftCard(
       padding: const EdgeInsets.all(14),
       child: InkWell(

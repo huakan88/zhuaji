@@ -28,8 +28,10 @@ class _AppShellState extends State<AppShell> {
   @override
   Widget build(BuildContext context) {
     final app = AppScope.of<AppController>(context);
+    final showBar = !app.loading && app.error == null;
     return Scaffold(
       backgroundColor: AppColors.background,
+      extendBody: true,
       body: app.loading
           ? const Center(child: CircularProgressIndicator(color: AppColors.coralDeep))
           : app.error != null
@@ -40,46 +42,62 @@ class _AppShellState extends State<AppShell> {
               onAction: app.init,
             )
           : widget.shell,
-      floatingActionButton: app.loading || app.error != null
-          ? null
-          : SizedBox(
-              width: 64,
-              height: 64,
-              child: FloatingActionButton(
-                elevation: 3,
-                highlightElevation: 4,
-                backgroundColor: AppColors.coral,
-                shape: const CircleBorder(),
-                onPressed: () => _openQuickAdd(context),
-                child: const Icon(Icons.pets_rounded, color: AppColors.ink, size: 30),
-              ),
-            ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
-      bottomNavigationBar: app.loading || app.error != null
-          ? null
-          : BottomAppBar(
-              color: Colors.white,
-              elevation: 8,
-              height: 72,
-              padding: EdgeInsets.zero,
-              shape: const CircularNotchedRectangle(),
-              notchMargin: 8,
-              child: Row(
+      bottomNavigationBar: showBar
+          ? SizedBox(
+              height: 92,
+              child: Stack(
+                alignment: Alignment.bottomCenter,
                 children: [
-                  _item(0, Icons.home_outlined, Icons.home_rounded, '首页'),
-                  _item(1, Icons.favorite_border_rounded, Icons.favorite_rounded, '健康'),
-                  const SizedBox(width: 72),
-                  _item(2, Icons.inventory_2_outlined, Icons.inventory_2_rounded, '粮仓'),
-                  _item(3, Icons.person_outline_rounded, Icons.person_rounded, '我的'),
+                  Container(
+                    height: 68,
+                    decoration: const BoxDecoration(
+                      color: Colors.white,
+                      boxShadow: [
+                        BoxShadow(
+                          color: Color(0x142C2A28),
+                          blurRadius: 18,
+                          offset: Offset(0, -4),
+                        ),
+                      ],
+                    ),
+                    child: Row(
+                      children: [
+                        _item(0, Icons.home_outlined, Icons.home_rounded, '首页'),
+                        _item(1, Icons.favorite_border_rounded, Icons.favorite_rounded, '健康'),
+                        const SizedBox(width: 76),
+                        _item(2, Icons.kitchen_outlined, Icons.kitchen_rounded, '粮仓'),
+                        _item(3, Icons.person_outline_rounded, Icons.person_rounded, '我的'),
+                      ],
+                    ),
+                  ),
+                  Positioned(
+                    top: 0,
+                    child: Material(
+                      color: AppColors.coral,
+                      elevation: 6,
+                      shadowColor: const Color(0x66E58B72),
+                      shape: const CircleBorder(),
+                      child: InkWell(
+                        customBorder: const CircleBorder(),
+                        onTap: () => _openQuickAdd(context),
+                        child: const SizedBox(
+                          width: 62,
+                          height: 62,
+                          child: Icon(Icons.pets_rounded, color: Colors.white, size: 30),
+                        ),
+                      ),
+                    ),
+                  ),
                 ],
               ),
-            ),
+            )
+          : null,
     );
   }
 
   Widget _item(int index, IconData idle, IconData active, String label) {
     final selected = widget.shell.currentIndex == index;
-    final color = selected ? AppColors.ink : AppColors.muted;
+    final color = selected ? AppColors.coralDeep : AppColors.muted;
     return Expanded(
       child: InkWell(
         onTap: () => widget.shell.goBranch(index),

@@ -28,7 +28,7 @@ class _PantryPageState extends State<PantryPage> {
     return Scaffold(
       body: SafeArea(
         child: ListView(
-          padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
+          padding: const EdgeInsets.fromLTRB(20, 12, 20, 120),
           children: [
             Row(
               children: [
