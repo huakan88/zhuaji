@@ -395,12 +395,21 @@ Future<void> _sheet(
                   const SizedBox(height: 16),
                   FilledButton(
                     onPressed: () async {
-                      final message = await onSubmit();
+                      final String? message;
+                      try {
+                        message = await onSubmit();
+                      } catch (caught) {
+                        if (!sheetContext.mounted) return;
+                        setLocal(() => error = '没有保存成功，请再试一次');
+                        debugPrint('记录没有写入：$caught');
+                        return;
+                      }
                       if (!sheetContext.mounted) return;
                       if (message == null) {
                         Navigator.pop(sheetContext);
                       } else {
-                        setLocal(() => error = message);
+                        final shown = message;
+                        setLocal(() => error = shown);
                       }
                     },
                     child: const Text('保存'),

@@ -59,7 +59,11 @@ class NotificationService implements ReminderNotifier {
   @override
   Future<void> replaceAll(List<PlannedNotification> items) async {
     if (!_ready) return;
-    await _plugin.cancelAll();
+    try {
+      await _plugin.cancelAll();
+    } catch (error, stack) {
+      debugPrint('清除旧提醒失败，继续安排新的：$error\n$stack');
+    }
     final soonest = [...items]..sort((a, b) => a.when.compareTo(b.when));
     for (final item in soonest.take(60)) {
       try {

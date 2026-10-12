@@ -297,6 +297,7 @@ void main() {
     await tester.tap(find.text('开启通知权限'));
     await frames(tester);
     expect(find.text('开启通知权限'), findsOneWidget);
+    expect(find.textContaining('已请求通知权限'), findsOneWidget);
     final daily = find.textContaining('每天');
     expect(daily, findsWidgets);
     final card = find.ancestor(of: daily.first, matching: find.byType(InkWell));

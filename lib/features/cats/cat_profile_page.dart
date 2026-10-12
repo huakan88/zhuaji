@@ -67,6 +67,7 @@ class CatProfilePage extends StatelessWidget {
                       color: const Color(0xCCFFFFFF),
                       shape: const CircleBorder(),
                       child: IconButton(
+                        tooltip: '返回',
                         onPressed: () => context.pop(),
                         icon: const Icon(Icons.arrow_back_rounded),
                       ),

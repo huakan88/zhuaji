@@ -56,6 +56,7 @@ class AppController extends ChangeNotifier {
   List<FeedingReminder> feedingSlots = [];
   List<FoodProduct> products = [];
   List<PantryEntry> pantry = [];
+  String? permissionNote;
 
   DateTime get now => _clock();
 
@@ -223,12 +224,20 @@ class AppController extends ChangeNotifier {
     final epoch = ++_selectEpoch;
     activeCatId = id;
     notifyListeners();
-    await repo.setSetting('activeCatId', '$id');
-    if (epoch != _selectEpoch) return;
-    final nextPhotos = await repo.photosOf(id);
-    if (epoch != _selectEpoch) return;
-    photos = nextPhotos;
-    notifyListeners();
+    try {
+      await repo.setSetting('activeCatId', '$id');
+      if (epoch != _selectEpoch) {
+        final current = activeCatId;
+        if (current != null) await repo.setSetting('activeCatId', '$current');
+        return;
+      }
+      final nextPhotos = await repo.photosOf(id);
+      if (epoch != _selectEpoch) return;
+      photos = nextPhotos;
+      notifyListeners();
+    } catch (error, stack) {
+      debugPrint('切换猫咪没有完成：$error\n$stack');
+    }
   }
 
   Future<void> enableNotifications() async {
@@ -236,9 +245,12 @@ class AppController extends ChangeNotifier {
       await notifications.requestPermissions();
       await repo.setSetting('notifAsked', '1');
       await _reschedule();
+      permissionNote = '已请求通知权限，提醒会按计划送到';
     } catch (error, stack) {
+      permissionNote = '通知权限没有打开，记录仍会留在这台手机上';
       debugPrint('通知权限没有打开：$error\n$stack');
     }
+    notifyListeners();
   }
 
   Future<int> saveCat(CatDraft draft) async {
@@ -459,7 +471,14 @@ class AppController extends ChangeNotifier {
     feedingSlots = await repo.feedingReminders();
     products = await repo.products();
     pantry = await repo.pantry();
-    photos = activeCatId == null ? [] : await repo.photosOf(activeCatId!);
+    final epoch = _selectEpoch;
+    final photoCatId = activeCatId;
+    final nextPhotos = photoCatId == null
+        ? <CatPhoto>[]
+        : await repo.photosOf(photoCatId);
+    if (epoch == _selectEpoch && activeCatId == photoCatId) {
+      photos = nextPhotos;
+    }
   }
 
   Future<void> _reschedule() async {

@@ -1,8 +1,8 @@
 import 'dart:io';
 import 'dart:ui' as ui;
 
+import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
-import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:maokangji/app.dart';
 import 'package:maokangji/core/widgets/paw_icon.dart';
@@ -77,35 +77,68 @@ void main() {
     await _frames(tester);
     await _shot(tester, 'quick-add');
 
-    await tester.tap(find.text('记体重'));
+    await _tapOnScreen(tester, '记体重');
     await _frames(tester);
     await _shot(tester, 'weight-sheet');
     Navigator.of(tester.element(find.text('记录体重'))).pop();
     await _frames(tester);
 
-    await tester.tap(find.text('喂食'));
+    await _tapOnScreen(tester, '喂食');
     await _frames(tester);
     await _shot(tester, 'feeding');
 
     await tester.tap(find.byTooltip('返回'));
     await _frames(tester);
-    await tester.tap(find.text('扫码'));
+    await _tapOnScreen(tester, '扫码');
     await _frames(tester);
     await _shot(tester, 'scan');
 
     await tester.tap(find.byTooltip('返回'));
     await _frames(tester);
-    await tester.tap(find.text('我的'));
+    await _tapOnScreen(tester, '我的');
     await _frames(tester);
-    await tester.tap(find.text('添加'));
+    await _tapOnScreen(tester, '添加');
     await _frames(tester);
     await _shot(tester, 'cat-form');
   });
 }
 
+bool _hidden(Element element) {
+  var hidden = false;
+  element.visitAncestorElements((ancestor) {
+    final widget = ancestor.widget;
+    if (widget is Offstage && widget.offstage) {
+      hidden = true;
+      return false;
+    }
+    return true;
+  });
+  return hidden;
+}
+
+Future<void> _tapOnScreen(WidgetTester tester, String text) async {
+  final size = tester.view.physicalSize / tester.view.devicePixelRatio;
+  Offset? target;
+  for (final element in find.text(text).evaluate()) {
+    if (_hidden(element)) continue;
+    final box = element.renderObject;
+    if (box is! RenderBox || !box.attached || !box.hasSize) continue;
+    final center = box.localToGlobal(box.size.center(Offset.zero));
+    if (center.dx >= 0 &&
+        center.dy >= 0 &&
+        center.dx <= size.width &&
+        center.dy <= size.height - 8) {
+      target = center;
+    }
+  }
+  if (target == null) fail('屏幕上没有可点的「$text」');
+  await tester.tapAt(target);
+}
+
 Future<void> _frames(WidgetTester tester) async {
   await tester.pump();
-  await tester.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 300)));
+  await tester.pump(const Duration(milliseconds: 400));
+  await tester.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 40)));
   await tester.pump();
 }
 

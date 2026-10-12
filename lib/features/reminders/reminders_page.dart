@@ -28,6 +28,13 @@ class RemindersPage extends StatelessWidget {
             onPressed: app.enableNotifications,
             child: const Text('开启通知权限'),
           ),
+          if (app.permissionNote != null) ...[
+            const SizedBox(height: 8),
+            Text(
+              app.permissionNote!,
+              style: const TextStyle(color: AppColors.olive, height: 1.4),
+            ),
+          ],
           const SizedBox(height: Space.x4),
           if (items.isEmpty)
             const EmptyHint(title: '近期没有提醒', body: '记下下次疫苗、驱虫或一袋粮的保质期后，这里会出现。')
