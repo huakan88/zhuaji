@@ -4,6 +4,8 @@
 
 爪记可以管理多只猫，给每只猫分开记疫苗、驱虫、就医、体重、喂食和体态照片；也可以扫猫粮条码，登记生产日期、保质期和开封后的倒计时。热量、换粮比例和日期提醒只是家庭记录，不能代替兽医。
 
+界面字体是随包附带的 Noto Sans SC 静态字重（Regular / Bold），并设为 `ThemeData.fontFamily` 和 `textTheme`。不要改回可变字体：Flutter 不会套用字重轴，默认 Thin 主字重会让中文变成方框。
+
 ## 环境
 
 - Flutter 3.47（Dart 3.13）或兼容的稳定版
@@ -84,7 +86,8 @@ iOS `Info.plist`：
 - `test/ocr_date_parser_test.dart`：中文日期、EXP、全角数字、保质期月数推算
 - `test/reminder_planner_test.dart`：30/7 天保质期、已过期的不排、疫苗驱虫、开封倒计时、喂食顺延、七日换粮
 - `test/widget_test.dart`：免责声明和日期卡片
-- `test/screenshots_test.dart`：在无设备环境下渲染首页、健康、粮仓、日期卡片、我的和档案（需要中文字体）
+- `test/cjk_font_test.dart`：中文笔画被画出来，而不是缺字方框
+- `test/screenshots_test.dart`：在无设备环境下渲染首页、健康、粮仓、日期卡片、我的和档案（测试里会加载同一套中文字体）
 
 ## 局限
 

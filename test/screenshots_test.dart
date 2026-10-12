@@ -10,10 +10,13 @@ import 'package:maokangji/services/coat_recognizer.dart';
 import 'package:maokangji/services/notification_service.dart';
 import 'package:maokangji/state/app_controller.dart';
 
+import 'cjk_font.dart';
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   testWidgets('capture key screens', (tester) async {
+    await tester.runAsync(loadZhuajiFonts);
     tester.view.physicalSize = const Size(390, 844);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);

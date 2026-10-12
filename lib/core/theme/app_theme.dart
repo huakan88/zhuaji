@@ -4,6 +4,7 @@ import 'app_tokens.dart';
 
 ThemeData buildAppTheme() {
   const family = 'NotoSansSC';
+  const fallback = <String>[family];
   final base = ColorScheme.fromSeed(
     seedColor: AppColors.coral,
     brightness: Brightness.light,
@@ -18,17 +19,25 @@ ThemeData buildAppTheme() {
     error: AppColors.danger,
     onError: Colors.white,
   );
-  final text = ThemeData(brightness: Brightness.light).textTheme.apply(
+  final typography = Typography.material2021(platform: TargetPlatform.android);
+  final text = typography.black.apply(
     fontFamily: family,
+    fontFamilyFallback: fallback,
     bodyColor: AppColors.ink,
     displayColor: AppColors.ink,
+  );
+  final primaryText = typography.white.apply(
+    fontFamily: family,
+    fontFamilyFallback: fallback,
   );
   return ThemeData(
     useMaterial3: true,
     colorScheme: scheme,
     scaffoldBackgroundColor: AppColors.background,
     fontFamily: family,
+    fontFamilyFallback: fallback,
     textTheme: text,
+    primaryTextTheme: primaryText,
     splashFactory: InkRipple.splashFactory,
     appBarTheme: AppBarTheme(
       backgroundColor: AppColors.background,
@@ -71,7 +80,7 @@ ThemeData buildAppTheme() {
     inputDecorationTheme: InputDecorationTheme(
       filled: true,
       fillColor: AppColors.cream,
-      hintStyle: const TextStyle(color: AppColors.muted),
+      hintStyle: const TextStyle(fontFamily: family, color: AppColors.muted),
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(Radii.m),
