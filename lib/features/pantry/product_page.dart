@@ -6,6 +6,7 @@ import '../../core/copy.dart';
 import '../../core/format.dart';
 import '../../core/theme/app_tokens.dart';
 import '../../core/widgets/common.dart';
+import '../../domain/dates.dart';
 import '../../domain/models.dart';
 import '../../domain/parsing/gs1_parser.dart';
 import '../../domain/parsing/ocr_date_parser.dart';
@@ -232,7 +233,8 @@ class _ProductPageState extends State<ProductPage> {
     }
     if (!mounted) return;
     if (!parsed.hasDate) {
-      showMessage(context, '没有认出日期，请手动填写');
+      showMessage(context, '没有认出日期，用滚轮点选');
+      await _editManually();
       return;
     }
     await _applyParsed(
@@ -249,11 +251,11 @@ class _ProductPageState extends State<ProductPage> {
 
   Future<void> _editManually() async {
     final app = AppScope.of<AppController>(context);
-    final production = await pickDate(context, _production ?? app.now);
+    final production = await pickDateWheel(context, _production ?? app.now);
     if (!mounted || production == null) return;
-    final expiry = await pickDate(
+    final expiry = await pickDateWheel(
       context,
-      _expiry ?? production.add(const Duration(days: 540)),
+      _expiry ?? addMonths(production, 18),
     );
     if (!mounted || expiry == null) return;
     await _applyParsed(

@@ -7,4 +7,4 @@ const kGuidelineSources =
 const kBarcodeNote =
     'EAN/UPC 商品条码本身不含生产日期或保质期。包装上若有 GS1 二维码（AI 11 生产日期、AI 17 失效日期、AI 10 批号）可以解析；否则请拍摄印刷日期并确认，或手动填写。';
 
-const kSampleFoodNote = '图鉴里的品牌、规格、热量和条码都是示例数据，请以手中包装为准。';
+const kSampleFoodNote = '图鉴只写下能核实的储存方式。条码、热量和没有出处的开封天数留空，请以手中包装为准。';

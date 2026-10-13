@@ -50,4 +50,25 @@ void main() {
     expect(result.expiryDate, isNull);
     expect(result.shelfLifeText, '24个月');
   });
+
+  test('reads production slash shelf-life and English month names', () {
+    final combined = parser.parse('生产日期：2025年1月1日/保质期18个月');
+    expect(combined.productionDate, DateTime(2025, 1, 1));
+    expect(combined.expiryDate, DateTime(2026, 7, 1));
+    expect(combined.expiryInferred, isTrue);
+
+    final english = parser.parse('MFG 2025-01-01 shelf life 18 months');
+    expect(english.productionDate, DateTime(2025, 1, 1));
+    expect(english.expiryDate, DateTime(2026, 7, 1));
+  });
+
+  test('reads EXP, BBE and a month-only expiry as day first', () {
+    expect(parser.parse('EXP 12/10/2026').expiryDate, DateTime(2026, 10, 12));
+    expect(parser.parse('BBE: 12 OCT 2026').expiryDate, DateTime(2026, 10, 12));
+    expect(
+      parser.parse('BEST BEFORE 12.10.2026').expiryDate,
+      DateTime(2026, 10, 12),
+    );
+    expect(parser.parse('保质期至 2026年10月').expiryDate, DateTime(2026, 10, 31));
+  });
 }

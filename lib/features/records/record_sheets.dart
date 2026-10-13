@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 import '../../core/format.dart';
@@ -414,45 +415,43 @@ Future<void> showWaterSheet(BuildContext context) async {
   }
 }
 
-Future<void> showCheckupResultSheet(
-  BuildContext context, {
-  required String itemId,
-  required String itemName,
-  required int intervalDays,
-}) async {
-  final app = AppScope.of<AppController>(context);
-  if (app.active == null) {
-    showMessage(context, '先选择一只猫');
-    return;
-  }
-  final result = TextEditingController();
-  try {
-    await _sheet(
-      context,
-      title: '记录$itemName',
-      child: TextField(
-        controller: result,
-        minLines: 2,
-        maxLines: 4,
-        decoration: const InputDecoration(
-          labelText: '兽医怎么说',
-          hintText: '写下结论或报告要点，不要只写“正常”',
+/// Date wheels, so a missed OCR read does not ask anyone to type a date.
+Future<DateTime?> pickDateWheel(BuildContext context, DateTime initial) {
+  var selected = DateTime(initial.year, initial.month, initial.day);
+  return showModalBottomSheet<DateTime>(
+    context: context,
+    builder: (context) => SafeArea(
+      child: SizedBox(
+        height: 320,
+        child: Column(
+          children: [
+            Row(
+              children: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('取消'),
+                ),
+                const Spacer(),
+                TextButton(
+                  onPressed: () => Navigator.pop(context, selected),
+                  child: const Text('确定'),
+                ),
+              ],
+            ),
+            Expanded(
+              child: CupertinoDatePicker(
+                mode: CupertinoDatePickerMode.date,
+                initialDateTime: selected,
+                minimumDate: DateTime(2000),
+                maximumDate: DateTime(2100, 12, 31),
+                onDateTimeChanged: (value) => selected = value,
+              ),
+            ),
+          ],
         ),
       ),
-      onSubmit: () async {
-        final text = result.text.trim();
-        if (text.isEmpty) return '先写一点检查结果';
-        await app.completeCheckup(
-          itemId: itemId,
-          result: text,
-          intervalDays: intervalDays,
-        );
-        return null;
-      },
-    );
-  } finally {
-    result.dispose();
-  }
+    ),
+  );
 }
 
 Widget _dateTile(String label, DateTime date, VoidCallback onTap) {

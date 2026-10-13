@@ -6,7 +6,7 @@ import '../domain/reminders/reminder_planner.dart';
 
 abstract class ReminderNotifier {
   Future<void> init();
-  Future<void> requestPermissions();
+  Future<void> requestPermissions({bool askExactAlarm = true});
   Future<void> replaceAll(List<PlannedNotification> items);
 }
 
@@ -15,7 +15,7 @@ class NoopNotificationService implements ReminderNotifier {
   Future<void> init() async {}
 
   @override
-  Future<void> requestPermissions() async {}
+  Future<void> requestPermissions({bool askExactAlarm = true}) async {}
 
   @override
   Future<void> replaceAll(List<PlannedNotification> items) async {}
@@ -42,13 +42,18 @@ class NotificationService implements ReminderNotifier {
     _ready = true;
   }
 
+  AndroidFlutterLocalNotificationsPlugin? get _android => _plugin
+      .resolvePlatformSpecificImplementation<
+        AndroidFlutterLocalNotificationsPlugin
+      >();
+
   @override
-  Future<void> requestPermissions() async {
-    await _plugin
-        .resolvePlatformSpecificImplementation<
-          AndroidFlutterLocalNotificationsPlugin
-        >()
-        ?.requestNotificationsPermission();
+  Future<void> requestPermissions({bool askExactAlarm = true}) async {
+    await _android?.requestNotificationsPermission();
+    final exact = await _android?.canScheduleExactNotifications();
+    if (askExactAlarm && exact == false) {
+      await _android?.requestExactAlarmsPermission();
+    }
     await _plugin
         .resolvePlatformSpecificImplementation<
           IOSFlutterLocalNotificationsPlugin
@@ -64,6 +69,10 @@ class NotificationService implements ReminderNotifier {
     } catch (error, stack) {
       debugPrint('清除旧提醒失败，继续安排新的：$error\n$stack');
     }
+    final exact = await _android?.canScheduleExactNotifications() ?? false;
+    final mode = exact
+        ? AndroidScheduleMode.exactAllowWhileIdle
+        : AndroidScheduleMode.inexactAllowWhileIdle;
     final soonest = [...items]..sort((a, b) => a.when.compareTo(b.when));
     for (final item in soonest.take(60)) {
       try {
@@ -73,7 +82,7 @@ class NotificationService implements ReminderNotifier {
           body: item.body,
           scheduledDate: tz.TZDateTime.from(item.when, tz.local),
           notificationDetails: _details(item.channel),
-          androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+          androidScheduleMode: mode,
           payload: item.channel.name,
           matchDateTimeComponents: item.repeatsDaily
               ? DateTimeComponents.time

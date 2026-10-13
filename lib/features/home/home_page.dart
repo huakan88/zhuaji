@@ -80,11 +80,12 @@ class HomePage extends StatelessWidget {
     final weight = weightChangeOverMonth(app.catWeights);
     if (weight != null && weight.notable) {
       final direction = weight.percent > 0 ? '增加' : '下降';
+      final hint = weight.percent > 0 ? '留意食量' : '留意食欲';
       final percent = (weight.percent.abs() * 100).toStringAsFixed(0);
       items.add(
         _Alert(
           title: '体重变化',
-          detail: '近 ${weight.days} 天$direction了 $percent%',
+          detail: '近 ${weight.days} 天体重$direction了 $percent%，$hint。',
           onTap: (context) => context.go('/health'),
         ),
       );

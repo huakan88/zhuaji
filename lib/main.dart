@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:flutter/widgets.dart';
 import 'package:flutter_timezone/flutter_timezone.dart';
 import 'package:timezone/data/latest_all.dart' as tzdata;
@@ -12,25 +14,38 @@ import 'state/app_controller.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  tzdata.initializeTimeZones();
-  try {
-    final info = await FlutterTimezone.getLocalTimezone();
-    tz.setLocalLocation(tz.getLocation(info.identifier));
-  } catch (_) {
-    tz.setLocalLocation(tz.UTC);
-  }
+  FlutterError.onError = (details) {
+    FlutterError.presentError(details);
+    debugPrint('界面错误：${details.exceptionAsString()}');
+  };
+  PlatformDispatcher.instance.onError = (error, stack) {
+    debugPrint('未捕获的错误：$error\n$stack');
+    return true;
+  };
 
   final notifications = NotificationService();
-  try {
-    await notifications.init();
-  } catch (error, stack) {
-    debugPrint('通知初始化失败，记录仍会保存：$error\n$stack');
-  }
   final controller = AppController(
     repo: DriftCareRepository(AppDatabase.defaults()),
     notifications: notifications,
-    recognizer: MlKitCoatBreedRecognizer(),
+    recognizer: const ColorCoatRecognizer(),
   );
-  await controller.init();
   runApp(ZhuajiApp(controller: controller));
+  try {
+    tzdata.initializeTimeZones();
+    try {
+      final info = await FlutterTimezone.getLocalTimezone();
+      tz.setLocalLocation(tz.getLocation(info.identifier));
+    } catch (_) {
+      tz.setLocalLocation(tz.UTC);
+    }
+    try {
+      await notifications.init();
+    } catch (error, stack) {
+      debugPrint('通知初始化失败，记录仍会保存：$error\n$stack');
+    }
+    await controller.init();
+  } catch (error, stack) {
+    debugPrint('启动没有完成：$error\n$stack');
+    controller.failStart('本地数据没有打开，可以点重试');
+  }
 }

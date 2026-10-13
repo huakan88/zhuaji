@@ -21,8 +21,12 @@ class WeightChange {
 
   double get percent => fromKg == 0 ? 0 : (toKg - fromKg) / fromKg;
 
-  /// About one month, and large enough to mention on the home screen.
-  bool get notable => days >= 21 && days <= 40 && percent.abs() >= 0.05;
+  /// A recent change large enough to mention in one sentence on 今天.
+  bool get notable {
+    if (days < 7 || days > 90) return false;
+    if (percent.abs() >= 0.05) return true;
+    return days <= 14 && percent.abs() >= 0.03;
+  }
 }
 
 /// Compares the latest weight with the sample closest to 30 days earlier.
@@ -31,9 +35,9 @@ WeightChange? weightChangeOverMonth(List<WeightRecord> weights) {
   final sorted = [...weights]..sort((a, b) => a.loggedOn.compareTo(b.loggedOn));
   final latest = sorted.last;
   WeightRecord? baseline;
-  var bestGap = 1 << 30;
+  var strongest = 0.0;
   for (final item in sorted) {
-    if (identical(item, latest)) continue;
+    if (item.loggedOn == latest.loggedOn && item.id == latest.id) continue;
     final days =
         DateTime(
               latest.loggedOn.year,
@@ -48,10 +52,12 @@ WeightChange? weightChangeOverMonth(List<WeightRecord> weights) {
               ),
             )
             .inDays;
-    if (days < 21 || days > 40) continue;
-    final gap = (days - 30).abs();
-    if (gap < bestGap) {
-      bestGap = gap;
+    if (days < 7 || days > 90) continue;
+    final change = item.weightKg == 0
+        ? 0.0
+        : ((latest.weightKg - item.weightKg) / item.weightKg).abs();
+    if (baseline == null || change > strongest) {
+      strongest = change;
       baseline = item;
     }
   }

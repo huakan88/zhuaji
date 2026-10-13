@@ -49,13 +49,8 @@ void main() {
     expect(find.textContaining('成年'), findsWidgets);
     expect(find.text('PKD 基因或肾脏超声'), findsNothing);
     expect(find.textContaining('AAHA/AAFP'), findsWidgets);
-    await tapText(tester, '记录完成');
-    expect(find.text('记录全面体格检查'), findsOneWidget);
-    await tapText(tester, '保存');
-    expect(find.text('先写一点检查结果'), findsOneWidget);
-    await enterField(tester, '兽医怎么说', '年度体检已当面完成');
-    await tapText(tester, '保存');
-    expect(find.textContaining('年度体检已当面完成'), findsOneWidget);
+    await tapText(tester, '已完成');
+    expect(find.textContaining('已记下，下次会再提醒'), findsWidgets);
 
     final again = AppController(
       repo: DriftCareRepository(database),
@@ -64,7 +59,7 @@ void main() {
       clock: () => DateTime(2026, 10, 12, 11),
     );
     await again.init();
-    expect(again.checkups.any((item) => item.result.contains('年度体检')), isTrue);
+    expect(again.checkups.any((item) => item.result == '已完成'), isTrue);
 
     await tapText(tester, '加入提醒');
     expect(find.textContaining('已经有未到的提醒'), findsOneWidget);

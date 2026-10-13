@@ -79,6 +79,11 @@ class HealthPage extends StatelessWidget {
                     '${formatDate(item.givenOn)}'
                     '${item.nextDue == null ? '' : ' · 下次 ${formatDate(item.nextDue!)}'}',
                 onTap: () => showVaccineSheet(context, existing: item),
+                onComplete: () async {
+                  final next = await app.completeVaccine(item);
+                  if (!context.mounted) return;
+                  showMessage(context, '下次 ${formatDate(next)}');
+                },
                 onDelete: () async {
                   if (await confirmDelete(context, '删除这条疫苗记录？')) {
                     await app.removeVaccine(item.id);
@@ -171,6 +176,7 @@ class HealthPage extends StatelessWidget {
     required String detail,
     required Future<void> Function() onDelete,
     VoidCallback? onTap,
+    Future<void> Function()? onComplete,
   }) {
     return ListTile(
       contentPadding: EdgeInsets.zero,
@@ -178,9 +184,25 @@ class HealthPage extends StatelessWidget {
       title: Text(title),
       subtitle: Text(detail, style: const TextStyle(color: AppColors.muted)),
       onTap: onTap,
-      trailing: IconButton(
-        icon: const Icon(Icons.delete_outline, color: AppColors.muted),
-        onPressed: () => onDelete(),
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (onComplete != null)
+            TextButton(
+              style: TextButton.styleFrom(
+                visualDensity: VisualDensity.compact,
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+                minimumSize: const Size(0, 36),
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              ),
+              onPressed: () => onComplete(),
+              child: const Text('已完成'),
+            ),
+          IconButton(
+            icon: const Icon(Icons.delete_outline, color: AppColors.muted),
+            onPressed: () => onDelete(),
+          ),
+        ],
       ),
     );
   }

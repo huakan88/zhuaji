@@ -29,6 +29,7 @@ void main() {
     expect(drop!.notable, isTrue);
     expect(drop.percent, closeTo(-0.06, 0.001));
 
-    expect(weightChangeOverMonth([point(80, 5), point(0, 4)]), isNull);
+    final slow = weightChangeOverMonth([point(80, 5), point(0, 4)]);
+    expect(slow!.notable, isTrue);
   });
 }

@@ -282,7 +282,8 @@ class FoodDateCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final days = expiry == null ? null : calendarDaysUntil(now, expiry!);
-    final openDue = openedAt == null || afterOpenDays == null
+    final openDue =
+        openedAt == null || afterOpenDays == null || afterOpenDays! <= 0
         ? null
         : dateOnly(openedAt!).add(Duration(days: afterOpenDays!));
     return SoftCard(
@@ -308,7 +309,7 @@ class FoodDateCard extends StatelessWidget {
                 tint: AppColors.tintGreen,
                 color: AppColors.olive,
               ),
-              TagChip(label: spec),
+              if (spec.isNotEmpty) TagChip(label: spec),
               if (isSample)
                 const TagChip(
                   label: '示例数据',
@@ -352,12 +353,14 @@ class FoodDateCard extends StatelessWidget {
           _line(
             '开封后',
             openDue == null
-                ? (afterOpenDays == null ? '未开封' : '建议 $afterOpenDays 天内喂完')
+                ? (afterOpenDays == null || afterOpenDays! <= 0
+                      ? '时限以包装为准'
+                      : '建议 $afterOpenDays 天内喂完')
                 : '${countdownOf(openDue, now)}（建议 ${formatDate(openDue)} 前）',
           ),
           const SizedBox(height: Space.x2),
           const Text(
-            '到期前会在 30 天和 7 天提醒。开封后按干粮约 4–6 周、湿粮冷藏尽快喂完来倒计时。',
+            '到期前会在 30 天和 7 天提醒。开封倒计时只用已核实的天数。',
             style: TextStyle(color: AppColors.muted, fontSize: 12, height: 1.4),
           ),
         ],

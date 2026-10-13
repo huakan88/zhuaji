@@ -14,6 +14,7 @@ class DriftCareRepository implements CareRepository {
 
   @override
   Future<void> seedDemoIfNeeded(DateTime now) async {
+    await seedSampleFoods(_db);
     final seeded = await setting('demoSeeded');
     if (seeded == '1') return;
     final existing = await cats();
@@ -142,8 +143,16 @@ class DriftCareRepository implements CareRepository {
       content: '毛发顺，食欲正常。示例笔记。',
     );
 
-    final royal = await productByBarcode('6971000000014');
-    final honest = await productByBarcode('6971000000113');
+    final foods = await products();
+    FoodProduct? named(String name) {
+      for (final item in foods) {
+        if (item.name == name) return item;
+      }
+      return null;
+    }
+
+    final royal = named('室内成猫全价粮');
+    final honest = named('K1 无谷全价猫粮');
     await upsertFeeding(
       FeedingDraft(
         catId: orangeId,
@@ -177,7 +186,7 @@ class DriftCareRepository implements CareRepository {
         ),
       );
     }
-    final wet = await productByBarcode('6971000000137');
+    final wet = named('浓汤大口肉罐');
     if (wet != null) {
       await upsertPantry(
         PantryDraft(

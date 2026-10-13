@@ -90,7 +90,9 @@ class _PantryPageState extends State<PantryPage> {
                       contentPadding: EdgeInsets.zero,
                       title: Text(product.displayName),
                       subtitle: Text(
-                        '${formLabel(product.foodForm)} · ${product.spec}',
+                        product.spec.isEmpty
+                            ? formLabel(product.foodForm)
+                            : '${formLabel(product.foodForm)} · ${product.spec}',
                       ),
                       trailing: product.isSample
                           ? const TagChip(label: '示例')
@@ -140,7 +142,9 @@ class _PantryPageState extends State<PantryPage> {
                           ),
                           const SizedBox(height: 6),
                           Text(
-                            '${formLabel(entry.product.foodForm)} · ${entry.product.spec}',
+                            entry.product.spec.isEmpty
+                                ? formLabel(entry.product.foodForm)
+                                : '${formLabel(entry.product.foodForm)} · ${entry.product.spec}',
                             style: const TextStyle(
                               color: AppColors.muted,
                               fontSize: 12,
@@ -149,7 +153,9 @@ class _PantryPageState extends State<PantryPage> {
                           const SizedBox(height: 4),
                           Text(
                             entry.item.openedAt == null
-                                ? '未开封 · ${entry.product.storageMethod}'
+                                ? '未开封'
+                                : entry.openWindowDays <= 0
+                                ? '已开封 · 时限以包装为准'
                                 : '已开封 · 建议 ${entry.openWindowDays} 天内喂完',
                             style: const TextStyle(fontSize: 12, height: 1.35),
                           ),

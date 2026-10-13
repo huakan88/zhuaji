@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 
 import '../core/format.dart';
+import '../domain/care/easy_log.dart';
 import '../domain/dates.dart';
 import '../domain/health/checkup_catalog.dart';
 import '../domain/health/disease_catalog.dart';
@@ -78,6 +79,12 @@ class AppController extends ChangeNotifier {
     return dated.isEmpty ? null : dated.first;
   }
 
+  void failStart(String message) {
+    loading = false;
+    error = message;
+    notifyListeners();
+  }
+
   Future<void> init() async {
     loading = true;
     error = null;
@@ -113,7 +120,9 @@ class AppController extends ChangeNotifier {
 
   Future<void> enableNotifications() async {
     try {
-      await notifications.requestPermissions();
+      final askedExact = await repo.setting('exactAsked');
+      await notifications.requestPermissions(askExactAlarm: askedExact != '1');
+      await repo.setSetting('exactAsked', '1');
       await repo.setSetting('notifAsked', '1');
       await _reschedule();
       permissionNote = '已请求通知权限，提醒会按计划送到';
@@ -145,6 +154,25 @@ class AppController extends ChangeNotifier {
   Future<void> removeVaccine(int id) async {
     await repo.deleteVaccine(id);
     await _refresh();
+  }
+
+  /// Marks this dose done today and moves the next due date forward.
+  Future<DateTime> completeVaccine(VaccineRecord record) async {
+    final given = dateOnly(now);
+    final next = nextVaccineDate(catById(record.catId)?.birthday, given);
+    await repo.upsertVaccine(
+      VaccineDraft(
+        id: record.id,
+        catId: record.catId,
+        name: record.name,
+        givenOn: given,
+        nextDue: next,
+        clinic: record.clinic,
+        notes: record.notes,
+      ),
+    );
+    await _refresh();
+    return next;
   }
 
   Future<void> saveDeworm(DewormDraft draft) async {

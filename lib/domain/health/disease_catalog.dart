@@ -42,7 +42,7 @@ const diseaseCatalog = <DiseaseInfo>[
     recheckDays: 90,
     monitoring: '在家记体重、食欲、呕吐次数、饮水量和精神。体重持续下降比单日波动更重要。',
     redFlags: ['完全不吃超过一顿主餐', '反复呕吐', '虚弱、站不稳或抽搐', '几乎无尿', '呼吸急或张口喘'],
-    sources: 'IRIS CKD 分期与管理；ISFM 猫慢性肾病共识',
+    sources: 'Sparkes 等，ISFM《猫慢性肾病诊断与管理共识》（2016）；IRIS 分期看肌酐、SDMA、尿蛋白和血压',
     stages: ['IRIS 1', 'IRIS 2', 'IRIS 3', 'IRIS 4'],
     trackWater: true,
   ),
@@ -57,7 +57,7 @@ const diseaseCatalog = <DiseaseInfo>[
     recheckDays: 30,
     monitoring: '砂盆里的尿量、带血、频繁蹲盆、舔下腹、哭叫。公猫无尿是紧急情况。',
     redFlags: ['反复蹲盆但几乎没有尿', '腹痛、哭叫', '呕吐、精神很差', '尿闭超过兽医交代的观察时限'],
-    sources: 'ISFM 猫特发性膀胱炎与泌尿道共识',
+    sources: 'Lulich 等，ACVIM 尿石治疗与预防共识（2016）。公猫尿闭按急症处理',
     trackWater: true,
   ),
   DiseaseInfo(
@@ -71,7 +71,7 @@ const diseaseCatalog = <DiseaseInfo>[
     recheckDays: 30,
     monitoring: '食欲、饮水、尿量、体重，以及兽医教过的居家血糖。软弱、走路不稳、抽搐要当成可能的低血糖。',
     redFlags: ['抽搐、虚脱', '完全不吃', '呕吐且精神差', '呼吸深或有烂苹果样气味'],
-    sources: 'ISFM 猫糖尿病共识；AAHA 糖尿病管理原则',
+    sources: 'Sparkes 等，ISFM 猫糖尿病共识（2015）；AAHA 糖尿病管理指南（2018）',
     trackWater: true,
   ),
   DiseaseInfo(
@@ -85,7 +85,7 @@ const diseaseCatalog = <DiseaseInfo>[
     recheckDays: 21,
     monitoring: '体重、食欲、呕吐、饮水量、心率如果兽医教过。治疗后体重上升往往是预期变化。',
     redFlags: ['极度虚弱', '呼吸困难', '脖子处明显肿胀或疼痛', '完全拒食'],
-    sources: 'AAFP 猫甲亢管理指南',
+    sources: '2016 AAFP《猫甲亢管理指南》',
     trackWater: true,
   ),
   DiseaseInfo(
@@ -99,7 +99,7 @@ const diseaseCatalog = <DiseaseInfo>[
     recheckDays: 180,
     monitoring: '安静时的呼吸频率（兽医教过再数）、活动耐力、后肢突然疼痛或发凉。',
     redFlags: ['张口呼吸、腹式急促呼吸', '牙龈发紫或发白', '后肢突然不能走、冰凉', '晕倒'],
-    sources: 'ACVIM 心肌病共识；品种猫筛查实践',
+    sources: 'Luis Fuentes 等，ACVIM 猫心肌病共识（2020）。超声由心脏科判断，听诊正常也不能排除',
   ),
   DiseaseInfo(
     id: 'stomatitis',
@@ -112,7 +112,7 @@ const diseaseCatalog = <DiseaseInfo>[
     recheckDays: 180,
     monitoring: '口臭、流涎、用爪抓嘴、偏侧咀嚼、吃两口就走开、体重下降。',
     redFlags: ['完全拒食', '口腔大量出血', '脸部明显肿胀', '精神很差'],
-    sources: 'AAHA 牙科护理指南中适用于猫的原则；牙科处置需全身麻醉',
+    sources: '2019 AAHA《犬猫牙科护理指南》。洁牙和拔牙需要全身麻醉',
   ),
   DiseaseInfo(
     id: 'obesity',
@@ -125,7 +125,7 @@ const diseaseCatalog = <DiseaseInfo>[
     recheckDays: 28,
     monitoring: '每周体重、体态、食欲和活动。下降过快或突然不吃都要停下来问兽医。',
     redFlags: ['突然拒食', '皮肤和眼白发黄', '虚弱', '减重过程中呕吐'],
-    sources: 'AAHA 体重管理指南中适用于猫的原则；猫脂肪肝风险',
+    sources: '2021 AAHA《营养与体重管理指南》。猫减重过快有脂肪肝风险',
     trackWater: false,
   ),
   DiseaseInfo(
@@ -139,7 +139,7 @@ const diseaseCatalog = <DiseaseInfo>[
     recheckDays: 42,
     monitoring: '呕吐和腹泻次数、大便形态、食欲、体重。便血或黑便要记录清楚。',
     redFlags: ['持续呕吐', '血便或黑便', '腹痛、弓背', '完全不吃或精神崩溃'],
-    sources: 'ISFM 猫慢性肠道病与胰腺炎相关共识',
+    sources: 'Forman 等，ACVIM 猫胰腺炎共识（2021）。慢性肠病要先排除寄生虫和其它器官问题',
   ),
   DiseaseInfo(
     id: 'fip',
@@ -152,7 +152,7 @@ const diseaseCatalog = <DiseaseInfo>[
     recheckDays: 14,
     monitoring: '体重、体温（若兽医要求）、食欲、腹围、呼吸和活动。把数值记下来比形容“好一点”有用。',
     redFlags: ['呼吸困难', '腹围迅速增大', '高热不退且不吃', '黄疸、抽搐或虚脱'],
-    sources: 'AAFP 等关于猫冠状病毒与 FIP 的临床指引；治疗方案以当面兽医为准',
+    sources: '2022 AAFP/EveryCat《猫传染性腹膜炎诊断指南》。抗病毒药在不少地区尚未获批，剂量由兽医决定',
   ),
   DiseaseInfo(
     id: 'uri',
@@ -165,7 +165,7 @@ const diseaseCatalog = <DiseaseInfo>[
     recheckDays: 14,
     monitoring: '喷嚏、鼻涕颜色、眼睛分泌物、口腔溃疡、食欲。和其他猫隔离，直到兽医认为风险下降。',
     redFlags: ['张口呼吸', '完全不吃', '幼猫沉郁', '眼睛明显疼痛或角膜发白'],
-    sources: 'AAFP 猫上呼吸道感染与疱疹病毒指引',
+    sources: 'ABCD 猫疱疹病毒与杯状病毒指南',
   ),
   DiseaseInfo(
     id: 'skin',
@@ -178,7 +178,7 @@ const diseaseCatalog = <DiseaseInfo>[
     recheckDays: 28,
     monitoring: '瘙痒部位、脱毛、结痂、是否还在抓。拍照比回忆更可靠。',
     redFlags: ['脸部或耳部迅速肿胀', '呼吸困难', '皮肤大面积破溃、流脓', '精神差并发烧'],
-    sources: 'ISFM 等猫过敏性皮炎实践；跳蚤防控是评估的一部分',
+    sources: '跳蚤防控和兽医设计的食物排除试验是皮肤病评估的常规步骤，不能代替当面诊断',
   ),
   DiseaseInfo(
     id: 'arthritis',
@@ -191,7 +191,7 @@ const diseaseCatalog = <DiseaseInfo>[
     recheckDays: 90,
     monitoring: '跳跃高度、砂盆使用、理毛、脾气和体重。可以按周记一次“还能跳上哪里”。',
     redFlags: ['突然不能走路', '后肢冰凉、疼痛（要排除血栓）', '用药后呕吐、不吃', '黑便'],
-    sources: 'AAFP/ISFM 关于猫退行性关节病的护理原则',
+    sources: '2022 AAHA《犬猫疼痛管理指南》里关于猫骨关节炎的部分',
     trackWater: true,
   ),
 ];

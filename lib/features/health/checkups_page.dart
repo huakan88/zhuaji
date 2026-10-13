@@ -8,7 +8,6 @@ import '../../domain/health/checkup_catalog.dart';
 import '../../domain/health/life_stage.dart';
 import '../../domain/models.dart';
 import '../../state/app_controller.dart';
-import '../records/record_sheets.dart';
 
 class CheckupsPage extends StatelessWidget {
   const CheckupsPage({super.key});
@@ -166,13 +165,16 @@ class _CheckupCard extends StatelessWidget {
             runSpacing: 8,
             children: [
               FilledButton(
-                onPressed: () => showCheckupResultSheet(
-                  context,
-                  itemId: advice.item.id,
-                  itemName: advice.item.name,
-                  intervalDays: advice.plan.intervalDays,
-                ),
-                child: const Text('记录完成'),
+                onPressed: () async {
+                  await app.completeCheckup(
+                    itemId: advice.item.id,
+                    result: '已完成',
+                    intervalDays: advice.plan.intervalDays,
+                  );
+                  if (!context.mounted) return;
+                  showMessage(context, '已记下，下次会再提醒');
+                },
+                child: const Text('已完成'),
               ),
               OutlinedButton(
                 onPressed: () async {
