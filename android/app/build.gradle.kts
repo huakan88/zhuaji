@@ -27,11 +27,22 @@ android {
         // flag during build.
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+        // ML Kit 的 AAR 会带上 x86_64 和 armeabi-v7a。当前引擎只有 arm64，
+        // 那些库装不上、也跑不起来，留着只会把包撑过可分发的体积。
+        ndk {
+            abiFilters += listOf("arm64-v8a")
+        }
     }
 
     buildTypes {
         release {
             signingConfig = signingConfigs.getByName("debug")
+        }
+    }
+
+    packaging {
+        jniLibs {
+            excludes += listOf("lib/x86/**", "lib/x86_64/**", "lib/armeabi-v7a/**")
         }
     }
 }
