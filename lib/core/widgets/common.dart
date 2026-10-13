@@ -133,7 +133,7 @@ class DisclaimerBanner extends StatelessWidget {
   }
 }
 
-class EmptyHint extends StatelessWidget {
+class EmptyHint extends StatefulWidget {
   const EmptyHint({
     required this.title,
     required this.body,
@@ -148,37 +148,73 @@ class EmptyHint extends StatelessWidget {
   final VoidCallback? onAction;
 
   @override
+  State<EmptyHint> createState() => _EmptyHintState();
+}
+
+class _EmptyHintState extends State<EmptyHint>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _motion = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 280),
+  )..forward();
+
+  @override
+  void dispose() {
+    _motion.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: Space.x6),
-      child: Column(
-        children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(Radii.xl),
-            child: Image.asset(
-              'assets/cats/cat-icon.jpg',
-              width: 96,
-              height: 96,
-              fit: BoxFit.cover,
-            ),
+    return FadeTransition(
+      opacity: CurvedAnimation(parent: _motion, curve: Curves.easeOut),
+      child: SlideTransition(
+        position: Tween<Offset>(
+          begin: const Offset(0, 0.04),
+          end: Offset.zero,
+        ).animate(CurvedAnimation(parent: _motion, curve: Curves.easeOut)),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: Space.x6),
+          child: Column(
+            children: [
+              DecoratedBox(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(Radii.xl),
+                  boxShadow: softShadow,
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(Radii.xl),
+                  child: Image.asset(
+                    'assets/cats/cat-diary.jpg',
+                    width: 128,
+                    height: 128,
+                    fit: BoxFit.cover,
+                  ),
+                ),
+              ),
+              const SizedBox(height: Space.x4),
+              Text(
+                widget.title,
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.titleMedium
+                    ?.copyWith(fontWeight: FontWeight.w700),
+              ),
+              const SizedBox(height: Space.x2),
+              Text(
+                widget.body,
+                textAlign: TextAlign.center,
+                style: const TextStyle(color: AppColors.muted, height: 1.45),
+              ),
+              if (widget.action != null) ...[
+                const SizedBox(height: Space.x4),
+                FilledButton(
+                  onPressed: widget.onAction,
+                  child: Text(widget.action!),
+                ),
+              ],
+            ],
           ),
-          const SizedBox(height: Space.x4),
-          Text(
-            title,
-            style: Theme.of(context).textTheme.titleMedium
-                ?.copyWith(fontWeight: FontWeight.w700),
-          ),
-          const SizedBox(height: Space.x2),
-          Text(
-            body,
-            textAlign: TextAlign.center,
-            style: const TextStyle(color: AppColors.muted, height: 1.4),
-          ),
-          if (action != null) ...[
-            const SizedBox(height: Space.x4),
-            FilledButton(onPressed: onAction, child: Text(action!)),
-          ],
-        ],
+        ),
       ),
     );
   }
@@ -344,7 +380,7 @@ class FoodDateCard extends StatelessWidget {
             const Padding(
               padding: EdgeInsets.only(bottom: Space.x2),
               child: Text(
-                '当前日期来自最佳赏味期（AI 15），不等同于失效日期。',
+                '这是最佳赏味期，不等于坏掉的日子。',
                 style: TextStyle(color: AppColors.brown, fontSize: 12),
               ),
             ),
@@ -360,7 +396,7 @@ class FoodDateCard extends StatelessWidget {
           ),
           const SizedBox(height: Space.x2),
           const Text(
-            '到期前会在 30 天和 7 天提醒。开封倒计时只用已核实的天数。',
+            '到期前 30 天、7 天会提醒你。包装写了开封天数，才会倒计时。',
             style: TextStyle(color: AppColors.muted, fontSize: 12, height: 1.4),
           ),
         ],

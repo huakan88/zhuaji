@@ -185,6 +185,25 @@ class AppController extends ChangeNotifier {
     await _refresh();
   }
 
+  /// Marks this dose done today and schedules the usual 90-day follow-up.
+  Future<DateTime> completeDeworm(DewormRecord record) async {
+    final given = dateOnly(now);
+    final next = given.add(const Duration(days: 90));
+    await repo.upsertDeworm(
+      DewormDraft(
+        id: record.id,
+        catId: record.catId,
+        kind: record.kind,
+        product: record.product,
+        givenOn: given,
+        nextDue: next,
+        notes: record.notes,
+      ),
+    );
+    await _refresh();
+    return next;
+  }
+
   Future<void> saveVisit(VetDraft draft) async {
     await repo.upsertVisit(draft);
     await _refresh();

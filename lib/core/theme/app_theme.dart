@@ -118,5 +118,43 @@ ThemeData buildAppTheme() {
         borderRadius: BorderRadius.circular(Radii.m),
       ),
     ),
+    chipTheme: ChipThemeData(
+      backgroundColor: AppColors.cream,
+      selectedColor: AppColors.coral,
+      disabledColor: AppColors.cream,
+      labelStyle: text.labelLarge?.copyWith(color: AppColors.ink),
+      secondaryLabelStyle: text.labelLarge?.copyWith(color: AppColors.ink),
+      showCheckmark: false,
+      side: BorderSide.none,
+      shape: const StadiumBorder(),
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+    ),
+    navigationBarTheme: NavigationBarThemeData(
+      height: 68,
+      backgroundColor: Colors.white,
+      indicatorColor: AppColors.tintCoral,
+      elevation: 8,
+      shadowColor: const Color(0x142C2A28),
+      labelTextStyle: WidgetStateProperty.resolveWith((states) {
+        final selected = states.contains(WidgetState.selected);
+        return text.labelMedium?.copyWith(
+          fontWeight: selected ? FontWeight.w700 : FontWeight.w400,
+          color: selected ? AppColors.coralDeep : AppColors.muted,
+        );
+      }),
+      iconTheme: WidgetStateProperty.resolveWith((states) {
+        final selected = states.contains(WidgetState.selected);
+        return IconThemeData(
+          color: selected ? AppColors.coralDeep : AppColors.muted,
+          size: 24,
+        );
+      }),
+    ),
+    pageTransitionsTheme: const PageTransitionsTheme(
+      builders: {
+        TargetPlatform.android: FadeUpwardsPageTransitionsBuilder(),
+        TargetPlatform.iOS: FadeUpwardsPageTransitionsBuilder(),
+      },
+    ),
   );
 }

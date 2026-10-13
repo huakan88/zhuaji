@@ -37,7 +37,7 @@ class _AppShellState extends State<AppShell> {
             )
           : app.error != null
           ? EmptyHint(
-              title: '数据没有准备好',
+              title: '数据没打开',
               body: app.error!,
               action: '重试',
               onAction: app.init,

@@ -53,8 +53,8 @@ class _PantryPageState extends State<PantryPage> {
             ),
             const SizedBox(height: 8),
             const Text(
-              '扫码后带出粮食，到期前会提醒。',
-              style: TextStyle(color: AppColors.muted, fontSize: 12),
+              '扫一袋，到期前会提醒你。',
+              style: TextStyle(color: AppColors.muted, fontSize: 13),
             ),
             const SizedBox(height: Space.x4),
             SegmentedButton<bool>(
@@ -77,7 +77,7 @@ class _PantryPageState extends State<PantryPage> {
               ),
               const SizedBox(height: Space.x3),
               if (products.isEmpty)
-                const EmptyHint(title: '没有这款', body: '换个词，或者扫一条新条码自己补上。'),
+                const EmptyHint(title: '没有这款', body: '换个词，或者扫一条新的自己补上。'),
               for (final product in products)
                 Padding(
                   padding: const EdgeInsets.only(bottom: 8),
@@ -103,10 +103,7 @@ class _PantryPageState extends State<PantryPage> {
                   ),
                 ),
             ] else if (app.pantry.isEmpty)
-              const EmptyHint(
-                title: '还没有在库的一袋粮',
-                body: '扫条码，或从示例图鉴里点开一款，登记生产日期和保质期。',
-              )
+              const EmptyHint(title: '粮仓还是空的', body: '扫一条，或切到图鉴里点开一款。')
             else
               for (final entry in app.pantry)
                 Padding(

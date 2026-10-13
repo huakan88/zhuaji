@@ -37,14 +37,16 @@ class CheckupsPage extends StatelessWidget {
           const SizedBox(height: 6),
           Text(
             cat.breed == null || cat.breed!.isEmpty
-                ? '品种还没写'
+                ? '品种还没写，补上之后建议会更准'
                 : '品种：${cat.breed}',
             style: const TextStyle(color: AppColors.muted),
           ),
+          const SizedBox(height: 8),
+          const Text('做完点「已完成」，下次日期会自己排上。', style: TextStyle(height: 1.4)),
           if (plan.birthdayMissing) ...[
             const SizedBox(height: 8),
             const Text(
-              '档案里还没有生日，下面暂时按成年猫的基线列出。补上生日后会改到对应年龄段。',
+              '还没填生日，先按成年猫列。补上生日就会改。',
               style: TextStyle(color: AppColors.brown, height: 1.4),
             ),
           ],
@@ -56,7 +58,11 @@ class CheckupsPage extends StatelessWidget {
               fontWeight: FontWeight.w700,
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 16),
+          for (final advice in plan.items) ...[
+            _CheckupCard(advice: advice),
+            const SizedBox(height: 10),
+          ],
           const Text(
             kGuidelineSources,
             style: TextStyle(
@@ -65,11 +71,7 @@ class CheckupsPage extends StatelessWidget {
               height: 1.45,
             ),
           ),
-          const SizedBox(height: 16),
-          for (final advice in plan.items) ...[
-            _CheckupCard(advice: advice),
-            const SizedBox(height: 10),
-          ],
+          const SizedBox(height: 12),
           const DisclaimerBanner(),
         ],
       ),
@@ -176,7 +178,7 @@ class _CheckupCard extends StatelessWidget {
                 },
                 child: const Text('已完成'),
               ),
-              OutlinedButton(
+              TextButton(
                 onPressed: () async {
                   final message = await app.scheduleCheckup(
                     itemId: advice.item.id,

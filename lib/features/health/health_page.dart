@@ -21,30 +21,56 @@ class HealthPage extends StatelessWidget {
     }
     final latest = app.latestWeight;
     final stage = lifeStageFor(cat.birthday, app.now);
+    final weightLine = latest == null
+        ? '还没有体重'
+        : '最近 ${latest.weightKg.toStringAsFixed(2)} kg';
     return Scaffold(
       body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.fromLTRB(20, 12, 20, 96),
           children: [
-            Text(
-              cat.name,
-              style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              latest == null
-                  ? '还没有体重'
-                  : '最近 ${latest.weightKg.toStringAsFixed(2)} kg',
-              style: const TextStyle(color: AppColors.muted),
-            ),
-            const Text(
-              '仅供参考，请遵医嘱。',
-              style: TextStyle(color: AppColors.muted, fontSize: 12),
+            SoftCard(
+              radius: Radii.xl,
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 14),
+              child: InkWell(
+                onTap: () => showWeightSheet(context),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      cat.name,
+                      style: const TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      weightLine,
+                      style: const TextStyle(
+                        fontSize: 28,
+                        fontWeight: FontWeight.w700,
+                        height: 1.1,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    const Text(
+                      '点一下就能改，默认是上次的数',
+                      style: TextStyle(color: AppColors.muted, fontSize: 13),
+                    ),
+                  ],
+                ),
+              ),
             ),
             const SizedBox(height: 12),
             FilledButton(
               onPressed: () => showWeightSheet(context),
               child: const Text('记体重'),
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              '仅供参考，请遵医嘱。',
+              style: TextStyle(color: AppColors.muted, fontSize: 12),
             ),
             const SizedBox(height: 16),
             _link(
@@ -72,6 +98,8 @@ class HealthPage extends StatelessWidget {
               action: '添加',
               onAction: () => showVaccineSheet(context),
             ),
+            if (app.catVaccines.isEmpty)
+              const _QuietLine('还没记。打完点添加，下次日期会自己算。'),
             for (final item in app.catVaccines)
               _record(
                 title: item.name,
@@ -95,6 +123,7 @@ class HealthPage extends StatelessWidget {
               action: '添加',
               onAction: () => showDewormSheet(context),
             ),
+            if (app.catDeworms.isEmpty) const _QuietLine('还没记。点常见药名就能填上。'),
             for (final item in app.catDeworms)
               _record(
                 title: '${dewormLabel(item.kind)} · ${item.product}',
@@ -102,6 +131,11 @@ class HealthPage extends StatelessWidget {
                     '${formatDate(item.givenOn)}'
                     '${item.nextDue == null ? '' : ' · 下次 ${formatDate(item.nextDue!)}'}',
                 onTap: () => showDewormSheet(context, existing: item),
+                onComplete: () async {
+                  final next = await app.completeDeworm(item);
+                  if (!context.mounted) return;
+                  showMessage(context, '下次 ${formatDate(next)}');
+                },
                 onDelete: () async {
                   if (await confirmDelete(context, '删除这条驱虫记录？')) {
                     await app.removeDeworm(item.id);
@@ -113,6 +147,7 @@ class HealthPage extends StatelessWidget {
               action: '添加',
               onAction: () => showVisitSheet(context),
             ),
+            if (app.catVisits.isEmpty) const _QuietLine('去过医院再记一笔就行。'),
             for (final item in app.catVisits)
               _record(
                 title: item.reason,
@@ -203,6 +238,23 @@ class HealthPage extends StatelessWidget {
             onPressed: () => onDelete(),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _QuietLine extends StatelessWidget {
+  const _QuietLine(this.text);
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Text(
+        text,
+        style: const TextStyle(color: AppColors.muted, height: 1.35),
       ),
     );
   }

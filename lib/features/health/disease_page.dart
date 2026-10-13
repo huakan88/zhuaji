@@ -49,6 +49,8 @@ class _DiseaseLibraryPageState extends State<DiseaseLibraryPage> {
       body: ListView(
         padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
         children: [
+          const Text('先看和这只猫有关的。看不懂就拿去问医生。', style: TextStyle(height: 1.4)),
+          const SizedBox(height: 8),
           const Text(
             '仅供参考，请遵医嘱。',
             style: TextStyle(
@@ -56,20 +58,11 @@ class _DiseaseLibraryPageState extends State<DiseaseLibraryPage> {
               fontWeight: FontWeight.w700,
             ),
           ),
-          const SizedBox(height: 8),
-          const Text(
-            kGuidelineSources,
-            style: TextStyle(
-              color: AppColors.muted,
-              fontSize: 12,
-              height: 1.45,
-            ),
-          ),
           const SizedBox(height: 12),
           TextField(
             decoration: const InputDecoration(
               labelText: '搜索疾病',
-              hintText: '例如肾病、口炎',
+              hintText: '肾病、口炎',
             ),
             onChanged: (value) => setState(() => _query = value),
           ),
@@ -124,6 +117,15 @@ class _DiseaseLibraryPageState extends State<DiseaseLibraryPage> {
               const SizedBox(height: 8),
             ],
           const SizedBox(height: 8),
+          const Text(
+            kGuidelineSources,
+            style: TextStyle(
+              color: AppColors.muted,
+              fontSize: 12,
+              height: 1.45,
+            ),
+          ),
+          const SizedBox(height: 12),
           const DisclaimerBanner(),
         ],
       ),
@@ -154,6 +156,8 @@ class DiseaseDetailPage extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
         children: [
+          const Text('家里先记着，怎么治听医生的。', style: TextStyle(height: 1.4)),
+          const SizedBox(height: 8),
           const Text(
             '仅供参考，请遵医嘱。',
             style: TextStyle(
@@ -317,8 +321,8 @@ class _MarkCardState extends State<_MarkCard> {
         children: [
           Text(
             marked == null
-                ? '还没有标成${widget.catName}的确诊'
-                : '已标为${widget.catName}的确诊',
+                ? '还没记在${widget.catName}名下'
+                : '已经记在${widget.catName}名下',
             style: const TextStyle(fontWeight: FontWeight.w700),
           ),
           if (marked != null) ...[
@@ -335,7 +339,7 @@ class _MarkCardState extends State<_MarkCard> {
               initialValue: widget.disease.stages.contains(stage)
                   ? stage
                   : null,
-              decoration: const InputDecoration(labelText: '兽医给出的分期'),
+              decoration: const InputDecoration(labelText: '医生说的分期'),
               items: [
                 for (final item in widget.disease.stages)
                   DropdownMenuItem(value: item, child: Text(item)),

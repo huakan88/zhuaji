@@ -93,29 +93,39 @@ class _ProductPageState extends State<ProductPage> {
             ),
           ],
           const SizedBox(height: 12),
+          const Text('先拍包装上的日期。认不出就用滚轮点。', style: TextStyle(height: 1.35)),
+          const SizedBox(height: 4),
           const Text(
             kBarcodeNote,
             style: TextStyle(color: AppColors.muted, fontSize: 12, height: 1.4),
           ),
           const SizedBox(height: Space.x4),
-          FilledButton(onPressed: _scanGs1, child: const Text('扫描 GS1 日期码')),
-          const SizedBox(height: 8),
-          OutlinedButton(onPressed: _scanText, child: const Text('拍摄印刷日期')),
+          FilledButton(onPressed: _scanText, child: const Text('拍摄印刷日期')),
           const SizedBox(height: 8),
           OutlinedButton(onPressed: _editManually, child: const Text('手动填写日期')),
-          const SizedBox(height: 8),
-          OutlinedButton(
-            onPressed: () {
-              final parsed = _gs1.parse('(11)251012(17)270412(10)DEMO');
-              _applyParsed(
-                production: parsed.productionDate,
-                expiry: parsed.suggestedExpiry,
-                batch: parsed.batch,
-                source: DateSource.gs1,
-                bestBefore: parsed.expiryIsBestBefore,
-              );
-            },
-            child: const Text('填入示例 GS1 日期'),
+          const SizedBox(height: 4),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: TextButton(
+              onPressed: _scanGs1,
+              child: const Text('扫描 GS1 日期码'),
+            ),
+          ),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: TextButton(
+              onPressed: () {
+                final parsed = _gs1.parse('(11)251012(17)270412(10)DEMO');
+                _applyParsed(
+                  production: parsed.productionDate,
+                  expiry: parsed.suggestedExpiry,
+                  batch: parsed.batch,
+                  source: DateSource.gs1,
+                  bestBefore: parsed.expiryIsBestBefore,
+                );
+              },
+              child: const Text('填入示例 GS1 日期'),
+            ),
           ),
           const SizedBox(height: Space.x4),
           if (entry == null) ...[

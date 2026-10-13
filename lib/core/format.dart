@@ -31,11 +31,17 @@ String slotLabel(MealSlot slot) => switch (slot) {
 };
 
 String sourceLabel(DateSource source) => switch (source) {
-  DateSource.gs1 => 'GS1 码',
-  DateSource.ocr => '文字识别',
-  DateSource.manual => '手动填写',
-  DateSource.none => '未记录',
+  DateSource.gs1 => '包装码',
+  DateSource.ocr => '拍照认的',
+  DateSource.manual => '自己点的',
+  DateSource.none => '还没记',
 };
+
+String greetingFor(DateTime now) {
+  if (now.hour < 11) return '上午好';
+  if (now.hour < 18) return '下午好';
+  return '晚上好';
+}
 
 String ageLabel(DateTime? birthday, DateTime now) {
   if (birthday == null) return '年龄未填';

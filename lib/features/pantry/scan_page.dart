@@ -44,7 +44,12 @@ class _ScanPageState extends State<ScanPage> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Text(
-                  gs1 ? '把 GS1 二维码或 DataMatrix 放进画面，也可以粘贴内容。' : kBarcodeNote,
+                  gs1 ? '把包装上的日期码放进画面。认不出就贴在下面。' : '对准条码。认不出，就在下面打数字。',
+                  style: const TextStyle(height: 1.4),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  gs1 ? kBarcodeNote : '扫到之后再去认日期。',
                   style: const TextStyle(
                     color: AppColors.muted,
                     fontSize: 12,
@@ -55,7 +60,7 @@ class _ScanPageState extends State<ScanPage> {
                 TextField(
                   controller: _manual,
                   decoration: InputDecoration(
-                    hintText: gs1 ? '(11)251012(17)270412(10)LOT' : '手动输入条码',
+                    hintText: gs1 ? '把日期码贴在这里' : '条码数字',
                   ),
                 ),
                 const SizedBox(height: 12),
@@ -75,9 +80,36 @@ class _ScanPageState extends State<ScanPage> {
     const fallback = Center(
       child: Padding(
         padding: EdgeInsets.all(24),
-        child: Text(
-          '相机暂时不可用。可以在下面手动输入条码或 GS1 内容。',
-          textAlign: TextAlign.center,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            DecoratedBox(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.all(Radius.circular(28)),
+                boxShadow: softShadow,
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.all(Radius.circular(28)),
+                child: Image(
+                  image: AssetImage('assets/cats/cat-cream.jpg'),
+                  width: 120,
+                  height: 120,
+                  fit: BoxFit.cover,
+                ),
+              ),
+            ),
+            SizedBox(height: 16),
+            Text(
+              '相机这会儿没开',
+              style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
+            ),
+            SizedBox(height: 6),
+            Text(
+              '在下面打数字也行。',
+              textAlign: TextAlign.center,
+              style: TextStyle(color: AppColors.muted, height: 1.4),
+            ),
+          ],
         ),
       ),
     );

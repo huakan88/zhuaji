@@ -20,46 +20,62 @@ class CatsPage extends StatelessWidget {
           child: cat == null
               ? EmptyHint(
                   title: '还没有猫咪',
-                  body: '拍一张，写个名字。',
+                  body: '拍一张，起个名字就够了。',
                   action: '添加猫咪',
                   onAction: () => context.push('/cat-form'),
                 )
               : Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    GestureDetector(
-                      onTap: () => context.push('/cat?id=${cat.id}'),
-                      child: Row(
-                        children: [
-                          CatAvatar(
-                            path: cat.avatarPath,
-                            size: 64,
-                            ring: AppColors.coral,
-                          ),
-                          const SizedBox(width: 14),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  cat.name,
-                                  style: const TextStyle(
-                                    fontSize: 22,
-                                    fontWeight: FontWeight.w700,
-                                  ),
-                                ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  ageLabel(cat.birthday, app.now),
-                                  style: const TextStyle(
-                                    color: AppColors.muted,
-                                    fontSize: 13,
-                                  ),
-                                ),
-                              ],
+                    SoftCard(
+                      radius: Radii.xl,
+                      child: InkWell(
+                        onTap: () => context.push('/cat?id=${cat.id}'),
+                        child: Row(
+                          children: [
+                            CatAvatar(
+                              path: cat.avatarPath,
+                              size: 72,
+                              ring: AppColors.coral,
+                              selected: true,
                             ),
-                          ),
-                        ],
+                            const SizedBox(width: 14),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    cat.name,
+                                    style: const TextStyle(
+                                      fontSize: 22,
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    ageLabel(cat.birthday, app.now),
+                                    style: const TextStyle(
+                                      color: AppColors.muted,
+                                      fontSize: 13,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  const Text(
+                                    '点开头像看档案',
+                                    style: TextStyle(
+                                      color: AppColors.olive,
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const Icon(
+                              Icons.chevron_right_rounded,
+                              color: AppColors.muted,
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                     const SizedBox(height: 16),
@@ -125,19 +141,42 @@ class CatsPage extends StatelessWidget {
                         },
                       ),
                     ),
-                    ListTile(
-                      contentPadding: EdgeInsets.zero,
-                      leading: const Icon(Icons.kitchen_outlined),
-                      title: const Text(
-                        '粮仓',
-                        style: TextStyle(fontWeight: FontWeight.w700),
+                    SoftCard(
+                      radius: Radii.xl,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
                       ),
-                      subtitle: const Text(
-                        '扫码和到期',
-                        style: TextStyle(color: AppColors.muted, fontSize: 12),
+                      child: ListTile(
+                        leading: Container(
+                          width: 40,
+                          height: 40,
+                          decoration: BoxDecoration(
+                            color: AppColors.tintCoral,
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                          child: const Icon(
+                            Icons.kitchen_outlined,
+                            color: AppColors.coralDeep,
+                          ),
+                        ),
+                        title: const Text(
+                          '粮仓',
+                          style: TextStyle(fontWeight: FontWeight.w700),
+                        ),
+                        subtitle: const Text(
+                          '看看还有哪袋要吃完',
+                          style: TextStyle(
+                            color: AppColors.muted,
+                            fontSize: 12,
+                          ),
+                        ),
+                        trailing: const Icon(
+                          Icons.chevron_right_rounded,
+                          color: AppColors.muted,
+                        ),
+                        onTap: () => context.push('/pantry'),
                       ),
-                      trailing: const Icon(Icons.chevron_right_rounded),
-                      onTap: () => context.push('/pantry'),
                     ),
                   ],
                 ),

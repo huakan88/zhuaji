@@ -101,11 +101,13 @@ class _CatFormPageState extends State<CatFormPage> {
               ),
             ],
           ),
-          const SizedBox(height: 8),
-          OutlinedButton(
-            onPressed: _avatar == null || _busy ? null : _recognize,
-            child: Text(_busy ? '正在识别…' : '识别毛色和大致品种'),
-          ),
+          if (_avatar != null) ...[
+            const SizedBox(height: 8),
+            OutlinedButton(
+              onPressed: _busy ? null : _recognize,
+              child: Text(_busy ? '正在看毛色…' : '再认一次毛色'),
+            ),
+          ],
           if (_hint != null) ...[
             const SizedBox(height: 8),
             Text(
@@ -131,7 +133,7 @@ class _CatFormPageState extends State<CatFormPage> {
           ),
           const SizedBox(height: 8),
           const Text(
-            '照片和名字就够了。',
+            '照片和名字就够了，下面的可以以后再补。',
             style: TextStyle(color: AppColors.muted, fontSize: 12),
           ),
           const SizedBox(height: 12),
@@ -173,11 +175,11 @@ class _CatFormPageState extends State<CatFormPage> {
             contentPadding: EdgeInsets.zero,
             title: const Text('生日'),
             subtitle: Text(
-              _birthday == null ? '可以跳过，年龄会按生日算' : formatDate(_birthday!),
+              _birthday == null ? '可以先不填，用滚轮点' : formatDate(_birthday!),
             ),
             trailing: const Icon(Icons.calendar_today_outlined, size: 18),
             onTap: () async {
-              final picked = await pickDate(
+              final picked = await pickDateWheel(
                 context,
                 _birthday ?? DateTime.now(),
               );
@@ -268,8 +270,7 @@ class _CatFormPageState extends State<CatFormPage> {
       if (suggestion.breedChoices.isNotEmpty) {
         _breedChoices = suggestion.breedChoices;
       }
-      _hint =
-          '${suggestion.detail} 置信度 ${(suggestion.confidence * 100).round()}%。来源：${suggestion.source == RecognitionSource.mlkit ? 'ML Kit' : '示例模型'}。';
+      _hint = '${suggestion.detail}。不对就点下面改。';
     });
   }
 

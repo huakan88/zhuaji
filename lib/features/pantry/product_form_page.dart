@@ -20,14 +20,12 @@ class ProductFormPage extends StatefulWidget {
 class _ProductFormPageState extends State<ProductFormPage> {
   late final TextEditingController _brand = TextEditingController();
   late final TextEditingController _name = TextEditingController();
-  late final TextEditingController _spec = TextEditingController(
-    text: '示例规格，请改成包装上的',
-  );
+  late final TextEditingController _spec = TextEditingController();
   late final TextEditingController _kcal = TextEditingController();
   late final TextEditingController _storage = TextEditingController(
-    text: '阴凉干燥处密封保存',
+    text: '阴凉干燥，封好袋口',
   );
-  late final TextEditingController _days = TextEditingController(text: '42');
+  late final TextEditingController _days = TextEditingController();
   FoodForm _form = FoodForm.dry;
 
   @override
@@ -70,26 +68,27 @@ class _ProductFormPageState extends State<ProductFormPage> {
             decoration: const InputDecoration(labelText: '规格'),
           ),
           const SizedBox(height: 12),
-          DropdownButtonFormField<FoodForm>(
-            initialValue: _form,
-            decoration: const InputDecoration(labelText: '形态'),
-            items: [
+          Wrap(
+            spacing: 8,
+            children: [
               for (final form in FoodForm.values)
-                DropdownMenuItem(value: form, child: Text(formLabel(form))),
+                ChoiceChip(
+                  label: Text(formLabel(form)),
+                  selected: _form == form,
+                  onSelected: (_) => setState(() {
+                    _form = form;
+                    if (form == FoodForm.wet) {
+                      _storage.text = '没开封放阴凉处。开了就放冰箱，尽快喂完。';
+                    }
+                  }),
+                ),
             ],
-            onChanged: (value) => setState(() {
-              _form = value ?? _form;
-              if (_form == FoodForm.wet) {
-                _days.text = '2';
-                _storage.text = '未开封阴凉保存。开封后冷藏并尽快喂完。';
-              }
-            }),
           ),
           const SizedBox(height: 12),
           TextField(
             controller: _kcal,
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            decoration: const InputDecoration(labelText: '每 100g 热量（可选，kcal）'),
+            decoration: const InputDecoration(labelText: '热量（可不填）'),
           ),
           const SizedBox(height: 12),
           TextField(
@@ -102,7 +101,10 @@ class _ProductFormPageState extends State<ProductFormPage> {
             controller: _days,
             keyboardType: TextInputType.number,
             inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-            decoration: const InputDecoration(labelText: '开封后建议天数'),
+            decoration: const InputDecoration(
+              labelText: '开封后几天',
+              hintText: '包装没写就空着',
+            ),
           ),
           const SizedBox(height: 20),
           FilledButton(onPressed: _save, child: const Text('保存并登记')),
@@ -116,7 +118,7 @@ class _ProductFormPageState extends State<ProductFormPage> {
       showMessage(context, '品牌和名称都要填');
       return;
     }
-    final days = int.tryParse(_days.text) ?? 42;
+    final days = int.tryParse(_days.text) ?? 0;
     final app = AppScope.of<AppController>(context);
     final id = await app.saveProduct(
       FoodDraft(

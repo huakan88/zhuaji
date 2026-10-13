@@ -9,12 +9,7 @@ import '../../domain/models.dart';
 import '../../state/app_controller.dart';
 
 Future<DateTime?> pickDate(BuildContext context, DateTime initial) {
-  return showDatePicker(
-    context: context,
-    initialDate: initial,
-    firstDate: DateTime(2000),
-    lastDate: DateTime(2100),
-  );
+  return pickDateWheel(context, initial);
 }
 
 Future<void> showWeightSheet(BuildContext context) async {
@@ -120,24 +115,21 @@ Future<void> showVaccineSheet(
               controller: name,
               decoration: const InputDecoration(labelText: '名称'),
             ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: clinic,
-              decoration: const InputDecoration(labelText: '医院（可选）'),
-            ),
-            const SizedBox(height: 12),
             _dateTile('接种日期', given, () async {
               final picked = await pickDate(context, given);
-              if (picked != null) setState(() => given = picked);
+              if (picked != null) {
+                setState(() {
+                  given = picked;
+                  if (existing == null) {
+                    due = nextVaccineDate(cat.birthday, given);
+                  }
+                });
+              }
             }),
             _dateTile('下次日期', due, () async {
               final picked = await pickDate(context, due);
               if (picked != null) setState(() => due = picked);
             }),
-            TextField(
-              controller: notes,
-              decoration: const InputDecoration(labelText: '备注'),
-            ),
           ],
         ),
       ),
@@ -190,6 +182,24 @@ Future<void> showDewormSheet(
               ],
               selected: {kind},
               onSelectionChanged: (value) => setState(() => kind = value.first),
+            ),
+            const SizedBox(height: 12),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Wrap(
+                spacing: 8,
+                children: [
+                  for (final label in ['大宠爱', '博来恩', '海乐妙'])
+                    ChoiceChip(
+                      label: Text(label),
+                      selected: product.text == label,
+                      onSelected: (_) {
+                        product.text = label;
+                        setState(() {});
+                      },
+                    ),
+                ],
+              ),
             ),
             const SizedBox(height: 12),
             TextField(
@@ -257,6 +267,25 @@ Future<void> showVisitSheet(BuildContext context, {VetRecord? existing}) async {
             TextField(
               controller: clinic,
               decoration: const InputDecoration(labelText: '医院'),
+            ),
+            const SizedBox(height: 12),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  for (final label in ['体检', '疫苗', '不吃饭', '呕吐'])
+                    ChoiceChip(
+                      label: Text(label),
+                      selected: reason.text == label,
+                      onSelected: (_) {
+                        reason.text = label;
+                        setState(() {});
+                      },
+                    ),
+                ],
+              ),
             ),
             const SizedBox(height: 12),
             TextField(
@@ -393,13 +422,29 @@ Future<void> showWaterSheet(BuildContext context) async {
     await _sheet(
       context,
       title: '记录饮水',
-      child: TextField(
-        controller: amount,
-        keyboardType: const TextInputType.numberWithOptions(decimal: true),
-        decoration: const InputDecoration(
-          labelText: '大约喝了多少毫升',
-          hintText: '例如 180',
-        ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Wrap(
+            spacing: 8,
+            children: [
+              for (final label in ['50', '100', '180'])
+                ActionChip(
+                  label: Text('$label ml'),
+                  onPressed: () => amount.text = label,
+                ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          TextField(
+            controller: amount,
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            decoration: const InputDecoration(
+              labelText: '大约喝了多少毫升',
+              hintText: '点上面，或自己填',
+            ),
+          ),
+        ],
       ),
       onSubmit: () async {
         final value = double.tryParse(amount.text.trim());
