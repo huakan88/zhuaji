@@ -45,8 +45,9 @@ class _AppShellState extends State<AppShell> {
           : widget.shell,
       bottomNavigationBar: showBar
           ? NavigationBar(
-              height: 68,
-              backgroundColor: Colors.white,
+              height: 64,
+              elevation: 0,
+              backgroundColor: AppColors.background,
               indicatorColor: AppColors.tintCoral,
               selectedIndex: widget.shell.currentIndex,
               labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,

@@ -45,23 +45,13 @@ class _DiseaseLibraryPageState extends State<DiseaseLibraryPage> {
     ];
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(title: const Text('疾病养护')),
+      appBar: AppBar(title: const Text('养护')),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
         children: [
-          const Text('先看和这只猫有关的。看不懂就拿去问医生。', style: TextStyle(height: 1.4)),
-          const SizedBox(height: 8),
-          const Text(
-            '仅供参考，请遵医嘱。',
-            style: TextStyle(
-              color: AppColors.olive,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-          const SizedBox(height: 12),
           TextField(
             decoration: const InputDecoration(
-              labelText: '搜索疾病',
+              labelText: '搜索',
               hintText: '肾病、口炎',
             ),
             onChanged: (value) => setState(() => _query = value),
@@ -90,43 +80,39 @@ class _DiseaseLibraryPageState extends State<DiseaseLibraryPage> {
             )
           else
             for (final disease in items) ...[
-              SoftCard(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 14,
-                  vertical: 4,
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                title: Text(
+                  disease.name,
+                  style: const TextStyle(fontWeight: FontWeight.w700),
                 ),
-                child: ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  title: Text(
-                    disease.name,
-                    style: const TextStyle(fontWeight: FontWeight.w700),
-                  ),
-                  subtitle: Text(
-                    disease.summary,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      color: AppColors.muted,
-                      height: 1.35,
-                    ),
-                  ),
-                  trailing: const Icon(Icons.chevron_right_rounded),
-                  onTap: () => context.push('/disease?id=${disease.id}'),
+                trailing: const Icon(
+                  Icons.chevron_right_rounded,
+                  color: AppColors.muted,
+                ),
+                onTap: () => context.push('/disease?id=${disease.id}'),
+              ),
+              const Divider(height: 1),
+            ],
+          ExpansionTile(
+            title: const Text('更多'),
+            tilePadding: EdgeInsets.zero,
+            children: const [
+              Text(
+                kGuidelineSources,
+                style: TextStyle(
+                  color: AppColors.muted,
+                  fontSize: 12,
+                  height: 1.45,
                 ),
               ),
-              const SizedBox(height: 8),
             ],
+          ),
           const SizedBox(height: 8),
           const Text(
-            kGuidelineSources,
-            style: TextStyle(
-              color: AppColors.muted,
-              fontSize: 12,
-              height: 1.45,
-            ),
+            '仅供参考，请遵医嘱。',
+            style: TextStyle(color: AppColors.muted, fontSize: 12),
           ),
-          const SizedBox(height: 12),
-          const DisclaimerBanner(),
         ],
       ),
     );
@@ -143,7 +129,7 @@ class DiseaseDetailPage extends StatelessWidget {
     final disease = diseaseById(diseaseId);
     if (disease == null) {
       return Scaffold(
-        appBar: AppBar(title: const Text('疾病养护')),
+        appBar: AppBar(title: const Text('养护')),
         body: const Center(child: Text('没有这种病')),
       );
     }
@@ -156,47 +142,22 @@ class DiseaseDetailPage extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
         children: [
-          const Text('家里先记着，怎么治听医生的。', style: TextStyle(height: 1.4)),
-          const SizedBox(height: 8),
-          const Text(
-            '仅供参考，请遵医嘱。',
-            style: TextStyle(
-              color: AppColors.olive,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-          const SizedBox(height: 8),
           Text(disease.summary, style: const TextStyle(height: 1.45)),
-          const SizedBox(height: 8),
-          Text(
-            '出处：${disease.sources}',
-            style: const TextStyle(
-              color: AppColors.olive,
-              fontSize: 12,
-              height: 1.4,
-            ),
-          ),
           const SizedBox(height: 12),
-          SoftCard(
-            color: AppColors.tintCoral,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  '需要立即就医',
-                  style: TextStyle(fontWeight: FontWeight.w700),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                '需要立即就医',
+                style: TextStyle(fontWeight: FontWeight.w700),
+              ),
+              const SizedBox(height: 8),
+              for (final flag in disease.redFlags)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 4),
+                  child: Text('· $flag', style: const TextStyle(height: 1.35)),
                 ),
-                const SizedBox(height: 8),
-                for (final flag in disease.redFlags)
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 4),
-                    child: Text(
-                      '· $flag',
-                      style: const TextStyle(height: 1.35),
-                    ),
-                  ),
-              ],
-            ),
+            ],
           ),
           const SizedBox(height: 12),
           if (cat == null)
@@ -215,21 +176,15 @@ class DiseaseDetailPage extends StatelessWidget {
           if (cat != null) ...[
             Row(
               children: [
-                Expanded(
-                  child: OutlinedButton(
-                    onPressed: () => showWeightSheet(context),
-                    child: const Text('记体重'),
-                  ),
+                TextButton(
+                  onPressed: () => showWeightSheet(context),
+                  child: const Text('记体重'),
                 ),
-                if (disease.trackWater) ...[
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: () => showWaterSheet(context),
-                      child: const Text('记饮水'),
-                    ),
+                if (disease.trackWater)
+                  TextButton(
+                    onPressed: () => showWaterSheet(context),
+                    child: const Text('记饮水'),
                   ),
-                ],
               ],
             ),
             const SizedBox(height: 8),
@@ -260,17 +215,43 @@ class DiseaseDetailPage extends StatelessWidget {
                 style: const TextStyle(fontWeight: FontWeight.w600),
               ),
           ],
-          const SizedBox(height: 12),
-          const Text(
-            kGuidelineSources,
-            style: TextStyle(
-              color: AppColors.muted,
-              fontSize: 12,
-              height: 1.45,
-            ),
+          ExpansionTile(
+            title: const Text('更多'),
+            tilePadding: EdgeInsets.zero,
+            children: [
+              Text(
+                '出处：${disease.sources}',
+                style: const TextStyle(
+                  color: AppColors.muted,
+                  fontSize: 12,
+                  height: 1.4,
+                ),
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                kGuidelineSources,
+                style: TextStyle(
+                  color: AppColors.muted,
+                  fontSize: 12,
+                  height: 1.45,
+                ),
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                kDisclaimer,
+                style: TextStyle(
+                  color: AppColors.muted,
+                  fontSize: 12,
+                  height: 1.45,
+                ),
+              ),
+            ],
           ),
-          const SizedBox(height: 12),
-          const DisclaimerBanner(),
+          const SizedBox(height: 8),
+          const Text(
+            '仅供参考，请遵医嘱。',
+            style: TextStyle(color: AppColors.muted, fontSize: 12),
+          ),
         ],
       ),
     );
@@ -278,16 +259,14 @@ class DiseaseDetailPage extends StatelessWidget {
 
   Widget _block(String title, String body) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 10),
-      child: SoftCard(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(title, style: const TextStyle(fontWeight: FontWeight.w700)),
-            const SizedBox(height: 6),
-            Text(body, style: const TextStyle(height: 1.45)),
-          ],
-        ),
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(title, style: const TextStyle(fontWeight: FontWeight.w700)),
+          const SizedBox(height: 4),
+          Text(body, style: const TextStyle(height: 1.4)),
+        ],
       ),
     );
   }
@@ -315,84 +294,80 @@ class _MarkCardState extends State<_MarkCard> {
         (marked == null || marked.stageLabel.isEmpty
             ? null
             : marked.stageLabel);
-    return SoftCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          marked == null
+              ? '还没记在${widget.catName}名下'
+              : '已经记在${widget.catName}名下',
+          style: const TextStyle(fontWeight: FontWeight.w700),
+        ),
+        if (marked != null) ...[
+          const SizedBox(height: 4),
           Text(
-            marked == null
-                ? '还没记在${widget.catName}名下'
-                : '已经记在${widget.catName}名下',
-            style: const TextStyle(fontWeight: FontWeight.w700),
-          ),
-          if (marked != null) ...[
-            const SizedBox(height: 4),
-            Text(
-              '${formatDate(marked.diagnosedOn)}'
-              '${marked.stageLabel.isEmpty ? '' : ' · ${marked.stageLabel}'}',
-              style: const TextStyle(color: AppColors.muted),
-            ),
-          ],
-          if (widget.disease.stages.isNotEmpty) ...[
-            const SizedBox(height: 8),
-            DropdownButtonFormField<String>(
-              initialValue: widget.disease.stages.contains(stage)
-                  ? stage
-                  : null,
-              decoration: const InputDecoration(labelText: '医生说的分期'),
-              items: [
-                for (final item in widget.disease.stages)
-                  DropdownMenuItem(value: item, child: Text(item)),
-              ],
-              onChanged: (value) => setState(() => _stage = value),
-            ),
-          ],
-          const SizedBox(height: 10),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              FilledButton(
-                onPressed: () async {
-                  await app.markDisease(
-                    diseaseId: widget.disease.id,
-                    stageLabel: stage ?? marked?.stageLabel ?? '',
-                  );
-                  if (!context.mounted) return;
-                  showMessage(context, '已记到${widget.catName}的健康页，并安排复查提醒');
-                },
-                child: Text(marked == null ? '标记确诊' : '更新分期'),
-              ),
-              if (marked != null)
-                OutlinedButton(
-                  onPressed: () async {
-                    final picked = await pickDate(
-                      context,
-                      marked.nextRecheck ?? app.now,
-                    );
-                    if (picked == null) return;
-                    await app.setRecheck(marked.id, picked);
-                    if (!context.mounted) return;
-                    showMessage(context, '复查日已改成 ${formatDate(picked)}');
-                  },
-                  child: const Text('改复查日'),
-                ),
-              if (marked != null)
-                TextButton(
-                  onPressed: () async {
-                    if (await confirmDelete(
-                      context,
-                      '取消${widget.catName}的这项确诊标记？',
-                    )) {
-                      await app.removeCondition(marked.id);
-                    }
-                  },
-                  child: const Text('取消标记'),
-                ),
-            ],
+            '${formatDate(marked.diagnosedOn)}'
+            '${marked.stageLabel.isEmpty ? '' : ' · ${marked.stageLabel}'}',
+            style: const TextStyle(color: AppColors.muted),
           ),
         ],
-      ),
+        if (widget.disease.stages.isNotEmpty) ...[
+          const SizedBox(height: 8),
+          DropdownButtonFormField<String>(
+            initialValue: widget.disease.stages.contains(stage) ? stage : null,
+            decoration: const InputDecoration(labelText: '医生说的分期'),
+            items: [
+              for (final item in widget.disease.stages)
+                DropdownMenuItem(value: item, child: Text(item)),
+            ],
+            onChanged: (value) => setState(() => _stage = value),
+          ),
+        ],
+        const SizedBox(height: 10),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            FilledButton(
+              onPressed: () async {
+                await app.markDisease(
+                  diseaseId: widget.disease.id,
+                  stageLabel: stage ?? marked?.stageLabel ?? '',
+                );
+                if (!context.mounted) return;
+                showMessage(context, '已记到${widget.catName}的健康页，并安排复查提醒');
+              },
+              child: Text(marked == null ? '标记确诊' : '更新分期'),
+            ),
+            if (marked != null)
+              OutlinedButton(
+                onPressed: () async {
+                  final picked = await pickDate(
+                    context,
+                    marked.nextRecheck ?? app.now,
+                  );
+                  if (picked == null) return;
+                  await app.setRecheck(marked.id, picked);
+                  if (!context.mounted) return;
+                  showMessage(context, '复查日已改成 ${formatDate(picked)}');
+                },
+                child: const Text('改复查日'),
+              ),
+            if (marked != null)
+              TextButton(
+                onPressed: () async {
+                  if (await confirmDelete(
+                    context,
+                    '取消${widget.catName}的这项确诊标记？',
+                  )) {
+                    await app.removeCondition(marked.id);
+                  }
+                },
+                child: const Text('取消标记'),
+              ),
+          ],
+        ),
+      ],
     );
   }
 }

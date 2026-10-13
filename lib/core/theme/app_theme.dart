@@ -133,8 +133,7 @@ ThemeData buildAppTheme() {
       height: 68,
       backgroundColor: Colors.white,
       indicatorColor: AppColors.tintCoral,
-      elevation: 8,
-      shadowColor: const Color(0x142C2A28),
+      elevation: 0,
       labelTextStyle: WidgetStateProperty.resolveWith((states) {
         final selected = states.contains(WidgetState.selected);
         return text.labelMedium?.copyWith(

@@ -63,7 +63,8 @@ void main() {
     expect(find.text('疫苗'), findsWidgets);
     await tapText(tester, '今天');
 
-    await tapText(tester, '扫条码');
+    await tapText(tester, '扫码');
+    await tapText(tester, '手输');
     expect(find.text('使用这段内容'), findsOneWidget);
     await back(tester);
   });
@@ -160,6 +161,7 @@ void main() {
     expect(find.textContaining('2027年4月12日'), findsOneWidget);
 
     await tapText(tester, '扫描 GS1 日期码');
+    await tapText(tester, '手输');
     expect(find.text('使用这段内容'), findsOneWidget);
     await enter(tester, find.byType(TextField).last, '');
     await tapText(tester, '使用这段内容');
@@ -195,7 +197,8 @@ void main() {
     expect(find.text('登记到粮仓'), findsOneWidget);
     await back(tester);
 
-    await tapText(tester, '扫条码');
+    await tapText(tester, '扫码');
+    await tapText(tester, '手输');
     await enter(tester, find.byType(TextField).last, '6900000000000');
     await tapText(tester, '使用这段内容');
     expect(find.text('添加猫粮'), findsOneWidget);
@@ -214,22 +217,21 @@ void main() {
     await tapText(tester, '我的');
     await tapText(tester, '橘座');
     expect(find.text('记录天数'), findsOneWidget);
-    await tapText(tester, '编辑资料');
+    await tapText(tester, '编辑');
     expect(find.text('名字'), findsOneWidget);
     await back(tester);
     await tapText(tester, '体重');
     expect(find.text('记体重'), findsOneWidget);
 
     await tapText(tester, '我的');
-    await tapText(tester, '编辑资料');
-    expect(find.text('名字'), findsOneWidget);
+    await tapText(tester, '添加');
     await back(tester);
     await tapText(tester, '添加');
-    expect(find.text('新的猫咪'), findsOneWidget);
+    expect(find.text('建档'), findsOneWidget);
     await tapText(tester, '保存');
     expect(find.text('先写一个名字'), findsOneWidget);
     await tapText(tester, '拍照');
-    expect(find.text('新的猫咪'), findsOneWidget);
+    expect(find.text('建档'), findsOneWidget);
     expect(find.textContaining('没有打开相机或相册'), findsWidgets);
     await enterField(tester, '名字', '小黑');
     await tapText(tester, '保存');
@@ -271,10 +273,11 @@ void main() {
     await frames(tester);
 
     await tapText(tester, '今天');
-    await tapText(tester, '扫条码');
-    expect(find.text('扫描商品条码'), findsOneWidget);
+    await tapText(tester, '扫码');
+    expect(find.text('扫码'), findsWidgets);
     await back(tester);
     await tapText(tester, '健康');
+    await tapText(tester, '养护');
     await tapText(tester, '慢性肾病');
     await revealText(tester, '记饮水');
     await tapText(tester, '记饮水');

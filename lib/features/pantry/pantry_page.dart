@@ -47,15 +47,12 @@ class _PantryPageState extends State<PantryPage> {
                 ),
                 FilledButton(
                   onPressed: () => context.push('/scan'),
-                  child: const Text('扫条码'),
+                  child: const Text('扫码'),
                 ),
               ],
             ),
             const SizedBox(height: 8),
-            const Text(
-              '扫一袋，到期前会提醒你。',
-              style: TextStyle(color: AppColors.muted, fontSize: 13),
-            ),
+            const SizedBox(height: 4),
             const SizedBox(height: Space.x4),
             SegmentedButton<bool>(
               segments: const [

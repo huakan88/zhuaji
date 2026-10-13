@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:maokangji/core/copy.dart';
 import 'package:maokangji/core/theme/app_theme.dart';
 import 'package:maokangji/core/widgets/common.dart';
 
@@ -12,8 +11,7 @@ void main() {
         home: const Scaffold(body: DisclaimerBanner()),
       ),
     );
-    expect(find.textContaining('不能替代执业兽医'), findsOneWidget);
-    expect(find.text(kDisclaimer), findsOneWidget);
+    expect(find.text('仅供参考，请遵医嘱。'), findsOneWidget);
   });
 
   testWidgets('food date card shows production, countdown and storage', (

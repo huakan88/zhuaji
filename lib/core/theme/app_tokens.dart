@@ -41,9 +41,7 @@ class Radii {
   static const xl = 28.0;
 }
 
-const softShadow = [
-  BoxShadow(color: Color(0x122C2A28), blurRadius: 22, offset: Offset(0, 10)),
-];
+const softShadow = <BoxShadow>[];
 
 const ringPalette = [
   AppColors.coral,

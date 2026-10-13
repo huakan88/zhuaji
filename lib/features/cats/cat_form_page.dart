@@ -78,7 +78,7 @@ class _CatFormPageState extends State<CatFormPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text(widget.catId == null ? '新的猫咪' : '编辑资料')),
+      appBar: AppBar(title: Text(widget.catId == null ? '建档' : '编辑')),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
         children: [
@@ -131,90 +131,98 @@ class _CatFormPageState extends State<CatFormPage> {
             controller: _name,
             decoration: const InputDecoration(labelText: '名字'),
           ),
-          const SizedBox(height: 8),
-          const Text(
-            '照片和名字就够了，下面的可以以后再补。',
-            style: TextStyle(color: AppColors.muted, fontSize: 12),
-          ),
           const SizedBox(height: 12),
-          const Text('性别', style: TextStyle(fontWeight: FontWeight.w700)),
-          const SizedBox(height: 8),
-          Wrap(
-            spacing: 8,
+          ExpansionTile(
+            title: const Text('更多'),
+            tilePadding: EdgeInsets.zero,
+            childrenPadding: const EdgeInsets.only(bottom: 8),
             children: [
-              for (final sex in CatSex.values)
-                ChoiceChip(
-                  label: Text(sexLabel(sex)),
-                  selected: _sex == sex,
-                  selectedColor: AppColors.coral,
-                  onSelected: (_) => setState(() => _sex = sex),
+              const Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  '性别',
+                  style: TextStyle(fontWeight: FontWeight.w700),
                 ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          const Text('绝育', style: TextStyle(fontWeight: FontWeight.w700)),
-          const SizedBox(height: 8),
-          Wrap(
-            spacing: 8,
-            children: [
-              ChoiceChip(
-                label: const Text('已绝育'),
-                selected: _neutered == true,
-                selectedColor: AppColors.coral,
-                onSelected: (_) => setState(() => _neutered = true),
               ),
-              ChoiceChip(
-                label: const Text('还没有'),
-                selected: _neutered == false,
-                selectedColor: AppColors.coral,
-                onSelected: (_) => setState(() => _neutered = false),
+              const SizedBox(height: 8),
+              Wrap(
+                spacing: 8,
+                children: [
+                  for (final sex in CatSex.values)
+                    ChoiceChip(
+                      label: Text(sexLabel(sex)),
+                      selected: _sex == sex,
+                      selectedColor: AppColors.coral,
+                      onSelected: (_) => setState(() => _sex = sex),
+                    ),
+                ],
               ),
-            ],
-          ),
-          ListTile(
-            contentPadding: EdgeInsets.zero,
-            title: const Text('生日'),
-            subtitle: Text(
-              _birthday == null ? '可以先不填，用滚轮点' : formatDate(_birthday!),
-            ),
-            trailing: const Icon(Icons.calendar_today_outlined, size: 18),
-            onTap: () async {
-              final picked = await pickDateWheel(
-                context,
-                _birthday ?? DateTime.now(),
-              );
-              if (picked != null) setState(() => _birthday = picked);
-            },
-          ),
-          const Text('毛色', style: TextStyle(fontWeight: FontWeight.w700)),
-          const SizedBox(height: 8),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              for (final coat in _coatChoices)
-                ChoiceChip(
-                  label: Text(coat),
-                  selected: _coat.text == coat,
-                  selectedColor: AppColors.coral,
-                  onSelected: (_) => setState(() => _coat.text = coat),
+              const SizedBox(height: 12),
+              const Text('绝育', style: TextStyle(fontWeight: FontWeight.w700)),
+              const SizedBox(height: 8),
+              Wrap(
+                spacing: 8,
+                children: [
+                  ChoiceChip(
+                    label: const Text('已绝育'),
+                    selected: _neutered == true,
+                    selectedColor: AppColors.coral,
+                    onSelected: (_) => setState(() => _neutered = true),
+                  ),
+                  ChoiceChip(
+                    label: const Text('还没有'),
+                    selected: _neutered == false,
+                    selectedColor: AppColors.coral,
+                    onSelected: (_) => setState(() => _neutered = false),
+                  ),
+                ],
+              ),
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                title: const Text('生日'),
+                subtitle: Text(
+                  _birthday == null ? '选填' : formatDate(_birthday!),
                 ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          const Text('大致品种', style: TextStyle(fontWeight: FontWeight.w700)),
-          const SizedBox(height: 8),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              for (final breed in _breedChoices)
-                ChoiceChip(
-                  label: Text(breed),
-                  selected: _breed.text == breed,
-                  selectedColor: AppColors.coral,
-                  onSelected: (_) => setState(() => _breed.text = breed),
-                ),
+                trailing: const Icon(Icons.calendar_today_outlined, size: 18),
+                onTap: () async {
+                  final picked = await pickDateWheel(
+                    context,
+                    _birthday ?? DateTime.now(),
+                  );
+                  if (picked != null) setState(() => _birthday = picked);
+                },
+              ),
+              const Text('毛色', style: TextStyle(fontWeight: FontWeight.w700)),
+              const SizedBox(height: 8),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  for (final coat in _coatChoices)
+                    ChoiceChip(
+                      label: Text(coat),
+                      selected: _coat.text == coat,
+                      selectedColor: AppColors.coral,
+                      onSelected: (_) => setState(() => _coat.text = coat),
+                    ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              const Text('大致品种', style: TextStyle(fontWeight: FontWeight.w700)),
+              const SizedBox(height: 8),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  for (final breed in _breedChoices)
+                    ChoiceChip(
+                      label: Text(breed),
+                      selected: _breed.text == breed,
+                      selectedColor: AppColors.coral,
+                      onSelected: (_) => setState(() => _breed.text = breed),
+                    ),
+                ],
+              ),
             ],
           ),
           const SizedBox(height: 20),

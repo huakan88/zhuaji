@@ -19,71 +19,45 @@ class CatsPage extends StatelessWidget {
           padding: const EdgeInsets.fromLTRB(20, 12, 20, 96),
           child: cat == null
               ? EmptyHint(
-                  title: '还没有猫咪',
-                  body: '拍一张，起个名字就够了。',
-                  action: '添加猫咪',
+                  title: '还没有猫',
+                  body: '拍一张，写名字。',
+                  action: '添加',
                   onAction: () => context.push('/cat-form'),
                 )
               : Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    SoftCard(
-                      radius: Radii.xl,
-                      child: InkWell(
-                        onTap: () => context.push('/cat?id=${cat.id}'),
-                        child: Row(
-                          children: [
-                            CatAvatar(
-                              path: cat.avatarPath,
-                              size: 72,
-                              ring: AppColors.coral,
-                              selected: true,
-                            ),
-                            const SizedBox(width: 14),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    cat.name,
-                                    style: const TextStyle(
-                                      fontSize: 22,
-                                      fontWeight: FontWeight.w700,
-                                    ),
+                    InkWell(
+                      onTap: () => context.push('/cat?id=${cat.id}'),
+                      child: Row(
+                        children: [
+                          CatAvatar(path: cat.avatarPath, size: 56),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  cat.name,
+                                  style: const TextStyle(
+                                    fontSize: 22,
+                                    fontWeight: FontWeight.w700,
                                   ),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    ageLabel(cat.birthday, app.now),
-                                    style: const TextStyle(
-                                      color: AppColors.muted,
-                                      fontSize: 13,
-                                    ),
+                                ),
+                                Text(
+                                  ageLabel(cat.birthday, app.now),
+                                  style: const TextStyle(
+                                    color: AppColors.muted,
+                                    fontSize: 13,
                                   ),
-                                  const SizedBox(height: 4),
-                                  const Text(
-                                    '点开头像看档案',
-                                    style: TextStyle(
-                                      color: AppColors.olive,
-                                      fontSize: 12,
-                                    ),
-                                  ),
-                                ],
-                              ),
+                                ),
+                              ],
                             ),
-                            const Icon(
-                              Icons.chevron_right_rounded,
-                              color: AppColors.muted,
-                            ),
-                          ],
-                        ),
+                          ),
+                        ],
                       ),
                     ),
-                    const SizedBox(height: 16),
-                    FilledButton(
-                      onPressed: () => context.push('/cat-form?id=${cat.id}'),
-                      child: const Text('编辑资料'),
-                    ),
-                    const SizedBox(height: 18),
+                    const SizedBox(height: 20),
                     SizedBox(
                       height: 96,
                       child: ListView.separated(
@@ -141,42 +115,10 @@ class CatsPage extends StatelessWidget {
                         },
                       ),
                     ),
-                    SoftCard(
-                      radius: Radii.xl,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 4,
-                      ),
-                      child: ListTile(
-                        leading: Container(
-                          width: 40,
-                          height: 40,
-                          decoration: BoxDecoration(
-                            color: AppColors.tintCoral,
-                            borderRadius: BorderRadius.circular(14),
-                          ),
-                          child: const Icon(
-                            Icons.kitchen_outlined,
-                            color: AppColors.coralDeep,
-                          ),
-                        ),
-                        title: const Text(
-                          '粮仓',
-                          style: TextStyle(fontWeight: FontWeight.w700),
-                        ),
-                        subtitle: const Text(
-                          '看看还有哪袋要吃完',
-                          style: TextStyle(
-                            color: AppColors.muted,
-                            fontSize: 12,
-                          ),
-                        ),
-                        trailing: const Icon(
-                          Icons.chevron_right_rounded,
-                          color: AppColors.muted,
-                        ),
-                        onTap: () => context.push('/pantry'),
-                      ),
+                    const Spacer(),
+                    FilledButton(
+                      onPressed: () => context.push('/pantry'),
+                      child: const Text('粮仓'),
                     ),
                   ],
                 ),

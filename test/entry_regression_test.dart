@@ -35,11 +35,12 @@ void main() {
 
     await tapText(tester, '橘座');
     await tapText(tester, '添加猫咪');
-    expect(find.text('新的猫咪'), findsOneWidget);
+    expect(find.text('建档'), findsOneWidget);
+    await tapText(tester, '更多');
     await tapText(tester, '生日');
     expect(find.text('取消'), findsWidgets);
     await tapText(tester, '取消');
-    expect(find.text('新的猫咪'), findsOneWidget);
+    expect(find.text('建档'), findsOneWidget);
     expect(find.text('已绝育'), findsOneWidget);
     await tapText(tester, '已绝育');
     await back(tester);
@@ -50,6 +51,7 @@ void main() {
     await back(tester);
 
     await tapText(tester, '健康');
+    await tapText(tester, '养护');
     await tapText(tester, '慢性肾病');
     await revealText(tester, '记饮水');
     await tapText(tester, '记饮水');
@@ -67,8 +69,9 @@ void main() {
   ) async {
     await boot(tester, controller);
     await tapText(tester, '健康');
-    await tapText(tester, '按年龄体检');
-    expect(find.textContaining('的体检'), findsOneWidget);
+    await tapText(tester, '体检');
+    expect(find.text('体检'), findsWidgets);
+    await revealText(tester, '仅供参考，请遵医嘱。');
     expect(find.text('仅供参考，请遵医嘱。'), findsWidgets);
     await revealText(tester, '删除最近一条');
     await tapText(tester, '删除最近一条');
@@ -79,8 +82,8 @@ void main() {
     );
     await back(tester);
 
-    await tapText(tester, '疾病养护');
-    expect(find.text('搜索疾病'), findsOneWidget);
+    await tapText(tester, '养护');
+    expect(find.text('搜索'), findsOneWidget);
     await tapText(tester, '慢性肾病');
     expect(find.text('需要立即就医'), findsOneWidget);
     await tapText(tester, '改复查日');
@@ -95,7 +98,7 @@ void main() {
     expect(find.text('记录天数'), findsOneWidget);
     await back(tester);
     await tapText(tester, '健康');
-    await tapText(tester, '疾病养护');
+    await tapText(tester, '养护');
     await tapText(tester, '看其他疾病');
     expect(find.text('糖尿病'), findsOneWidget);
   });

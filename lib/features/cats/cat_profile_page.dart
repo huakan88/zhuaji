@@ -144,7 +144,7 @@ class CatProfilePage extends StatelessWidget {
               children: [
                 FilledButton(
                   onPressed: () => context.push('/cat-form?id=${cat.id}'),
-                  child: const Text('编辑资料'),
+                  child: const Text('编辑'),
                 ),
                 TextButton(
                   onPressed: () async {

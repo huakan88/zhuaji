@@ -3,7 +3,6 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 
 import '../../domain/dates.dart';
-import '../copy.dart';
 import '../format.dart';
 import '../theme/app_tokens.dart';
 import 'paw_icon.dart';
@@ -40,7 +39,7 @@ class SoftCard extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(radius),
-        boxShadow: softShadow,
+        border: Border.all(color: AppColors.line),
       ),
       child: Material(
         color: color,
@@ -126,14 +125,14 @@ class DisclaimerBanner extends StatelessWidget {
         borderRadius: BorderRadius.circular(Radii.l),
       ),
       child: const Text(
-        kDisclaimer,
-        style: TextStyle(color: AppColors.olive, height: 1.45, fontSize: 12),
+        '仅供参考，请遵医嘱。',
+        style: TextStyle(color: AppColors.muted, fontSize: 12),
       ),
     );
   }
 }
 
-class EmptyHint extends StatefulWidget {
+class EmptyHint extends StatelessWidget {
   const EmptyHint({
     required this.title,
     required this.body,
@@ -148,73 +147,38 @@ class EmptyHint extends StatefulWidget {
   final VoidCallback? onAction;
 
   @override
-  State<EmptyHint> createState() => _EmptyHintState();
-}
-
-class _EmptyHintState extends State<EmptyHint>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _motion = AnimationController(
-    vsync: this,
-    duration: const Duration(milliseconds: 280),
-  )..forward();
-
-  @override
-  void dispose() {
-    _motion.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    return FadeTransition(
-      opacity: CurvedAnimation(parent: _motion, curve: Curves.easeOut),
-      child: SlideTransition(
-        position: Tween<Offset>(
-          begin: const Offset(0, 0.04),
-          end: Offset.zero,
-        ).animate(CurvedAnimation(parent: _motion, curve: Curves.easeOut)),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: Space.x6),
-          child: Column(
-            children: [
-              DecoratedBox(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(Radii.xl),
-                  boxShadow: softShadow,
-                ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(Radii.xl),
-                  child: Image.asset(
-                    'assets/cats/cat-diary.jpg',
-                    width: 128,
-                    height: 128,
-                    fit: BoxFit.cover,
-                  ),
-                ),
-              ),
-              const SizedBox(height: Space.x4),
-              Text(
-                widget.title,
-                textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.titleMedium
-                    ?.copyWith(fontWeight: FontWeight.w700),
-              ),
-              const SizedBox(height: Space.x2),
-              Text(
-                widget.body,
-                textAlign: TextAlign.center,
-                style: const TextStyle(color: AppColors.muted, height: 1.45),
-              ),
-              if (widget.action != null) ...[
-                const SizedBox(height: Space.x4),
-                FilledButton(
-                  onPressed: widget.onAction,
-                  child: Text(widget.action!),
-                ),
-              ],
-            ],
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: Space.x6),
+      child: Column(
+        children: [
+          ClipRRect(
+            borderRadius: BorderRadius.circular(Radii.xl),
+            child: Image.asset(
+              'assets/cats/cat-icon.jpg',
+              width: 72,
+              height: 72,
+              fit: BoxFit.cover,
+            ),
           ),
-        ),
+          const SizedBox(height: Space.x4),
+          Text(
+            title,
+            textAlign: TextAlign.center,
+            style: Theme.of(context).textTheme.titleMedium
+                ?.copyWith(fontWeight: FontWeight.w700),
+          ),
+          const SizedBox(height: Space.x2),
+          Text(
+            body,
+            textAlign: TextAlign.center,
+            style: const TextStyle(color: AppColors.muted, height: 1.4),
+          ),
+          if (action != null) ...[
+            const SizedBox(height: Space.x4),
+            FilledButton(onPressed: onAction, child: Text(action!)),
+          ],
+        ],
       ),
     );
   }
@@ -395,10 +359,7 @@ class FoodDateCard extends StatelessWidget {
                 : '${countdownOf(openDue, now)}（建议 ${formatDate(openDue)} 前）',
           ),
           const SizedBox(height: Space.x2),
-          const Text(
-            '到期前 30 天、7 天会提醒你。包装写了开封天数，才会倒计时。',
-            style: TextStyle(color: AppColors.muted, fontSize: 12, height: 1.4),
-          ),
+          const SizedBox(height: 4),
         ],
       ),
     );
