@@ -34,15 +34,27 @@ class PhotoPage extends StatelessWidget {
           if (oldest != null && newest != null)
             Row(
               children: [
-                Expanded(child: _shot('较早', oldest.path, oldest.takenAt, oldest.weightKg)),
+                Expanded(
+                  child: _shot(
+                    '较早',
+                    oldest.path,
+                    oldest.takenAt,
+                    oldest.weightKg,
+                  ),
+                ),
                 const SizedBox(width: 12),
-                Expanded(child: _shot('最近', newest.path, newest.takenAt, newest.weightKg)),
+                Expanded(
+                  child: _shot(
+                    '最近',
+                    newest.path,
+                    newest.takenAt,
+                    newest.weightKg,
+                  ),
+                ),
               ],
             )
           else
-            const SoftCard(
-              child: Text('两张以上的照片才会并排对比。'),
-            ),
+            const SoftCard(child: Text('两张以上的照片才会并排对比。')),
           const SizedBox(height: Space.x4),
           FilledButton(
             onPressed: () => _add(context, app),
@@ -68,7 +80,10 @@ class PhotoPage extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 8),
-                    Text(formatDate(photo.takenAt), style: const TextStyle(fontWeight: FontWeight.w700)),
+                    Text(
+                      formatDate(photo.takenAt),
+                      style: const TextStyle(fontWeight: FontWeight.w700),
+                    ),
                     Text(
                       '${photo.weightKg == null ? '' : '${photo.weightKg!.toStringAsFixed(2)} kg · '}${photo.note}',
                       style: const TextStyle(color: AppColors.muted),
@@ -108,7 +123,10 @@ class PhotoPage extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(label, style: const TextStyle(color: AppColors.muted, fontSize: 12)),
+          Text(
+            label,
+            style: const TextStyle(color: AppColors.muted, fontSize: 12),
+          ),
           const SizedBox(height: 8),
           ClipRRect(
             borderRadius: BorderRadius.circular(Radii.m),
@@ -117,7 +135,10 @@ class PhotoPage extends StatelessWidget {
           const SizedBox(height: 8),
           Text(formatDate(at), style: const TextStyle(fontSize: 12)),
           if (weight != null)
-            Text('${weight.toStringAsFixed(2)} kg', style: const TextStyle(fontSize: 12)),
+            Text(
+              '${weight.toStringAsFixed(2)} kg',
+              style: const TextStyle(fontSize: 12),
+            ),
         ],
       ),
     );
@@ -164,13 +185,21 @@ class PhotoPage extends StatelessWidget {
     );
     if (source == null) return;
     try {
-      final file = await ImagePicker().pickImage(source: source, maxWidth: 1600, imageQuality: 85);
+      final file = await ImagePicker().pickImage(
+        source: source,
+        maxWidth: 1600,
+        imageQuality: 85,
+      );
       if (file == null) {
         if (context.mounted) showMessage(context, '没有拿到照片，可以稍后再试');
         return;
       }
       final stored = await PhotoStore().persist(file.path);
-      await app.addPhoto(path: stored, weightKg: app.latestWeight?.weightKg, note: '体态记录');
+      await app.addPhoto(
+        path: stored,
+        weightKg: app.latestWeight?.weightKg,
+        note: '体态记录',
+      );
     } catch (_) {
       if (context.mounted) {
         showMessage(context, '没有拿到照片，可以稍后再试');

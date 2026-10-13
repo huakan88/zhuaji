@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:maokangji/core/widgets/common.dart';
-import 'package:maokangji/core/widgets/paw_icon.dart';
 import 'package:maokangji/data/db/app_database.dart';
 import 'package:maokangji/data/repositories/drift_care_repository.dart';
 import 'package:maokangji/services/coat_recognizer.dart';
@@ -43,54 +41,27 @@ void main() {
     expect(find.text('取消'), findsWidgets);
     await tapText(tester, '取消');
     expect(find.text('新的猫咪'), findsOneWidget);
-    final neuter = tester.widget<SwitchListTile>(
-      find.widgetWithText(SwitchListTile, '已绝育'),
-    );
-    expect(neuter.onChanged, isNotNull);
+    expect(find.text('已绝育'), findsOneWidget);
+    await tapText(tester, '已绝育');
     await back(tester);
 
-    await revealText(tester, '全部');
-    final pageScroll = tester.state<ScrollableState>(downScrollables().first);
-    for (
-      var step = 0;
-      step < 6 &&
-          find
-              .ancestor(
-                of: find.byType(CatImage),
-                matching: find.byType(GestureDetector),
-              )
-              .evaluate()
-              .isEmpty;
-      step++
-    ) {
-      pageScroll.position.jumpTo(
-        (pageScroll.position.pixels + 180).clamp(
-          0,
-          pageScroll.position.maxScrollExtent,
-        ),
-      );
-      await tester.pump();
-    }
-    final diary = find.ancestor(
-      of: find.byType(CatImage),
-      matching: find.byType(GestureDetector),
-    );
-    expect(diary, findsWidgets);
-    tester.widget<GestureDetector>(diary.first).onTap?.call();
-    await frames(tester);
+    await tapText(tester, '我的');
+    await tapText(tester, '体态对比');
     expect(find.textContaining('的体态'), findsOneWidget);
     await back(tester);
 
-    await tapText(tester, '首页');
     await tapText(tester, '粮仓');
     expect(find.text('在库'), findsOneWidget);
-    await tapText(tester, '我的');
+    await back(tester);
     expect(find.text('体检建议'), findsOneWidget);
 
-    await tapText(tester, '首页');
-    await tester.tap(find.byType(PawIcon).last);
+    await tapText(tester, '今天');
+    await tapText(tester, '健康');
+    await revealText(tester, '成长');
+    await tester.tap(find.byKey(const Key('tab-健康')));
     await frames(tester);
-    await tapText(tester, '记饮水');
+    await revealText(tester, '记饮水 · 今日 180 ml');
+    await tapText(tester, '记饮水 · 今日 180 ml');
     expect(find.text('记录饮水'), findsOneWidget);
     await enterField(tester, '大约喝了多少毫升', '0');
     await tapText(tester, '保存');
@@ -137,6 +108,7 @@ void main() {
     expect(find.textContaining('成年'), findsWidgets);
     await back(tester);
     await tapText(tester, '疾病养护');
+    await tapText(tester, '看其他疾病');
     expect(find.text('糖尿病'), findsOneWidget);
     await back(tester);
     await tapText(tester, '体态对比');
@@ -147,6 +119,7 @@ void main() {
     'pantry manual date, photo date, removal, and reminder cards work',
     (tester) async {
       await boot(tester, controller);
+      await tapText(tester, '我的');
       await tapText(tester, '粮仓');
       await tapText(tester, '查看并修改日期');
       final before = controller.pantry.length;
@@ -174,6 +147,7 @@ void main() {
       await tapText(tester, '删除');
       expect(controller.pantry, hasLength(before - 1));
       expect(find.text('在库'), findsOneWidget);
+      await back(tester);
 
       await tapText(tester, '我的');
       await tapText(tester, '喂养');
@@ -188,7 +162,7 @@ void main() {
       await revealText(tester, '橘座的驱虫提醒');
       await tapText(tester, '橘座的驱虫提醒');
       expect(find.text('成长'), findsWidgets);
-      await tapText(tester, '首页');
+      await tapText(tester, '今天');
       await tapText(tester, '橘座');
       await tapText(tester, '奶油');
       await tapText(tester, '我的');

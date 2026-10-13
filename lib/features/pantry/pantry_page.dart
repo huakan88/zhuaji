@@ -22,7 +22,8 @@ class _PantryPageState extends State<PantryPage> {
   Widget build(BuildContext context) {
     final app = AppScope.of<AppController>(context);
     final products = app.products.where((product) {
-      final text = '${product.brand}${product.name}${product.barcode ?? ''}'.toLowerCase();
+      final text = '${product.brand}${product.name}${product.barcode ?? ''}'
+          .toLowerCase();
       return _query.isEmpty || text.contains(_query.toLowerCase());
     }).toList();
     return Scaffold(
@@ -32,12 +33,17 @@ class _PantryPageState extends State<PantryPage> {
           children: [
             Row(
               children: [
+                if (context.canPop())
+                  IconButton(
+                    tooltip: '返回',
+                    onPressed: () => context.pop(),
+                    icon: const Icon(Icons.arrow_back),
+                  ),
                 Expanded(
                   child: Text(
                     '粮仓',
-                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                      fontWeight: FontWeight.w700,
-                    ),
+                    style: Theme.of(context).textTheme.headlineSmall
+                        ?.copyWith(fontWeight: FontWeight.w700),
                   ),
                 ),
                 FilledButton(
@@ -47,7 +53,10 @@ class _PantryPageState extends State<PantryPage> {
               ],
             ),
             const SizedBox(height: 8),
-            const Text(kSampleFoodNote, style: TextStyle(color: AppColors.muted, fontSize: 12)),
+            const Text(
+              kSampleFoodNote,
+              style: TextStyle(color: AppColors.muted, fontSize: 12),
+            ),
             const SizedBox(height: Space.x4),
             SegmentedButton<bool>(
               segments: const [
@@ -55,7 +64,8 @@ class _PantryPageState extends State<PantryPage> {
                 ButtonSegment(value: true, label: Text('图鉴')),
               ],
               selected: {_catalog},
-              onSelectionChanged: (value) => setState(() => _catalog = value.first),
+              onSelectionChanged: (value) =>
+                  setState(() => _catalog = value.first),
             ),
             const SizedBox(height: Space.x4),
             if (_catalog) ...[
@@ -68,23 +78,26 @@ class _PantryPageState extends State<PantryPage> {
               ),
               const SizedBox(height: Space.x3),
               if (products.isEmpty)
-                const EmptyHint(
-                  title: '没有这款',
-                  body: '换个词，或者扫一条新条码自己补上。',
-                ),
+                const EmptyHint(title: '没有这款', body: '换个词，或者扫一条新条码自己补上。'),
               for (final product in products)
                 Padding(
                   padding: const EdgeInsets.only(bottom: 8),
                   child: SoftCard(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 4,
+                    ),
                     child: ListTile(
                       contentPadding: EdgeInsets.zero,
                       title: Text(product.displayName),
-                      subtitle: Text('${formLabel(product.foodForm)} · ${product.spec}'),
+                      subtitle: Text(
+                        '${formLabel(product.foodForm)} · ${product.spec}',
+                      ),
                       trailing: product.isSample
                           ? const TagChip(label: '示例')
                           : const Icon(Icons.chevron_right),
-                      onTap: () => context.push('/product?productId=${product.id}'),
+                      onTap: () =>
+                          context.push('/product?productId=${product.id}'),
                     ),
                   ),
                 ),
@@ -111,12 +124,17 @@ class _PantryPageState extends State<PantryPage> {
                               Expanded(
                                 child: Text(
                                   entry.product.displayName,
-                                  style: const TextStyle(fontWeight: FontWeight.w700),
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.w700,
+                                  ),
                                 ),
                               ),
                               if (entry.item.expiryDate != null)
                                 TagChip(
-                                  label: countdownOf(entry.item.expiryDate!, app.now),
+                                  label: countdownOf(
+                                    entry.item.expiryDate!,
+                                    app.now,
+                                  ),
                                   tint: AppColors.tintCoral,
                                 ),
                             ],
@@ -124,7 +142,10 @@ class _PantryPageState extends State<PantryPage> {
                           const SizedBox(height: 6),
                           Text(
                             '${formLabel(entry.product.foodForm)} · ${entry.product.spec}',
-                            style: const TextStyle(color: AppColors.muted, fontSize: 12),
+                            style: const TextStyle(
+                              color: AppColors.muted,
+                              fontSize: 12,
+                            ),
                           ),
                           const SizedBox(height: 4),
                           Text(
@@ -137,7 +158,10 @@ class _PantryPageState extends State<PantryPage> {
                             alignment: Alignment.centerRight,
                             child: Text(
                               '查看并修改日期',
-                              style: TextStyle(color: AppColors.olive, fontWeight: FontWeight.w600),
+                              style: TextStyle(
+                                color: AppColors.olive,
+                                fontWeight: FontWeight.w600,
+                              ),
                             ),
                           ),
                         ],

@@ -100,9 +100,11 @@ class FeedingLogs extends Table {
   TextColumn get foodForm => text()();
   RealColumn get grams => real()();
   RealColumn get kcal => real().nullable()();
-  IntColumn get productId => integer()
-      .nullable()
-      .references(FoodProducts, #id, onDelete: KeyAction.setNull)();
+  IntColumn get productId => integer().nullable().references(
+    FoodProducts,
+    #id,
+    onDelete: KeyAction.setNull,
+  )();
   TextColumn get slot => text()();
 }
 
@@ -219,8 +221,7 @@ class AppSettings extends Table {
 class AppDatabase extends _$AppDatabase {
   AppDatabase(super.executor);
 
-  factory AppDatabase.defaults() =>
-      AppDatabase(driftDatabase(name: 'zhuaji'));
+  factory AppDatabase.defaults() => AppDatabase(driftDatabase(name: 'zhuaji'));
 
   factory AppDatabase.memory() => AppDatabase(NativeDatabase.memory());
 

@@ -96,35 +96,38 @@ void main() {
     expect(byId(items, 11000008)?.body, contains('不能代替兽医'));
   });
 
-  test('opened food uses a 7-day lead for long windows and 1 day for wet food', () {
-    final dry = planner.plan(
-      now: now,
-      opened: [
-        OpenedInput(
-          id: 5,
-          productName: '干粮',
-          openedAt: DateTime(2026, 10, 12, 8),
-          afterOpenDays: 42,
-        ),
-      ],
-    );
-    expect(byId(dry, 40000005)?.when, DateTime(2026, 11, 16, 9));
-    expect(byId(dry, 42000005)?.when, DateTime(2026, 11, 23, 9));
+  test(
+    'opened food uses a 7-day lead for long windows and 1 day for wet food',
+    () {
+      final dry = planner.plan(
+        now: now,
+        opened: [
+          OpenedInput(
+            id: 5,
+            productName: '干粮',
+            openedAt: DateTime(2026, 10, 12, 8),
+            afterOpenDays: 42,
+          ),
+        ],
+      );
+      expect(byId(dry, 40000005)?.when, DateTime(2026, 11, 16, 9));
+      expect(byId(dry, 42000005)?.when, DateTime(2026, 11, 23, 9));
 
-    final wet = planner.plan(
-      now: now,
-      opened: [
-        OpenedInput(
-          id: 6,
-          productName: '罐头',
-          openedAt: DateTime(2026, 10, 12, 8),
-          afterOpenDays: 2,
-        ),
-      ],
-    );
-    expect(byId(wet, 41000006)?.when, DateTime(2026, 10, 13, 9));
-    expect(byId(wet, 42000006)?.when, DateTime(2026, 10, 14, 9));
-  });
+      final wet = planner.plan(
+        now: now,
+        opened: [
+          OpenedInput(
+            id: 6,
+            productName: '罐头',
+            openedAt: DateTime(2026, 10, 12, 8),
+            afterOpenDays: 2,
+          ),
+        ],
+      );
+      expect(byId(wet, 41000006)?.when, DateTime(2026, 10, 13, 9));
+      expect(byId(wet, 42000006)?.when, DateTime(2026, 10, 14, 9));
+    },
+  );
 
   test('feeding rolls to tomorrow and repeats daily', () {
     final morningPast = planner.plan(

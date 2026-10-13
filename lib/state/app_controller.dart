@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 
 import '../core/format.dart';
+import '../domain/care/easy_log.dart';
 import '../domain/dates.dart';
 import '../domain/feeding/feeding_math.dart';
 import '../domain/health/checkup_catalog.dart';
@@ -95,12 +96,10 @@ class AppController extends ChangeNotifier {
       .where((item) => isSameDay(item.loggedOn, now))
       .fold<double>(0, (sum, item) => sum + item.milliliters);
 
-  WeightRecord? get latestWeight =>
-      catWeights.isEmpty ? null : catWeights.last;
+  WeightRecord? get latestWeight => catWeights.isEmpty ? null : catWeights.last;
 
-  List<FeedingRecord> get todayFeedings => catFeedings
-      .where((item) => isSameDay(item.loggedAt, now))
-      .toList();
+  List<FeedingRecord> get todayFeedings =>
+      catFeedings.where((item) => isSameDay(item.loggedAt, now)).toList();
 
   double get todayGrams =>
       todayFeedings.fold<double>(0, (sum, item) => sum + item.grams);
@@ -134,9 +133,7 @@ class AppController extends ChangeNotifier {
 
   PantryEntry? get nearestExpiry {
     final dated = pantry.where((item) => item.item.expiryDate != null).toList()
-      ..sort(
-        (a, b) => a.item.expiryDate!.compareTo(b.item.expiryDate!),
-      );
+      ..sort((a, b) => a.item.expiryDate!.compareTo(b.item.expiryDate!));
     return dated.isEmpty ? null : dated.first;
   }
 
@@ -158,7 +155,8 @@ class AppController extends ChangeNotifier {
     );
     final vaccine = nextVaccine;
     final vaccineOk =
-        vaccine?.nextDue != null && !dateOnly(vaccine!.nextDue!).isBefore(dateOnly(now));
+        vaccine?.nextDue != null &&
+        !dateOnly(vaccine!.nextDue!).isBefore(dateOnly(now));
     return [
       DailyTask(
         title: '今日喂食',
@@ -211,7 +209,12 @@ class AppController extends ChangeNotifier {
     CareSlice(label: '疫苗', done: _dueOk(nextVaccine?.nextDue)),
     CareSlice(label: '体内驱虫', done: _dueOk(nextInternal?.nextDue)),
     CareSlice(label: '体外驱虫', done: _dueOk(nextExternal?.nextDue)),
-    CareSlice(label: '体重', done: catWeights.any((item) => now.difference(item.loggedOn).inDays <= 14)),
+    CareSlice(
+      label: '体重',
+      done: catWeights.any(
+        (item) => now.difference(item.loggedOn).inDays <= 14,
+      ),
+    ),
     CareSlice(label: '今日喂食', done: todayFeedings.isNotEmpty),
   ];
 
@@ -355,6 +358,34 @@ class AppController extends ChangeNotifier {
   Future<void> removeNote(int id) async {
     await repo.deleteNote(id);
     await _refresh();
+  }
+
+  Future<void> markFed(MealSlot slot, Portion portion) async {
+    final cat = active;
+    if (cat == null) return;
+    final history = catFeedings;
+    FeedingRecord? previous;
+    for (final meal in history) {
+      if (previous == null || meal.loggedAt.isAfter(previous.loggedAt)) {
+        previous = meal;
+      }
+    }
+    final grams = gramsForPortion(
+      feedingBaseline(history, dailyGrams: calories?.grams),
+      portion,
+    );
+    await saveFeeding(
+      FeedingDraft(
+        catId: cat.id,
+        loggedAt: now,
+        foodName: previous?.foodName ?? '口粮',
+        foodForm: previous?.foodForm ?? FoodForm.dry,
+        grams: grams,
+        slot: slot,
+        productId: previous?.productId,
+        kcal: mealKcal(grams: grams, kcalPer100g: _density ?? 380),
+      ),
+    );
   }
 
   Future<void> saveFeeding(FeedingDraft draft) async {
@@ -541,11 +572,7 @@ class AppController extends ChangeNotifier {
   Future<void> addWater(double milliliters) async {
     final cat = active;
     if (cat == null) return;
-    await repo.addWater(
-      catId: cat.id,
-      loggedOn: now,
-      milliliters: milliliters,
-    );
+    await repo.addWater(catId: cat.id, loggedOn: now, milliliters: milliliters);
     await _refresh();
   }
 
@@ -727,10 +754,11 @@ class AppController extends ChangeNotifier {
   }
 
   DewormRecord? _soonestDeworm(DewormKind kind) {
-    final dated = catDeworms
-        .where((item) => item.kind == kind && item.nextDue != null)
-        .toList()
-      ..sort((a, b) => a.nextDue!.compareTo(b.nextDue!));
+    final dated =
+        catDeworms
+            .where((item) => item.kind == kind && item.nextDue != null)
+            .toList()
+          ..sort((a, b) => a.nextDue!.compareTo(b.nextDue!));
     return dated.isEmpty ? null : dated.first;
   }
 

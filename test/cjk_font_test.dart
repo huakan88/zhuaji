@@ -36,21 +36,17 @@ void main() {
     final boundary = tester.renderObject<RenderRepaintBoundary>(
       find.byKey(const Key('glyph')),
     );
-    final image = await tester.runAsync(
-      () => boundary.toImage(pixelRatio: 1),
-    );
+    final image = await tester.runAsync(() => boundary.toImage(pixelRatio: 1));
     final data = await tester.runAsync(
       () => image!.toByteData(format: ui.ImageByteFormat.rawRgba),
     );
-    final ratio = interiorDarkRatio(
-      data!,
-      image!.width,
-      image.height,
-    );
+    final ratio = interiorDarkRatio(data!, image!.width, image.height);
     expect(ratio, greaterThan(0.02));
   });
 
-  testWidgets('Material icons draw glyphs instead of tofu boxes', (tester) async {
+  testWidgets('Material icons draw glyphs instead of tofu boxes', (
+    tester,
+  ) async {
     await tester.runAsync(loadZhuajiFonts);
     await tester.pumpWidget(
       const MaterialApp(
@@ -61,10 +57,22 @@ void main() {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.favorite_rounded, size: 48, color: Color(0xFF1E1E1E)),
+                  Icon(
+                    Icons.favorite_rounded,
+                    size: 48,
+                    color: Color(0xFF1E1E1E),
+                  ),
                   Icon(Icons.home_outlined, size: 48, color: Color(0xFF1E1E1E)),
-                  Icon(Icons.notifications_none_rounded, size: 48, color: Color(0xFF1E1E1E)),
-                  Icon(Icons.keyboard_arrow_down_rounded, size: 48, color: Color(0xFF1E1E1E)),
+                  Icon(
+                    Icons.notifications_none_rounded,
+                    size: 48,
+                    color: Color(0xFF1E1E1E),
+                  ),
+                  Icon(
+                    Icons.keyboard_arrow_down_rounded,
+                    size: 48,
+                    color: Color(0xFF1E1E1E),
+                  ),
                 ],
               ),
             ),

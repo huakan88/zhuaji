@@ -495,6 +495,8 @@ class RecognitionSuggestion {
     required this.confidence,
     required this.source,
     required this.detail,
+    this.coatChoices = const [],
+    this.breedChoices = const [],
   });
 
   final String coatColor;
@@ -502,6 +504,8 @@ class RecognitionSuggestion {
   final double confidence;
   final RecognitionSource source;
   final String detail;
+  final List<String> coatChoices;
+  final List<String> breedChoices;
 }
 
 abstract class CoatBreedRecognizer {

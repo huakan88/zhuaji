@@ -27,7 +27,9 @@ class CatProfilePage extends StatelessWidget {
         if (app.activeCatId != cat.id) app.selectCat(cat.id);
       });
     }
-    final ownPhotos = app.activeCatId == cat.id ? app.photos : const <CatPhoto>[];
+    final ownPhotos = app.activeCatId == cat.id
+        ? app.photos
+        : const <CatPhoto>[];
     final ownConditions = app.activeCatId == cat.id
         ? app.catConditions
         : const <ConditionRecord>[];
@@ -39,7 +41,9 @@ class CatProfilePage extends StatelessWidget {
       for (final item in weights) item.loggedOn,
       for (final item in ownPhotos) item.takenAt,
     ];
-    final earliest = points.map(dateOnly).reduce((a, b) => a.isBefore(b) ? a : b);
+    final earliest = points
+        .map(dateOnly)
+        .reduce((a, b) => a.isBefore(b) ? a : b);
     final days = dateOnly(app.now).difference(earliest).inDays;
     final recordDays = days < 1 ? 1 : days;
     final latest = weights.isEmpty ? null : weights.last.weightKg;
@@ -59,7 +63,11 @@ class CatProfilePage extends StatelessWidget {
                     gradient: LinearGradient(
                       begin: Alignment.topCenter,
                       end: Alignment.bottomCenter,
-                      colors: [Color(0x22000000), Color(0x00000000), Color(0xCC2C2A28)],
+                      colors: [
+                        Color(0x22000000),
+                        Color(0x00000000),
+                        Color(0xCC2C2A28),
+                      ],
                     ),
                   ),
                 ),
@@ -98,11 +106,18 @@ class CatProfilePage extends StatelessWidget {
                         spacing: 8,
                         runSpacing: 8,
                         children: [
-                          if (cat.breed != null) TagChip(label: cat.breed!, tint: Colors.white),
+                          if (cat.breed != null)
+                            TagChip(label: cat.breed!, tint: Colors.white),
                           if (cat.coatColor != null)
-                            TagChip(label: cat.coatColor!, tint: AppColors.green),
+                            TagChip(
+                              label: cat.coatColor!,
+                              tint: AppColors.green,
+                            ),
                           TagChip(label: sexLabel(cat.sex), tint: Colors.white),
-                          TagChip(label: cat.neutered ? '已绝育' : '未绝育', tint: Colors.white),
+                          TagChip(
+                            label: cat.neutered ? '已绝育' : '未绝育',
+                            tint: Colors.white,
+                          ),
                         ],
                       ),
                     ],
@@ -122,7 +137,11 @@ class CatProfilePage extends StatelessWidget {
                     _stat('记录天数', '$recordDays', () => context.go('/health')),
                     _stat('疫苗', '$vaccines', () => context.go('/health')),
                     _stat('驱虫', '$deworms', () => context.go('/health')),
-                    _stat('体重', latest == null ? '—' : latest.toStringAsFixed(1), () => context.go('/health')),
+                    _stat(
+                      '体重',
+                      latest == null ? '—' : latest.toStringAsFixed(1),
+                      () => context.go('/health'),
+                    ),
                   ],
                 ),
               ),
@@ -136,7 +155,10 @@ class CatProfilePage extends StatelessWidget {
                 if (cat.recognitionDetail != null) ...[
                   SoftCard(
                     color: AppColors.tintCoral,
-                    child: Text(cat.recognitionDetail!, style: const TextStyle(height: 1.45)),
+                    child: Text(
+                      cat.recognitionDetail!,
+                      style: const TextStyle(height: 1.45),
+                    ),
                   ),
                   const SizedBox(height: 14),
                 ],
@@ -158,14 +180,18 @@ class CatProfilePage extends StatelessWidget {
                   child: ownPhotos.isEmpty
                       ? const Align(
                           alignment: Alignment.centerLeft,
-                          child: Text('还没有体态照片', style: TextStyle(color: AppColors.muted)),
+                          child: Text(
+                            '还没有体态照片',
+                            style: TextStyle(color: AppColors.muted),
+                          ),
                         )
                       : ListView.separated(
                           scrollDirection: Axis.horizontal,
                           itemCount: ownPhotos.length,
                           separatorBuilder: (_, _) => const SizedBox(width: 10),
                           itemBuilder: (context, index) {
-                            final photo = ownPhotos[ownPhotos.length - 1 - index];
+                            final photo =
+                                ownPhotos[ownPhotos.length - 1 - index];
                             return ClipRRect(
                               borderRadius: BorderRadius.circular(Radii.m),
                               child: SizedBox(
@@ -182,7 +208,12 @@ class CatProfilePage extends StatelessWidget {
                     children: [
                       _row('年龄', ageLabel(cat.birthday, app.now)),
                       _row('目标', goalLabel(cat.goal)),
-                      _row('最近体重', latest == null ? '未记录' : '${latest.toStringAsFixed(2)} kg'),
+                      _row(
+                        '最近体重',
+                        latest == null
+                            ? '未记录'
+                            : '${latest.toStringAsFixed(2)} kg',
+                      ),
                       if (cat.notes.isNotEmpty) _row('备注', cat.notes),
                     ],
                   ),
@@ -219,16 +250,26 @@ class CatProfilePage extends StatelessWidget {
                 if (ownConditions.isEmpty)
                   const Padding(
                     padding: EdgeInsets.only(top: 8),
-                    child: Text('还没有标记确诊疾病', style: TextStyle(color: AppColors.muted)),
+                    child: Text(
+                      '还没有标记确诊疾病',
+                      style: TextStyle(color: AppColors.muted),
+                    ),
                   )
                 else
                   for (final condition in ownConditions)
                     ListTile(
                       contentPadding: EdgeInsets.zero,
-                      title: Text(diseaseById(condition.diseaseId)?.name ?? '已标记的疾病'),
-                      subtitle: Text(condition.stageLabel.isEmpty ? '已确诊' : condition.stageLabel),
+                      title: Text(
+                        diseaseById(condition.diseaseId)?.name ?? '已标记的疾病',
+                      ),
+                      subtitle: Text(
+                        condition.stageLabel.isEmpty
+                            ? '已确诊'
+                            : condition.stageLabel,
+                      ),
                       trailing: const Icon(Icons.chevron_right_rounded),
-                      onTap: () => context.push('/disease?id=${condition.diseaseId}'),
+                      onTap: () =>
+                          context.push('/disease?id=${condition.diseaseId}'),
                     ),
                 TextButton(
                   onPressed: () async {
@@ -260,9 +301,15 @@ class CatProfilePage extends StatelessWidget {
         onTap: onTap,
         child: Column(
           children: [
-            Text(value, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
+            Text(
+              value,
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+            ),
             const SizedBox(height: 4),
-            Text(label, style: const TextStyle(color: AppColors.muted, fontSize: 12)),
+            Text(
+              label,
+              style: const TextStyle(color: AppColors.muted, fontSize: 12),
+            ),
           ],
         ),
       ),

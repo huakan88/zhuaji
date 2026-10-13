@@ -45,7 +45,11 @@ class _ScanPageState extends State<ScanPage> {
               children: [
                 Text(
                   gs1 ? '把 GS1 二维码或 DataMatrix 放进画面，也可以粘贴内容。' : kBarcodeNote,
-                  style: const TextStyle(color: AppColors.muted, fontSize: 12, height: 1.4),
+                  style: const TextStyle(
+                    color: AppColors.muted,
+                    fontSize: 12,
+                    height: 1.4,
+                  ),
                 ),
                 const SizedBox(height: 12),
                 TextField(
@@ -116,7 +120,9 @@ class _ScanPageState extends State<ScanPage> {
     final product = app.findBarcode(value);
     if (!mounted) return;
     if (product == null) {
-      context.pushReplacement('/product-form?barcode=${Uri.encodeComponent(value)}');
+      context.pushReplacement(
+        '/product-form?barcode=${Uri.encodeComponent(value)}',
+      );
     } else {
       context.pushReplacement('/product?productId=${product.id}');
     }

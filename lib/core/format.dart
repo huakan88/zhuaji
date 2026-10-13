@@ -41,8 +41,7 @@ String sourceLabel(DateSource source) => switch (source) {
 
 String ageLabel(DateTime? birthday, DateTime now) {
   if (birthday == null) return '年龄未填';
-  var months =
-      (now.year - birthday.year) * 12 + now.month - birthday.month;
+  var months = (now.year - birthday.year) * 12 + now.month - birthday.month;
   if (now.day < birthday.day) months -= 1;
   if (months < 1) return '未满 1 个月';
   if (months < 12) return '$months 个月';

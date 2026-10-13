@@ -9,11 +9,8 @@ import '../theme/app_tokens.dart';
 import 'paw_icon.dart';
 
 class AppScope extends InheritedNotifier<Listenable> {
-  const AppScope({
-    required this.controller,
-    required super.child,
-    super.key,
-  }) : super(notifier: controller);
+  const AppScope({required this.controller, required super.child, super.key})
+    : super(notifier: controller);
 
   final Listenable controller;
 
@@ -77,7 +74,11 @@ class TagChip extends StatelessWidget {
       ),
       child: Text(
         label,
-        style: TextStyle(fontSize: 12, color: color, fontWeight: FontWeight.w600),
+        style: TextStyle(
+          fontSize: 12,
+          color: color,
+          fontWeight: FontWeight.w600,
+        ),
       ),
     );
   }
@@ -102,9 +103,8 @@ class SectionHeader extends StatelessWidget {
         Expanded(
           child: Text(
             title,
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.w700,
-            ),
+            style: Theme.of(context).textTheme.titleMedium
+                ?.copyWith(fontWeight: FontWeight.w700),
           ),
         ),
         if (action != null)
@@ -165,9 +165,8 @@ class EmptyHint extends StatelessWidget {
           const SizedBox(height: Space.x4),
           Text(
             title,
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.w700,
-            ),
+            style: Theme.of(context).textTheme.titleMedium
+                ?.copyWith(fontWeight: FontWeight.w700),
           ),
           const SizedBox(height: Space.x2),
           Text(
@@ -197,9 +196,7 @@ class CatImage extends StatelessWidget {
     if (source == null || source.isEmpty) {
       return const ColoredBox(
         color: AppColors.cream,
-        child: Center(
-          child: PawIcon(size: 42, color: AppColors.coralDeep),
-        ),
+        child: Center(child: PawIcon(size: 42, color: AppColors.coralDeep)),
       );
     }
     if (source.startsWith('asset:')) {
@@ -298,20 +295,28 @@ class FoodDateCard extends StatelessWidget {
           const SizedBox(height: Space.x1),
           Text(
             name,
-            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-              fontWeight: FontWeight.w700,
-            ),
+            style: Theme.of(context).textTheme.headlineSmall
+                ?.copyWith(fontWeight: FontWeight.w700),
           ),
           const SizedBox(height: Space.x3),
           Wrap(
             spacing: 8,
             runSpacing: 8,
             children: [
-              TagChip(label: form, tint: AppColors.tintGreen, color: AppColors.olive),
+              TagChip(
+                label: form,
+                tint: AppColors.tintGreen,
+                color: AppColors.olive,
+              ),
               TagChip(label: spec),
               if (isSample)
-                const TagChip(label: '示例数据', tint: AppColors.cream, color: AppColors.brown),
-              if (source != null) TagChip(label: source!, tint: AppColors.cream),
+                const TagChip(
+                  label: '示例数据',
+                  tint: AppColors.cream,
+                  color: AppColors.brown,
+                ),
+              if (source != null)
+                TagChip(label: source!, tint: AppColors.cream),
             ],
           ),
           const SizedBox(height: Space.x4),
@@ -329,7 +334,9 @@ class FoodDateCard extends StatelessWidget {
                         : days <= 30
                         ? AppColors.tintCoral
                         : AppColors.tintGreen,
-                    color: days < 0 || days <= 7 ? AppColors.danger : AppColors.ink,
+                    color: days < 0 || days <= 7
+                        ? AppColors.danger
+                        : AppColors.ink,
                   ),
           ),
           if (bestBeforeOnly)
@@ -399,11 +406,8 @@ Future<bool> confirmDelete(BuildContext context, String title) async {
 
 void showMessage(BuildContext context, String text) {
   final messenger = ScaffoldMessenger.of(context);
-  messenger.hideCurrentSnackBar();
+  messenger.clearSnackBars();
   messenger.showSnackBar(
-    SnackBar(
-      content: Text(text),
-      behavior: SnackBarBehavior.floating,
-    ),
+    SnackBar(content: Text(text), behavior: SnackBarBehavior.floating),
   );
 }

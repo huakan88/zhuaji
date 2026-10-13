@@ -141,7 +141,13 @@ void main() {
         ),
       ],
     );
-    expect(items.map((item) => item.id), containsAll([70000004, 71000004, 80000004, 81000004]));
-    expect(items.firstWhere((item) => item.id == 81000004).body, contains('遵医嘱'));
+    expect(
+      items.map((item) => item.id),
+      containsAll([70000004, 71000004, 80000004, 81000004]),
+    );
+    expect(
+      items.firstWhere((item) => item.id == 81000004).body,
+      contains('遵医嘱'),
+    );
   });
 }

@@ -60,7 +60,8 @@ Future<void> _loadCupertinoIcons() async {
     final data = await rootBundle.load(
       'packages/cupertino_icons/assets/CupertinoIcons.ttf',
     );
-    final loader = FontLoader('CupertinoIcons')..addFont(Future<ByteData>.value(data));
+    final loader = FontLoader('CupertinoIcons')
+      ..addFont(Future<ByteData>.value(data));
     await loader.load();
   } catch (_) {
     final which = Process.runSync('which', ['flutter']);

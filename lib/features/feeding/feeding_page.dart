@@ -20,7 +20,9 @@ class FeedingPage extends StatelessWidget {
     }
     final calories = app.calories;
     final plan = app.activeTransition;
-    final ratio = plan == null ? null : transitionRatio(transitionDayNumber(plan.startDate, app.now));
+    final ratio = plan == null
+        ? null
+        : transitionRatio(transitionDayNumber(plan.startDate, app.now));
     return Scaffold(
       appBar: AppBar(title: Text('${cat.name}的喂养')),
       body: ListView(
@@ -31,19 +33,25 @@ class FeedingPage extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('热量估算', style: TextStyle(fontWeight: FontWeight.w700)),
+                const Text(
+                  '热量估算',
+                  style: TextStyle(fontWeight: FontWeight.w700),
+                ),
                 const SizedBox(height: 8),
                 Text(
                   calories == null
                       ? '先记一次体重。估算用静息能量，绝育成猫约 ×1.2，幼猫 ×2.5，减重目标 ×0.8。'
                       : '${calories.summary}（系数 ${calories.factor}）。'
-                          '${calories.assumedKcal ? '没有关联具体猫粮时，按示例 380 kcal/100g。' : '按最近一餐关联猫粮的示例热量。'}',
+                            '${calories.assumedKcal ? '没有关联具体猫粮时，按示例 380 kcal/100g。' : '按最近一餐关联猫粮的示例热量。'}',
                   style: const TextStyle(height: 1.45),
                 ),
                 const SizedBox(height: 8),
                 Text(
                   '今天已记录 ${app.todayGrams.round()} g',
-                  style: const TextStyle(color: AppColors.olive, fontWeight: FontWeight.w600),
+                  style: const TextStyle(
+                    color: AppColors.olive,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ],
             ),
@@ -59,7 +67,10 @@ class FeedingPage extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.only(bottom: 8),
               child: SoftCard(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
                 child: ListTile(
                   contentPadding: EdgeInsets.zero,
                   onTap: () => showDialog<void>(
@@ -105,9 +116,8 @@ class FeedingPage extends StatelessWidget {
                 title: Text(slot.slot == 0 ? '早餐' : '晚餐'),
                 subtitle: Text(formatClock(slot.hour, slot.minute)),
                 value: slot.enabled,
-                onChanged: (value) => app.saveReminder(
-                  slot.copyWith(enabled: value),
-                ),
+                onChanged: (value) =>
+                    app.saveReminder(slot.copyWith(enabled: value)),
               ),
             ),
           const SizedBox(height: 8),
@@ -122,7 +132,11 @@ class FeedingPage extends StatelessWidget {
               final morning = slots.where((item) => item.slot == 0).firstOrNull;
               if (morning == null) return;
               await app.saveReminder(
-                morning.copyWith(hour: time.hour, minute: time.minute, enabled: true),
+                morning.copyWith(
+                  hour: time.hour,
+                  minute: time.minute,
+                  enabled: true,
+                ),
               );
             },
             child: const Text('调整早餐时间'),
@@ -135,10 +149,17 @@ class FeedingPage extends StatelessWidget {
                 initialTime: const TimeOfDay(hour: 18, minute: 30),
               );
               if (time == null) return;
-              final evening = app.remindersFor(cat.id).where((item) => item.slot == 1).firstOrNull;
+              final evening = app
+                  .remindersFor(cat.id)
+                  .where((item) => item.slot == 1)
+                  .firstOrNull;
               if (evening == null) return;
               await app.saveReminder(
-                evening.copyWith(hour: time.hour, minute: time.minute, enabled: true),
+                evening.copyWith(
+                  hour: time.hour,
+                  minute: time.minute,
+                  enabled: true,
+                ),
               );
             },
             child: const Text('调整晚餐时间'),
@@ -154,11 +175,17 @@ class FeedingPage extends StatelessWidget {
                 : Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('第 ${ratio.day} 天', style: const TextStyle(fontWeight: FontWeight.w700)),
+                      Text(
+                        '第 ${ratio.day} 天',
+                        style: const TextStyle(fontWeight: FontWeight.w700),
+                      ),
                       const SizedBox(height: 6),
                       Text('${plan.fromFood} → ${plan.toFood}'),
                       const SizedBox(height: 6),
-                      Text(ratio.label, style: const TextStyle(color: AppColors.olive)),
+                      Text(
+                        ratio.label,
+                        style: const TextStyle(color: AppColors.olive),
+                      ),
                     ],
                   ),
           ),
@@ -195,14 +222,26 @@ class FeedingPage extends StatelessWidget {
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              TextField(controller: from, decoration: const InputDecoration(labelText: '原来的粮')),
+              TextField(
+                controller: from,
+                decoration: const InputDecoration(labelText: '原来的粮'),
+              ),
               const SizedBox(height: 12),
-              TextField(controller: to, decoration: const InputDecoration(labelText: '新的粮')),
+              TextField(
+                controller: to,
+                decoration: const InputDecoration(labelText: '新的粮'),
+              ),
             ],
           ),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('取消')),
-            FilledButton(onPressed: () => Navigator.pop(context, true), child: const Text('开始')),
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('取消'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text('开始'),
+            ),
           ],
         ),
       );

@@ -19,8 +19,12 @@ class WeightChart extends StatelessWidget {
         style: const TextStyle(color: AppColors.muted, fontSize: 12),
       );
     }
-    final min = weights.map((item) => item.weightKg).reduce((a, b) => a < b ? a : b);
-    final max = weights.map((item) => item.weightKg).reduce((a, b) => a > b ? a : b);
+    final min = weights
+        .map((item) => item.weightKg)
+        .reduce((a, b) => a < b ? a : b);
+    final max = weights
+        .map((item) => item.weightKg)
+        .reduce((a, b) => a > b ? a : b);
     return SizedBox(
       height: compact ? 88 : 188,
       child: LineChart(
@@ -30,21 +34,29 @@ class WeightChart extends StatelessWidget {
           gridData: FlGridData(
             show: !compact,
             drawVerticalLine: false,
-            getDrawingHorizontalLine: (_) => const FlLine(color: AppColors.line, strokeWidth: 1),
+            getDrawingHorizontalLine: (_) =>
+                const FlLine(color: AppColors.line, strokeWidth: 1),
           ),
           borderData: FlBorderData(show: false),
           titlesData: compact
               ? const FlTitlesData(show: false)
               : FlTitlesData(
-                  topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                  rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                  topTitles: const AxisTitles(
+                    sideTitles: SideTitles(showTitles: false),
+                  ),
+                  rightTitles: const AxisTitles(
+                    sideTitles: SideTitles(showTitles: false),
+                  ),
                   leftTitles: AxisTitles(
                     sideTitles: SideTitles(
                       showTitles: true,
                       reservedSize: 36,
                       getTitlesWidget: (value, meta) => Text(
                         value.toStringAsFixed(1),
-                        style: const TextStyle(fontSize: 10, color: AppColors.muted),
+                        style: const TextStyle(
+                          fontSize: 10,
+                          color: AppColors.muted,
+                        ),
                       ),
                     ),
                   ),
@@ -61,7 +73,10 @@ class WeightChart extends StatelessWidget {
                           padding: const EdgeInsets.only(top: 6),
                           child: Text(
                             formatMonthDay(weights[index].loggedOn),
-                            style: const TextStyle(fontSize: 10, color: AppColors.muted),
+                            style: const TextStyle(
+                              fontSize: 10,
+                              color: AppColors.muted,
+                            ),
                           ),
                         );
                       },

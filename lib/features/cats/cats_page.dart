@@ -28,28 +28,38 @@ class CatsPage extends StatelessWidget {
             else ...[
               Row(
                 children: [
-                  CatAvatar(path: cat.avatarPath, size: 72, ring: AppColors.coral),
+                  CatAvatar(
+                    path: cat.avatarPath,
+                    size: 72,
+                    ring: AppColors.coral,
+                  ),
                   const SizedBox(width: 14),
                   Expanded(
                     child: GestureDetector(
                       onTap: () => context.push('/cat?id=${cat.id}'),
                       child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          cat.name,
-                          style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          [
-                            if (cat.breed != null) cat.breed!,
-                            ageLabel(cat.birthday, app.now),
-                          ].join(' · '),
-                          style: const TextStyle(color: AppColors.muted, fontSize: 13),
-                        ),
-                      ],
-                    ),
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            cat.name,
+                            style: const TextStyle(
+                              fontSize: 22,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            [
+                              if (cat.breed != null) cat.breed!,
+                              ageLabel(cat.birthday, app.now),
+                            ].join(' · '),
+                            style: const TextStyle(
+                              color: AppColors.muted,
+                              fontSize: 13,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                   TextButton(
@@ -71,11 +81,18 @@ class CatsPage extends StatelessWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('家庭照护', style: TextStyle(fontWeight: FontWeight.w700)),
+                          Text(
+                            '家庭照护',
+                            style: TextStyle(fontWeight: FontWeight.w700),
+                          ),
                           SizedBox(height: 4),
                           Text(
                             '疫苗、驱虫和猫粮提醒都留在这台手机上。',
-                            style: TextStyle(color: AppColors.muted, fontSize: 12, height: 1.35),
+                            style: TextStyle(
+                              color: AppColors.muted,
+                              fontSize: 12,
+                              height: 1.35,
+                            ),
                           ),
                         ],
                       ),
@@ -141,7 +158,9 @@ class CatsPage extends StatelessWidget {
                             item.name,
                             style: TextStyle(
                               fontSize: 12,
-                              fontWeight: selected ? FontWeight.w700 : FontWeight.w400,
+                              fontWeight: selected
+                                  ? FontWeight.w700
+                                  : FontWeight.w400,
                             ),
                           ),
                         ],
@@ -151,12 +170,55 @@ class CatsPage extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 8),
-              _setting(context, Icons.notifications_none_rounded, '提醒', '喂食、疫苗、保质期', () => context.push('/reminders')),
-              _setting(context, Icons.restaurant_outlined, '喂养', '热量估算和七日换粮', () => context.push('/feeding')),
-              _setting(context, Icons.photo_outlined, '体态对比', '并排看较早和最近的照片', () => context.push('/photos')),
-              _setting(context, Icons.pets_outlined, '当前档案', cat.name, () => context.push('/cat?id=${cat.id}')),
-              _setting(context, Icons.medical_services_outlined, '体检建议', '按年龄和品种', () => context.push('/checkups')),
-              _setting(context, Icons.healing_outlined, '疾病养护', '确诊后的居家护理', () => context.push('/diseases')),
+              _setting(
+                context,
+                Icons.notifications_none_rounded,
+                '提醒',
+                '喂食、疫苗、保质期',
+                () => context.push('/reminders'),
+              ),
+              _setting(
+                context,
+                Icons.restaurant_outlined,
+                '喂养',
+                '热量估算和七日换粮',
+                () => context.push('/feeding'),
+              ),
+              _setting(
+                context,
+                Icons.kitchen_outlined,
+                '粮仓',
+                '扫码、日期和开封',
+                () => context.push('/pantry'),
+              ),
+              _setting(
+                context,
+                Icons.photo_outlined,
+                '体态对比',
+                '并排看较早和最近的照片',
+                () => context.push('/photos'),
+              ),
+              _setting(
+                context,
+                Icons.pets_outlined,
+                '当前档案',
+                cat.name,
+                () => context.push('/cat?id=${cat.id}'),
+              ),
+              _setting(
+                context,
+                Icons.medical_services_outlined,
+                '体检建议',
+                '按年龄和品种',
+                () => context.push('/checkups'),
+              ),
+              _setting(
+                context,
+                Icons.healing_outlined,
+                '疾病养护',
+                '确诊后的居家护理',
+                () => context.push('/diseases'),
+              ),
               const SizedBox(height: 12),
               const DisclaimerBanner(),
             ],
@@ -188,8 +250,14 @@ class CatsPage extends StatelessWidget {
             ),
             child: Icon(icon, size: 20),
           ),
-          title: Text(title, style: const TextStyle(fontWeight: FontWeight.w600)),
-          subtitle: Text(detail, style: const TextStyle(color: AppColors.muted, fontSize: 12)),
+          title: Text(
+            title,
+            style: const TextStyle(fontWeight: FontWeight.w600),
+          ),
+          subtitle: Text(
+            detail,
+            style: const TextStyle(color: AppColors.muted, fontSize: 12),
+          ),
           trailing: const Icon(Icons.chevron_right, color: AppColors.muted),
           onTap: onTap,
         ),

@@ -59,7 +59,9 @@ class DriftCareRepository implements CareRepository {
     for (var i = 0; i < orangeWeights.length; i++) {
       await addWeight(
         catId: orangeId,
-        loggedOn: today.subtract(Duration(days: (orangeWeights.length - 1 - i) * 7)),
+        loggedOn: today.subtract(
+          Duration(days: (orangeWeights.length - 1 - i) * 7),
+        ),
         weightKg: orangeWeights[i],
       );
     }
@@ -149,7 +151,9 @@ class DriftCareRepository implements CareRepository {
         foodName: royal?.displayName ?? '皇家室内成猫粮',
         foodForm: FoodForm.dry,
         grams: 35,
-        kcal: royal?.kcalPer100g == null ? null : 35 * royal!.kcalPer100g! / 100,
+        kcal: royal?.kcalPer100g == null
+            ? null
+            : 35 * royal!.kcalPer100g! / 100,
         productId: royal?.id,
         slot: MealSlot.breakfast,
       ),
@@ -216,9 +220,9 @@ class DriftCareRepository implements CareRepository {
 
   @override
   Future<List<CatProfile>> cats() async {
-    final rows = await (_db.select(_db.cats)
-          ..orderBy([(t) => OrderingTerm.asc(t.createdAt)]))
-        .get();
+    final rows = await (_db.select(
+      _db.cats,
+    )..orderBy([(t) => OrderingTerm.asc(t.createdAt)])).get();
     return rows.map(_cat).toList();
   }
 
@@ -240,9 +244,9 @@ class DriftCareRepository implements CareRepository {
       recognitionDetail: Value(_blank(draft.recognitionDetail)),
     );
     if (draft.id == null) {
-      final id = await _db.into(_db.cats).insert(
-        companion.copyWith(createdAt: Value(DateTime.now())),
-      );
+      final id = await _db
+          .into(_db.cats)
+          .insert(companion.copyWith(createdAt: Value(DateTime.now())));
       await saveFeedingReminder(
         catId: id,
         slot: 0,
@@ -259,9 +263,9 @@ class DriftCareRepository implements CareRepository {
       );
       return id;
     }
-    await (_db.update(_db.cats)..where((t) => t.id.equals(draft.id!))).write(
-      companion,
-    );
+    await (_db.update(
+      _db.cats,
+    )..where((t) => t.id.equals(draft.id!))).write(companion);
     return draft.id!;
   }
 
@@ -272,25 +276,28 @@ class DriftCareRepository implements CareRepository {
 
   @override
   Future<String?> setting(String key) async {
-    final row = await (_db.select(_db.appSettings)
-          ..where((t) => t.key.equals(key)))
-        .getSingleOrNull();
+    final row = await (_db.select(
+      _db.appSettings,
+    )..where((t) => t.key.equals(key))).getSingleOrNull();
     return row?.value;
   }
 
   @override
   Future<void> setSetting(String key, String value) {
-    return _db.into(_db.appSettings).insertOnConflictUpdate(
-      AppSettingsCompanion.insert(key: key, value: value),
-    );
+    return _db
+        .into(_db.appSettings)
+        .insertOnConflictUpdate(
+          AppSettingsCompanion.insert(key: key, value: value),
+        );
   }
 
   @override
   Future<List<CatPhoto>> photosOf(int catId) async {
-    final rows = await (_db.select(_db.catPhotos)
-          ..where((t) => t.catId.equals(catId))
-          ..orderBy([(t) => OrderingTerm.asc(t.takenAt)]))
-        .get();
+    final rows =
+        await (_db.select(_db.catPhotos)
+              ..where((t) => t.catId.equals(catId))
+              ..orderBy([(t) => OrderingTerm.asc(t.takenAt)]))
+            .get();
     return rows
         .map(
           (row) => CatPhoto(
@@ -313,15 +320,17 @@ class DriftCareRepository implements CareRepository {
     double? weightKg,
     String note = '',
   }) {
-    return _db.into(_db.catPhotos).insert(
-      CatPhotosCompanion.insert(
-        catId: catId,
-        path: path,
-        takenAt: takenAt,
-        weightKg: Value(weightKg),
-        note: Value(note),
-      ),
-    );
+    return _db
+        .into(_db.catPhotos)
+        .insert(
+          CatPhotosCompanion.insert(
+            catId: catId,
+            path: path,
+            takenAt: takenAt,
+            weightKg: Value(weightKg),
+            note: Value(note),
+          ),
+        );
   }
 
   @override
@@ -331,9 +340,9 @@ class DriftCareRepository implements CareRepository {
 
   @override
   Future<List<VaccineRecord>> vaccines() async {
-    final rows = await (_db.select(_db.vaccines)
-          ..orderBy([(t) => OrderingTerm.desc(t.givenOn)]))
-        .get();
+    final rows = await (_db.select(
+      _db.vaccines,
+    )..orderBy([(t) => OrderingTerm.desc(t.givenOn)])).get();
     return rows
         .map(
           (row) => VaccineRecord(
@@ -362,8 +371,9 @@ class DriftCareRepository implements CareRepository {
     if (draft.id == null) {
       return _db.into(_db.vaccines).insert(companion);
     }
-    await (_db.update(_db.vaccines)..where((t) => t.id.equals(draft.id!)))
-        .write(companion);
+    await (_db.update(
+      _db.vaccines,
+    )..where((t) => t.id.equals(draft.id!))).write(companion);
     return draft.id!;
   }
 
@@ -374,9 +384,9 @@ class DriftCareRepository implements CareRepository {
 
   @override
   Future<List<DewormRecord>> deworms() async {
-    final rows = await (_db.select(_db.dewormings)
-          ..orderBy([(t) => OrderingTerm.desc(t.givenOn)]))
-        .get();
+    final rows = await (_db.select(
+      _db.dewormings,
+    )..orderBy([(t) => OrderingTerm.desc(t.givenOn)])).get();
     return rows
         .map(
           (row) => DewormRecord(
@@ -403,8 +413,9 @@ class DriftCareRepository implements CareRepository {
       notes: Value(draft.notes.trim()),
     );
     if (draft.id == null) return _db.into(_db.dewormings).insert(companion);
-    await (_db.update(_db.dewormings)..where((t) => t.id.equals(draft.id!)))
-        .write(companion);
+    await (_db.update(
+      _db.dewormings,
+    )..where((t) => t.id.equals(draft.id!))).write(companion);
     return draft.id!;
   }
 
@@ -415,9 +426,9 @@ class DriftCareRepository implements CareRepository {
 
   @override
   Future<List<VetRecord>> visits() async {
-    final rows = await (_db.select(_db.vetVisits)
-          ..orderBy([(t) => OrderingTerm.desc(t.visitedOn)]))
-        .get();
+    final rows = await (_db.select(
+      _db.vetVisits,
+    )..orderBy([(t) => OrderingTerm.desc(t.visitedOn)])).get();
     return rows
         .map(
           (row) => VetRecord(
@@ -446,8 +457,9 @@ class DriftCareRepository implements CareRepository {
       notes: Value(draft.notes.trim()),
     );
     if (draft.id == null) return _db.into(_db.vetVisits).insert(companion);
-    await (_db.update(_db.vetVisits)..where((t) => t.id.equals(draft.id!)))
-        .write(companion);
+    await (_db.update(
+      _db.vetVisits,
+    )..where((t) => t.id.equals(draft.id!))).write(companion);
     return draft.id!;
   }
 
@@ -458,9 +470,9 @@ class DriftCareRepository implements CareRepository {
 
   @override
   Future<List<WeightRecord>> weights() async {
-    final rows = await (_db.select(_db.weightLogs)
-          ..orderBy([(t) => OrderingTerm.asc(t.loggedOn)]))
-        .get();
+    final rows = await (_db.select(
+      _db.weightLogs,
+    )..orderBy([(t) => OrderingTerm.asc(t.loggedOn)])).get();
     return rows
         .map(
           (row) => WeightRecord(
@@ -479,13 +491,15 @@ class DriftCareRepository implements CareRepository {
     required DateTime loggedOn,
     required double weightKg,
   }) {
-    return _db.into(_db.weightLogs).insert(
-      WeightLogsCompanion.insert(
-        catId: catId,
-        loggedOn: loggedOn,
-        weightKg: weightKg,
-      ),
-    );
+    return _db
+        .into(_db.weightLogs)
+        .insert(
+          WeightLogsCompanion.insert(
+            catId: catId,
+            loggedOn: loggedOn,
+            weightKg: weightKg,
+          ),
+        );
   }
 
   @override
@@ -495,9 +509,9 @@ class DriftCareRepository implements CareRepository {
 
   @override
   Future<List<HealthNote>> notes() async {
-    final rows = await (_db.select(_db.healthNotes)
-          ..orderBy([(t) => OrderingTerm.desc(t.notedOn)]))
-        .get();
+    final rows = await (_db.select(
+      _db.healthNotes,
+    )..orderBy([(t) => OrderingTerm.desc(t.notedOn)])).get();
     return rows
         .map(
           (row) => HealthNote(
@@ -516,13 +530,15 @@ class DriftCareRepository implements CareRepository {
     required DateTime notedOn,
     required String content,
   }) {
-    return _db.into(_db.healthNotes).insert(
-      HealthNotesCompanion.insert(
-        catId: catId,
-        notedOn: notedOn,
-        content: content.trim(),
-      ),
-    );
+    return _db
+        .into(_db.healthNotes)
+        .insert(
+          HealthNotesCompanion.insert(
+            catId: catId,
+            notedOn: notedOn,
+            content: content.trim(),
+          ),
+        );
   }
 
   @override
@@ -532,9 +548,9 @@ class DriftCareRepository implements CareRepository {
 
   @override
   Future<List<FeedingRecord>> feedings() async {
-    final rows = await (_db.select(_db.feedingLogs)
-          ..orderBy([(t) => OrderingTerm.desc(t.loggedAt)]))
-        .get();
+    final rows = await (_db.select(
+      _db.feedingLogs,
+    )..orderBy([(t) => OrderingTerm.desc(t.loggedAt)])).get();
     return rows
         .map(
           (row) => FeedingRecord(
@@ -565,8 +581,9 @@ class DriftCareRepository implements CareRepository {
       slot: Value(slotKey(draft.slot)),
     );
     if (draft.id == null) return _db.into(_db.feedingLogs).insert(companion);
-    await (_db.update(_db.feedingLogs)..where((t) => t.id.equals(draft.id!)))
-        .write(companion);
+    await (_db.update(
+      _db.feedingLogs,
+    )..where((t) => t.id.equals(draft.id!))).write(companion);
     return draft.id!;
   }
 
@@ -577,9 +594,9 @@ class DriftCareRepository implements CareRepository {
 
   @override
   Future<List<TransitionPlan>> transitions() async {
-    final rows = await (_db.select(_db.foodTransitions)
-          ..orderBy([(t) => OrderingTerm.desc(t.startDate)]))
-        .get();
+    final rows = await (_db.select(
+      _db.foodTransitions,
+    )..orderBy([(t) => OrderingTerm.desc(t.startDate)])).get();
     return rows
         .map(
           (row) => TransitionPlan(
@@ -602,20 +619,24 @@ class DriftCareRepository implements CareRepository {
     required DateTime startDate,
     int days = 7,
   }) {
-    return _db.into(_db.foodTransitions).insert(
-      FoodTransitionsCompanion.insert(
-        catId: catId,
-        fromFood: fromFood.trim(),
-        toFood: toFood.trim(),
-        startDate: startDate,
-        days: Value(days),
-      ),
-    );
+    return _db
+        .into(_db.foodTransitions)
+        .insert(
+          FoodTransitionsCompanion.insert(
+            catId: catId,
+            fromFood: fromFood.trim(),
+            toFood: toFood.trim(),
+            startDate: startDate,
+            days: Value(days),
+          ),
+        );
   }
 
   @override
   Future<void> deleteTransition(int id) {
-    return (_db.delete(_db.foodTransitions)..where((t) => t.id.equals(id))).go();
+    return (_db.delete(
+      _db.foodTransitions,
+    )..where((t) => t.id.equals(id))).go();
   }
 
   @override
@@ -643,23 +664,27 @@ class DriftCareRepository implements CareRepository {
     required int minute,
     required bool enabled,
   }) async {
-    final existing = await (_db.select(_db.feedingReminders)
-          ..where((t) => t.catId.equals(catId) & t.slot.equals(slot)))
-        .getSingleOrNull();
+    final existing =
+        await (_db.select(_db.feedingReminders)
+              ..where((t) => t.catId.equals(catId) & t.slot.equals(slot)))
+            .getSingleOrNull();
     if (existing == null) {
-      await _db.into(_db.feedingReminders).insert(
-        FeedingRemindersCompanion.insert(
-          catId: catId,
-          slot: slot,
-          hour: hour,
-          minute: minute,
-          enabled: Value(enabled),
-        ),
-      );
+      await _db
+          .into(_db.feedingReminders)
+          .insert(
+            FeedingRemindersCompanion.insert(
+              catId: catId,
+              slot: slot,
+              hour: hour,
+              minute: minute,
+              enabled: Value(enabled),
+            ),
+          );
       return;
     }
-    await (_db.update(_db.feedingReminders)..where((t) => t.id.equals(existing.id)))
-        .write(
+    await (_db.update(
+      _db.feedingReminders,
+    )..where((t) => t.id.equals(existing.id))).write(
       FeedingRemindersCompanion(
         hour: Value(hour),
         minute: Value(minute),
@@ -670,20 +695,20 @@ class DriftCareRepository implements CareRepository {
 
   @override
   Future<List<FoodProduct>> products() async {
-    final rows = await (_db.select(_db.foodProducts)
-          ..orderBy([
-            (t) => OrderingTerm.asc(t.brand),
-            (t) => OrderingTerm.asc(t.name),
-          ]))
-        .get();
+    final rows =
+        await (_db.select(_db.foodProducts)..orderBy([
+              (t) => OrderingTerm.asc(t.brand),
+              (t) => OrderingTerm.asc(t.name),
+            ]))
+            .get();
     return rows.map(_product).toList();
   }
 
   @override
   Future<FoodProduct?> productByBarcode(String barcode) async {
-    final row = await (_db.select(_db.foodProducts)
-          ..where((t) => t.barcode.equals(barcode.trim())))
-        .getSingleOrNull();
+    final row = await (_db.select(
+      _db.foodProducts,
+    )..where((t) => t.barcode.equals(barcode.trim()))).getSingleOrNull();
     return row == null ? null : _product(row);
   }
 
@@ -702,8 +727,9 @@ class DriftCareRepository implements CareRepository {
       isSample: Value(draft.isSample),
     );
     if (draft.id == null) return _db.into(_db.foodProducts).insert(companion);
-    await (_db.update(_db.foodProducts)..where((t) => t.id.equals(draft.id!)))
-        .write(companion);
+    await (_db.update(
+      _db.foodProducts,
+    )..where((t) => t.id.equals(draft.id!))).write(companion);
     return draft.id!;
   }
 
@@ -747,8 +773,9 @@ class DriftCareRepository implements CareRepository {
       afterOpenDays: Value(draft.afterOpenDays),
     );
     if (draft.id == null) return _db.into(_db.pantryItems).insert(companion);
-    await (_db.update(_db.pantryItems)..where((t) => t.id.equals(draft.id!)))
-        .write(companion);
+    await (_db.update(
+      _db.pantryItems,
+    )..where((t) => t.id.equals(draft.id!))).write(companion);
     return draft.id!;
   }
 
@@ -759,9 +786,9 @@ class DriftCareRepository implements CareRepository {
 
   @override
   Future<List<ConditionRecord>> conditions() async {
-    final rows = await (_db.select(_db.catConditions)
-          ..orderBy([(t) => OrderingTerm.desc(t.diagnosedOn)]))
-        .get();
+    final rows = await (_db.select(
+      _db.catConditions,
+    )..orderBy([(t) => OrderingTerm.desc(t.diagnosedOn)])).get();
     return [
       for (final row in rows)
         ConditionRecord(
@@ -789,8 +816,9 @@ class DriftCareRepository implements CareRepository {
     if (draft.id == null) {
       return _db.into(_db.catConditions).insert(companion);
     }
-    await (_db.update(_db.catConditions)..where((t) => t.id.equals(draft.id!)))
-        .write(companion);
+    await (_db.update(
+      _db.catConditions,
+    )..where((t) => t.id.equals(draft.id!))).write(companion);
     return draft.id!;
   }
 
@@ -801,9 +829,9 @@ class DriftCareRepository implements CareRepository {
 
   @override
   Future<List<CheckupRecord>> checkups() async {
-    final rows = await (_db.select(_db.checkupLogs)
-          ..orderBy([(t) => OrderingTerm.desc(t.completedOn)]))
-        .get();
+    final rows = await (_db.select(
+      _db.checkupLogs,
+    )..orderBy([(t) => OrderingTerm.desc(t.completedOn)])).get();
     return [
       for (final row in rows)
         CheckupRecord(
@@ -827,8 +855,9 @@ class DriftCareRepository implements CareRepository {
       nextDue: Value(draft.nextDue),
     );
     if (draft.id == null) return _db.into(_db.checkupLogs).insert(companion);
-    await (_db.update(_db.checkupLogs)..where((t) => t.id.equals(draft.id!)))
-        .write(companion);
+    await (_db.update(
+      _db.checkupLogs,
+    )..where((t) => t.id.equals(draft.id!))).write(companion);
     return draft.id!;
   }
 
@@ -839,9 +868,9 @@ class DriftCareRepository implements CareRepository {
 
   @override
   Future<List<WaterRecord>> waters() async {
-    final rows = await (_db.select(_db.waterLogs)
-          ..orderBy([(t) => OrderingTerm.desc(t.loggedOn)]))
-        .get();
+    final rows = await (_db.select(
+      _db.waterLogs,
+    )..orderBy([(t) => OrderingTerm.desc(t.loggedOn)])).get();
     return [
       for (final row in rows)
         WaterRecord(
@@ -859,13 +888,15 @@ class DriftCareRepository implements CareRepository {
     required DateTime loggedOn,
     required double milliliters,
   }) {
-    return _db.into(_db.waterLogs).insert(
-      WaterLogsCompanion.insert(
-        catId: catId,
-        loggedOn: loggedOn,
-        milliliters: milliliters,
-      ),
-    );
+    return _db
+        .into(_db.waterLogs)
+        .insert(
+          WaterLogsCompanion.insert(
+            catId: catId,
+            loggedOn: loggedOn,
+            milliliters: milliliters,
+          ),
+        );
   }
 
   @override

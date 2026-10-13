@@ -112,7 +112,7 @@ void main() {
     await back(tester);
     await back(tester);
 
-    await tapText(tester, '首页');
+    await tapText(tester, '今天');
     await tapText(tester, '橘座');
     await tapText(tester, '奶油');
     expect(controller.active?.name, '奶油');

@@ -48,14 +48,7 @@ class _ZhuajiAppState extends State<ZhuajiApp> {
             ],
           ),
           StatefulShellBranch(
-            routes: [
-              GoRoute(path: '/pantry', builder: (_, _) => const PantryPage()),
-            ],
-          ),
-          StatefulShellBranch(
-            routes: [
-              GoRoute(path: '/me', builder: (_, _) => const CatsPage()),
-            ],
+            routes: [GoRoute(path: '/me', builder: (_, _) => const CatsPage())],
           ),
         ],
       ),
@@ -73,9 +66,8 @@ class _ZhuajiAppState extends State<ZhuajiApp> {
       ),
       GoRoute(
         path: '/product-form',
-        builder: (context, state) => ProductFormPage(
-          barcode: state.uri.queryParameters['barcode'],
-        ),
+        builder: (context, state) =>
+            ProductFormPage(barcode: state.uri.queryParameters['barcode']),
       ),
       GoRoute(
         path: '/cat',
@@ -88,6 +80,7 @@ class _ZhuajiAppState extends State<ZhuajiApp> {
           catId: int.tryParse(state.uri.queryParameters['id'] ?? ''),
         ),
       ),
+      GoRoute(path: '/pantry', builder: (_, _) => const PantryPage()),
       GoRoute(path: '/photos', builder: (_, _) => const PhotoPage()),
       GoRoute(path: '/feeding', builder: (_, _) => const FeedingPage()),
       GoRoute(path: '/reminders', builder: (_, _) => const RemindersPage()),
@@ -95,9 +88,8 @@ class _ZhuajiAppState extends State<ZhuajiApp> {
       GoRoute(path: '/diseases', builder: (_, _) => const DiseaseLibraryPage()),
       GoRoute(
         path: '/disease',
-        builder: (context, state) => DiseaseDetailPage(
-          diseaseId: state.uri.queryParameters['id'] ?? '',
-        ),
+        builder: (context, state) =>
+            DiseaseDetailPage(diseaseId: state.uri.queryParameters['id'] ?? ''),
       ),
     ],
   );

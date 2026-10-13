@@ -114,7 +114,9 @@ ThemeData buildAppTheme() {
       backgroundColor: AppColors.ink,
       contentTextStyle: text.bodyMedium?.copyWith(color: Colors.white),
       behavior: SnackBarBehavior.floating,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(Radii.m)),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(Radii.m),
+      ),
     ),
   );
 }

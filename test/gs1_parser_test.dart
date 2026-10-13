@@ -40,7 +40,10 @@ void main() {
   });
 
   test('AI 15 is best-before, not an expiry', () {
-    final result = parser.parse('(15)261130(01)06971000000014', reference: reference);
+    final result = parser.parse(
+      '(15)261130(01)06971000000014',
+      reference: reference,
+    );
     expect(result.bestBeforeDate, DateTime(2026, 11, 30));
     expect(result.expiryDate, isNull);
     expect(result.suggestedExpiry, DateTime(2026, 11, 30));

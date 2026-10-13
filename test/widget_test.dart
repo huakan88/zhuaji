@@ -7,13 +7,18 @@ import 'package:maokangji/core/widgets/common.dart';
 void main() {
   testWidgets('disclaimer says the app is not a vet', (tester) async {
     await tester.pumpWidget(
-      MaterialApp(theme: buildAppTheme(), home: const Scaffold(body: DisclaimerBanner())),
+      MaterialApp(
+        theme: buildAppTheme(),
+        home: const Scaffold(body: DisclaimerBanner()),
+      ),
     );
     expect(find.textContaining('不能替代执业兽医'), findsOneWidget);
     expect(find.text(kDisclaimer), findsOneWidget);
   });
 
-  testWidgets('food date card shows production, countdown and storage', (tester) async {
+  testWidgets('food date card shows production, countdown and storage', (
+    tester,
+  ) async {
     await tester.pumpWidget(
       MaterialApp(
         theme: buildAppTheme(),

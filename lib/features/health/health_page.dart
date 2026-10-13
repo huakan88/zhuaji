@@ -55,8 +55,12 @@ class _HealthPageState extends State<HealthPage> {
                             entry.$2,
                             style: TextStyle(
                               fontSize: 16,
-                              fontWeight: _tab == entry.$1 ? FontWeight.w700 : FontWeight.w500,
-                              color: _tab == entry.$1 ? AppColors.ink : AppColors.muted,
+                              fontWeight: _tab == entry.$1
+                                  ? FontWeight.w700
+                                  : FontWeight.w500,
+                              color: _tab == entry.$1
+                                  ? AppColors.ink
+                                  : AppColors.muted,
                             ),
                           ),
                           const SizedBox(height: 6),
@@ -64,7 +68,9 @@ class _HealthPageState extends State<HealthPage> {
                             width: 18,
                             height: 3,
                             decoration: BoxDecoration(
-                              color: _tab == entry.$1 ? AppColors.coralDeep : Colors.transparent,
+                              color: _tab == entry.$1
+                                  ? AppColors.coralDeep
+                                  : Colors.transparent,
                               borderRadius: BorderRadius.circular(99),
                             ),
                           ),
@@ -93,12 +99,19 @@ class _HealthPageState extends State<HealthPage> {
       for (final item in app.photos) item.takenAt,
     ];
     if (points.isEmpty) return 1;
-    final earliest = points.map(dateOnly).reduce((a, b) => a.isBefore(b) ? a : b);
+    final earliest = points
+        .map(dateOnly)
+        .reduce((a, b) => a.isBefore(b) ? a : b);
     final days = dateOnly(app.now).difference(earliest).inDays;
     return days < 1 ? 1 : days;
   }
 
-  List<Widget> _growth(BuildContext context, AppController app, CatProfile cat, int days) {
+  List<Widget> _growth(
+    BuildContext context,
+    AppController app,
+    CatProfile cat,
+    int days,
+  ) {
     return [
       SoftCard(
         child: Row(
@@ -109,11 +122,23 @@ class _HealthPageState extends State<HealthPage> {
                 children: [
                   const Text('已经一起', style: TextStyle(color: AppColors.muted)),
                   const SizedBox(height: 4),
-                  Text('$days 天', style: const TextStyle(fontSize: 36, fontWeight: FontWeight.w700, height: 1)),
+                  Text(
+                    '$days 天',
+                    style: const TextStyle(
+                      fontSize: 36,
+                      fontWeight: FontWeight.w700,
+                      height: 1,
+                    ),
+                  ),
                   const SizedBox(height: 6),
                   Text(
-                    '从最早的记录算起 · ${ageLabel(cat.birthday, app.now)}',
-                    style: const TextStyle(color: AppColors.muted, fontSize: 12),
+                    app.latestWeight == null
+                        ? '还没有体重'
+                        : '最近 ${app.latestWeight!.weightKg.toStringAsFixed(2)} kg',
+                    style: const TextStyle(
+                      color: AppColors.muted,
+                      fontSize: 12,
+                    ),
                   ),
                 ],
               ),
@@ -165,7 +190,9 @@ class _HealthPageState extends State<HealthPage> {
     final cat = app.active!;
     final stage = lifeStageFor(cat.birthday, app.now);
     final done = app.careRing.where((item) => item.done).length;
-    final percent = app.careRing.isEmpty ? 0 : (done * 100 / app.careRing.length).round();
+    final percent = app.careRing.isEmpty
+        ? 0
+        : (done * 100 / app.careRing.length).round();
     return [
       const Padding(
         padding: EdgeInsets.only(bottom: 8),
@@ -189,7 +216,7 @@ class _HealthPageState extends State<HealthPage> {
         ),
       _linkCard(
         title: '疾病养护',
-        detail: '常见病的饮食、饮水、复查和警示',
+        detail: '只看和${cat.name}有关的，搜名字能看其他病',
         onTap: () => context.push('/diseases'),
       ),
       Align(
@@ -226,7 +253,13 @@ class _HealthPageState extends State<HealthPage> {
                     ),
                     duration: Duration.zero,
                   ),
-                  Text('$percent%', style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 18)),
+                  Text(
+                    '$percent%',
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 18,
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -235,7 +268,10 @@ class _HealthPageState extends State<HealthPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('本周照护', style: TextStyle(fontWeight: FontWeight.w700)),
+                  const Text(
+                    '本周照护',
+                    style: TextStyle(fontWeight: FontWeight.w700),
+                  ),
                   const SizedBox(height: 8),
                   Wrap(
                     spacing: 6,
@@ -244,7 +280,9 @@ class _HealthPageState extends State<HealthPage> {
                       for (final slice in app.careRing)
                         TagChip(
                           label: slice.label,
-                          tint: slice.done ? AppColors.tintGreen : AppColors.cream,
+                          tint: slice.done
+                              ? AppColors.tintGreen
+                              : AppColors.cream,
                           color: slice.done ? AppColors.olive : AppColors.muted,
                         ),
                     ],
@@ -256,7 +294,11 @@ class _HealthPageState extends State<HealthPage> {
         ),
       ),
       const SizedBox(height: 16),
-      SectionHeader(title: '疫苗', action: '添加', onAction: () => showVaccineSheet(context)),
+      SectionHeader(
+        title: '疫苗',
+        action: '添加',
+        onAction: () => showVaccineSheet(context),
+      ),
       for (final item in app.catVaccines)
         _record(
           title: item.name,
@@ -270,7 +312,11 @@ class _HealthPageState extends State<HealthPage> {
             }
           },
         ),
-      SectionHeader(title: '驱虫', action: '添加', onAction: () => showDewormSheet(context)),
+      SectionHeader(
+        title: '驱虫',
+        action: '添加',
+        onAction: () => showDewormSheet(context),
+      ),
       for (final item in app.catDeworms)
         _record(
           title: '${dewormLabel(item.kind)} · ${item.product}',
@@ -284,7 +330,11 @@ class _HealthPageState extends State<HealthPage> {
             }
           },
         ),
-      SectionHeader(title: '就医', action: '添加', onAction: () => showVisitSheet(context)),
+      SectionHeader(
+        title: '就医',
+        action: '添加',
+        onAction: () => showVisitSheet(context),
+      ),
       for (final item in app.catVisits)
         _record(
           title: item.reason,
@@ -314,28 +364,43 @@ class _HealthPageState extends State<HealthPage> {
             child: InkWell(
               onTap: () => _openTask(context, task.title),
               child: Row(
-              children: [
-                Icon(
-                  task.done ? Icons.check_circle_rounded : Icons.circle_outlined,
-                  color: task.done ? AppColors.sage : AppColors.muted,
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(task.title, style: const TextStyle(fontWeight: FontWeight.w600)),
-                      Text(task.detail, style: const TextStyle(color: AppColors.muted, fontSize: 12)),
-                    ],
+                children: [
+                  Icon(
+                    task.done
+                        ? Icons.check_circle_rounded
+                        : Icons.circle_outlined,
+                    color: task.done ? AppColors.sage : AppColors.muted,
                   ),
-                ),
-              ],
-            ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          task.title,
+                          style: const TextStyle(fontWeight: FontWeight.w600),
+                        ),
+                        Text(
+                          task.detail,
+                          style: const TextStyle(
+                            color: AppColors.muted,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ),
       const SizedBox(height: 8),
-      SectionHeader(title: '笔记', action: '写一条', onAction: () => showNoteSheet(context)),
+      SectionHeader(
+        title: '笔记',
+        action: '写一条',
+        onAction: () => showNoteSheet(context),
+      ),
       for (final item in app.catNotes)
         _record(
           title: item.content,
@@ -393,8 +458,14 @@ class _HealthPageState extends State<HealthPage> {
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
         child: ListTile(
           contentPadding: EdgeInsets.zero,
-          title: Text(title, style: const TextStyle(fontWeight: FontWeight.w700)),
-          subtitle: Text(detail, style: const TextStyle(color: AppColors.muted)),
+          title: Text(
+            title,
+            style: const TextStyle(fontWeight: FontWeight.w700),
+          ),
+          subtitle: Text(
+            detail,
+            style: const TextStyle(color: AppColors.muted),
+          ),
           trailing: const Icon(Icons.chevron_right_rounded),
           onTap: onTap,
         ),
@@ -415,7 +486,10 @@ class _HealthPageState extends State<HealthPage> {
         child: ListTile(
           contentPadding: EdgeInsets.zero,
           title: Text(title),
-          subtitle: Text(detail, style: const TextStyle(color: AppColors.muted)),
+          subtitle: Text(
+            detail,
+            style: const TextStyle(color: AppColors.muted),
+          ),
           onTap: onTap,
           trailing: IconButton(
             icon: const Icon(Icons.delete_outline, color: AppColors.muted),
@@ -435,9 +509,14 @@ class _Dots extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (weights.isEmpty) {
-      return const Text('时间线会随着称重慢慢长出来。', style: TextStyle(color: AppColors.muted));
+      return const Text(
+        '时间线会随着称重慢慢长出来。',
+        style: TextStyle(color: AppColors.muted),
+      );
     }
-    final shown = weights.length <= 5 ? weights : weights.sublist(weights.length - 5);
+    final shown = weights.length <= 5
+        ? weights
+        : weights.sublist(weights.length - 5);
     return Row(
       children: [
         for (final item in shown)
@@ -452,12 +531,18 @@ class _Dots extends StatelessWidget {
                 Container(
                   width: 12,
                   height: 12,
-                  decoration: const BoxDecoration(color: AppColors.sage, shape: BoxShape.circle),
+                  decoration: const BoxDecoration(
+                    color: AppColors.sage,
+                    shape: BoxShape.circle,
+                  ),
                 ),
                 const SizedBox(height: 8),
                 Text(
                   item.weightKg.toStringAsFixed(2),
-                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                  style: const TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ],
             ),

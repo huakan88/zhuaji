@@ -28,9 +28,7 @@ class OcrDateParser {
     r'(\d{4})\s*[年\-/.]\s*(\d{1,2})\s*[月\-/.]\s*(\d{1,2})\s*日?',
   );
   static final _compact = RegExp(r'(?<!\d)(\d{4})(\d{2})(\d{2})(?!\d)');
-  static final _shelfLife = RegExp(
-    r'保质期(?!至)[:：]?\s*(\d+)\s*(年|个月|月|天|日)',
-  );
+  static final _shelfLife = RegExp(r'保质期(?!至)[:：]?\s*(\d+)\s*(年|个月|月|天|日)');
 
   static const _productionLabels = ['生产日期', '制造日期', 'MFG', 'MFD', '生产'];
   static const _expiryLabels = [

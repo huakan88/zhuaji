@@ -167,9 +167,8 @@ class ReminderPlanner {
       now: now,
       offsets: const [7, 0],
       idFor: (offset) => base + (offset == 7 ? 0 : 1000000) + due.id,
-      titleFor: (offset) => offset == 0
-          ? '${due.catName}的$kind提醒'
-          : '${due.catName}的$kind将至',
+      titleFor: (offset) =>
+          offset == 0 ? '${due.catName}的$kind提醒' : '${due.catName}的$kind将至',
       bodyFor: (offset) => offset == 0
           ? '今天是「${due.label}」的计划日期。这只是提醒，不能代替兽医判断。'
           : '还有 7 天到「${due.label}」的计划日期。',

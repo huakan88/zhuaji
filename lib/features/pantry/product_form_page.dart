@@ -20,7 +20,9 @@ class ProductFormPage extends StatefulWidget {
 class _ProductFormPageState extends State<ProductFormPage> {
   late final TextEditingController _brand = TextEditingController();
   late final TextEditingController _name = TextEditingController();
-  late final TextEditingController _spec = TextEditingController(text: '示例规格，请改成包装上的');
+  late final TextEditingController _spec = TextEditingController(
+    text: '示例规格，请改成包装上的',
+  );
   late final TextEditingController _kcal = TextEditingController();
   late final TextEditingController _storage = TextEditingController(
     text: '阴凉干燥处密封保存',
@@ -53,11 +55,20 @@ class _ProductFormPageState extends State<ProductFormPage> {
             style: const TextStyle(color: AppColors.muted, height: 1.4),
           ),
           const SizedBox(height: 16),
-          TextField(controller: _brand, decoration: const InputDecoration(labelText: '品牌')),
+          TextField(
+            controller: _brand,
+            decoration: const InputDecoration(labelText: '品牌'),
+          ),
           const SizedBox(height: 12),
-          TextField(controller: _name, decoration: const InputDecoration(labelText: '名称')),
+          TextField(
+            controller: _name,
+            decoration: const InputDecoration(labelText: '名称'),
+          ),
           const SizedBox(height: 12),
-          TextField(controller: _spec, decoration: const InputDecoration(labelText: '规格')),
+          TextField(
+            controller: _spec,
+            decoration: const InputDecoration(labelText: '规格'),
+          ),
           const SizedBox(height: 12),
           DropdownButtonFormField<FoodForm>(
             initialValue: _form,

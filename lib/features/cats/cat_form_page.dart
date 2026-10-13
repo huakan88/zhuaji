@@ -27,10 +27,20 @@ class _CatFormPageState extends State<CatFormPage> {
   final _photos = PhotoStore();
   CatSex _sex = CatSex.unknown;
   CareGoal _goal = CareGoal.maintain;
-  bool _neutered = true;
+  bool? _neutered;
   DateTime? _birthday;
   String? _avatar;
   String? _hint;
+  List<String> _coatChoices = const ['橘白', '乳白', '狸花', '纯黑', '纯白', '三花'];
+  List<String> _breedChoices = const [
+    '中华田园猫',
+    '英国短毛猫',
+    '美国短毛猫',
+    '布偶猫',
+    '暹罗猫',
+    '缅因猫',
+    '波斯猫',
+  ];
   var _loaded = false;
   var _busy = false;
 
@@ -72,9 +82,7 @@ class _CatFormPageState extends State<CatFormPage> {
       body: ListView(
         padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
         children: [
-          Center(
-            child: CatAvatar(path: _avatar, size: 112, selected: true),
-          ),
+          Center(child: CatAvatar(path: _avatar, size: 112, selected: true)),
           const SizedBox(height: 12),
           Row(
             children: [
@@ -100,54 +108,130 @@ class _CatFormPageState extends State<CatFormPage> {
           ),
           if (_hint != null) ...[
             const SizedBox(height: 8),
-            Text(_hint!, style: const TextStyle(color: AppColors.brown, height: 1.4)),
+            Text(
+              _hint!,
+              style: const TextStyle(color: AppColors.brown, height: 1.4),
+            ),
           ],
           const SizedBox(height: 16),
-          TextField(controller: _name, decoration: const InputDecoration(labelText: '名字')),
+          if (_avatar == null)
+            Align(
+              alignment: Alignment.centerLeft,
+              child: TextButton(
+                onPressed: () => setState(
+                  () => _avatar = 'asset:assets/cats/cat-orange.jpg',
+                ),
+                child: const Text('先用示例图'),
+              ),
+            ),
+          const SizedBox(height: 8),
+          TextField(
+            controller: _name,
+            decoration: const InputDecoration(labelText: '名字'),
+          ),
+          const SizedBox(height: 8),
+          const Text(
+            '照片和名字就够了，下面都可以以后再补。',
+            style: TextStyle(color: AppColors.muted, fontSize: 12),
+          ),
           const SizedBox(height: 12),
-          DropdownButtonFormField<CatSex>(
-            initialValue: _sex,
-            decoration: const InputDecoration(labelText: '性别'),
-            items: [
+          const Text('性别', style: TextStyle(fontWeight: FontWeight.w700)),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 8,
+            children: [
               for (final sex in CatSex.values)
-                DropdownMenuItem(value: sex, child: Text(sexLabel(sex))),
+                ChoiceChip(
+                  label: Text(sexLabel(sex)),
+                  selected: _sex == sex,
+                  selectedColor: AppColors.coral,
+                  onSelected: (_) => setState(() => _sex = sex),
+                ),
             ],
-            onChanged: (value) => setState(() => _sex = value ?? _sex),
+          ),
+          const SizedBox(height: 12),
+          const Text('绝育', style: TextStyle(fontWeight: FontWeight.w700)),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 8,
+            children: [
+              ChoiceChip(
+                label: const Text('已绝育'),
+                selected: _neutered == true,
+                selectedColor: AppColors.coral,
+                onSelected: (_) => setState(() => _neutered = true),
+              ),
+              ChoiceChip(
+                label: const Text('还没有'),
+                selected: _neutered == false,
+                selectedColor: AppColors.coral,
+                onSelected: (_) => setState(() => _neutered = false),
+              ),
+            ],
           ),
           ListTile(
             contentPadding: EdgeInsets.zero,
             title: const Text('生日'),
-            subtitle: Text(_birthday == null ? '未填' : formatDate(_birthday!)),
+            subtitle: Text(
+              _birthday == null ? '可以跳过，年龄会按生日算' : formatDate(_birthday!),
+            ),
             trailing: const Icon(Icons.calendar_today_outlined, size: 18),
             onTap: () async {
-              final picked = await pickDate(context, _birthday ?? DateTime.now());
+              final picked = await pickDate(
+                context,
+                _birthday ?? DateTime.now(),
+              );
               if (picked != null) setState(() => _birthday = picked);
             },
           ),
-          SwitchListTile(
-            contentPadding: EdgeInsets.zero,
-            title: const Text('已绝育'),
-            value: _neutered,
-            onChanged: (value) => setState(() => _neutered = value),
-          ),
-          DropdownButtonFormField<CareGoal>(
-            initialValue: _goal,
-            decoration: const InputDecoration(labelText: '喂养目标'),
-            items: [
-              for (final goal in CareGoal.values)
-                DropdownMenuItem(value: goal, child: Text(goalLabel(goal))),
+          const Text('毛色', style: TextStyle(fontWeight: FontWeight.w700)),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              for (final coat in _coatChoices)
+                ChoiceChip(
+                  label: Text(coat),
+                  selected: _coat.text == coat,
+                  selectedColor: AppColors.coral,
+                  onSelected: (_) => setState(() => _coat.text = coat),
+                ),
             ],
-            onChanged: (value) => setState(() => _goal = value ?? _goal),
           ),
           const SizedBox(height: 12),
-          TextField(controller: _coat, decoration: const InputDecoration(labelText: '毛色')),
+          const Text('大致品种', style: TextStyle(fontWeight: FontWeight.w700)),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              for (final breed in _breedChoices)
+                ChoiceChip(
+                  label: Text(breed),
+                  selected: _breed.text == breed,
+                  selectedColor: AppColors.coral,
+                  onSelected: (_) => setState(() => _breed.text = breed),
+                ),
+            ],
+          ),
           const SizedBox(height: 12),
-          TextField(controller: _breed, decoration: const InputDecoration(labelText: '大致品种')),
-          const SizedBox(height: 12),
-          TextField(
-            controller: _notes,
-            maxLines: 3,
-            decoration: const InputDecoration(labelText: '备注'),
+          Wrap(
+            spacing: 8,
+            children: [
+              ChoiceChip(
+                label: const Text('维持'),
+                selected: _goal == CareGoal.maintain,
+                selectedColor: AppColors.green,
+                onSelected: (_) => setState(() => _goal = CareGoal.maintain),
+              ),
+              ChoiceChip(
+                label: const Text('减重'),
+                selected: _goal == CareGoal.loss,
+                selectedColor: AppColors.green,
+                onSelected: (_) => setState(() => _goal = CareGoal.loss),
+              ),
+            ],
           ),
           const SizedBox(height: 20),
           FilledButton(onPressed: _save, child: const Text('保存')),
@@ -196,6 +280,12 @@ class _CatFormPageState extends State<CatFormPage> {
       _busy = false;
       _coat.text = suggestion.coatColor;
       _breed.text = suggestion.breed;
+      if (suggestion.coatChoices.isNotEmpty) {
+        _coatChoices = suggestion.coatChoices;
+      }
+      if (suggestion.breedChoices.isNotEmpty) {
+        _breedChoices = suggestion.breedChoices;
+      }
       _hint =
           '${suggestion.detail} 置信度 ${(suggestion.confidence * 100).round()}%。来源：${suggestion.source == RecognitionSource.mlkit ? 'ML Kit' : '示例模型'}。';
     });
@@ -206,6 +296,10 @@ class _CatFormPageState extends State<CatFormPage> {
       showMessage(context, '先写一个名字');
       return;
     }
+    if (_avatar == null || _avatar!.isEmpty) {
+      showMessage(context, '先拍一张，或点示例图');
+      return;
+    }
     final app = AppScope.of<AppController>(context);
     final existing = widget.catId == null ? null : app.catById(widget.catId!);
     final id = await app.saveCat(
@@ -214,7 +308,7 @@ class _CatFormPageState extends State<CatFormPage> {
         name: _name.text,
         sex: _sex,
         birthday: _birthday,
-        neutered: _neutered,
+        neutered: _neutered ?? false,
         goal: _goal,
         coatColor: _coat.text,
         breed: _breed.text,

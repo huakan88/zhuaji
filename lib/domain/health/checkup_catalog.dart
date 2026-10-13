@@ -58,7 +58,10 @@ const checkupCatalog = <CheckupItem>[
     why: '体重、体态、心肺、口腔、淋巴结和关节都要兽医当面看，家庭记录代替不了。',
     source: 'AAHA/AAFP 猫生命阶段指南',
     byStage: {
-      LifeStage.kitten: StagePlan(frequency: '幼猫系列期间约每 3–4 周一次，直到基础免疫和绝育评估完成', intervalDays: 28),
+      LifeStage.kitten: StagePlan(
+        frequency: '幼猫系列期间约每 3–4 周一次，直到基础免疫和绝育评估完成',
+        intervalDays: 28,
+      ),
       LifeStage.adult: StagePlan(frequency: '至少每年 1 次', intervalDays: 365),
       LifeStage.mature: StagePlan(frequency: '至少每 6–12 个月', intervalDays: 180),
       LifeStage.senior: StagePlan(frequency: '建议每 6 个月', intervalDays: 180),
@@ -70,7 +73,10 @@ const checkupCatalog = <CheckupItem>[
     why: '看贫血、炎症和血小板。成熟和老年猫更需要定期对比。',
     source: 'AAHA/AAFP 猫生命阶段指南',
     byStage: {
-      LifeStage.kitten: StagePlan(frequency: '绝育或生病时由兽医决定，不必自行开单', intervalDays: 365),
+      LifeStage.kitten: StagePlan(
+        frequency: '绝育或生病时由兽医决定，不必自行开单',
+        intervalDays: 365,
+      ),
       LifeStage.adult: StagePlan(frequency: '每年讨论一次基线', intervalDays: 365),
       LifeStage.mature: StagePlan(frequency: '每 6–12 个月', intervalDays: 180),
       LifeStage.senior: StagePlan(frequency: '每 6 个月', intervalDays: 180),
@@ -105,8 +111,14 @@ const checkupCatalog = <CheckupItem>[
     why: '老年猫甲亢常见。体重下降、多吃、多饮、呕吐或心率快时更要查。',
     source: 'AAFP 甲亢共识；AAHA/AAFP 生命阶段指南',
     byStage: {
-      LifeStage.adult: StagePlan(frequency: '非常规。出现消瘦、多饮多尿时请兽医评估', intervalDays: 365),
-      LifeStage.mature: StagePlan(frequency: '7 岁起每 6–12 个月讨论', intervalDays: 180),
+      LifeStage.adult: StagePlan(
+        frequency: '非常规。出现消瘦、多饮多尿时请兽医评估',
+        intervalDays: 365,
+      ),
+      LifeStage.mature: StagePlan(
+        frequency: '7 岁起每 6–12 个月讨论',
+        intervalDays: 180,
+      ),
       LifeStage.senior: StagePlan(frequency: '每 6 个月', intervalDays: 180),
     },
   ),
@@ -150,10 +162,22 @@ const checkupCatalog = <CheckupItem>[
     why: '核心疫苗的种类和间隔由兽医按风险、法规和抗体情况决定。',
     source: 'WSAVA 犬猫疫苗指南；当地法规优先',
     byStage: {
-      LifeStage.kitten: StagePlan(frequency: '幼猫系列通常从 6–8 周龄开始，每 2–4 周一次，直到 16 周龄或兽医指定的末剂', intervalDays: 28),
-      LifeStage.adult: StagePlan(frequency: '加强间隔常见为 1 年或 3 年，以兽医和当地要求为准', intervalDays: 365),
-      LifeStage.mature: StagePlan(frequency: '继续按兽医制定的核心疫苗计划', intervalDays: 365),
-      LifeStage.senior: StagePlan(frequency: '不要自行停用。高龄、免疫和风险由兽医评估', intervalDays: 365),
+      LifeStage.kitten: StagePlan(
+        frequency: '幼猫系列通常从 6–8 周龄开始，每 2–4 周一次，直到 16 周龄或兽医指定的末剂',
+        intervalDays: 28,
+      ),
+      LifeStage.adult: StagePlan(
+        frequency: '加强间隔常见为 1 年或 3 年，以兽医和当地要求为准',
+        intervalDays: 365,
+      ),
+      LifeStage.mature: StagePlan(
+        frequency: '继续按兽医制定的核心疫苗计划',
+        intervalDays: 365,
+      ),
+      LifeStage.senior: StagePlan(
+        frequency: '不要自行停用。高龄、免疫和风险由兽医评估',
+        intervalDays: 365,
+      ),
     },
   ),
   CheckupItem(
@@ -162,10 +186,19 @@ const checkupCatalog = <CheckupItem>[
     why: '体内外寄生虫和生活方式有关。幼猫、外出和多猫家庭通常更密。',
     source: 'ESCCAP / WSAVA 寄生虫防控思路；产品由兽医选择',
     byStage: {
-      LifeStage.kitten: StagePlan(frequency: '幼猫阶段更频繁，具体间隔听兽医的', intervalDays: 30),
-      LifeStage.adult: StagePlan(frequency: '常见讨论间隔约 1–3 个月，视外出和猎食而定', intervalDays: 90),
+      LifeStage.kitten: StagePlan(
+        frequency: '幼猫阶段更频繁，具体间隔听兽医的',
+        intervalDays: 30,
+      ),
+      LifeStage.adult: StagePlan(
+        frequency: '常见讨论间隔约 1–3 个月，视外出和猎食而定',
+        intervalDays: 90,
+      ),
       LifeStage.mature: StagePlan(frequency: '继续按风险，不要套用狗的药', intervalDays: 90),
-      LifeStage.senior: StagePlan(frequency: '按风险，同时留意肝肾能否承受药物', intervalDays: 90),
+      LifeStage.senior: StagePlan(
+        frequency: '按风险，同时留意肝肾能否承受药物',
+        intervalDays: 90,
+      ),
     },
   ),
   CheckupItem(
@@ -176,10 +209,19 @@ const checkupCatalog = <CheckupItem>[
     breedKeys: ['缅因', '布偶', 'maine', 'ragdoll'],
     breedReason: '品种与 HCM 相关',
     byStage: {
-      LifeStage.kitten: StagePlan(frequency: '繁殖体检或兽医听到杂音时再安排，不必在家判断', intervalDays: 365),
-      LifeStage.adult: StagePlan(frequency: '1 岁后与心脏病方向的兽医讨论超声，之后常按每年或按上次结果缩短', intervalDays: 365),
+      LifeStage.kitten: StagePlan(
+        frequency: '繁殖体检或兽医听到杂音时再安排，不必在家判断',
+        intervalDays: 365,
+      ),
+      LifeStage.adult: StagePlan(
+        frequency: '1 岁后与心脏病方向的兽医讨论超声，之后常按每年或按上次结果缩短',
+        intervalDays: 365,
+      ),
       LifeStage.mature: StagePlan(frequency: '继续按上次超声结果复查', intervalDays: 365),
-      LifeStage.senior: StagePlan(frequency: '有杂音、呼吸加快或既往异常时提前', intervalDays: 180),
+      LifeStage.senior: StagePlan(
+        frequency: '有杂音、呼吸加快或既往异常时提前',
+        intervalDays: 180,
+      ),
     },
   ),
   CheckupItem(
@@ -190,10 +232,22 @@ const checkupCatalog = <CheckupItem>[
     breedKeys: ['波斯', '英短', '英国短毛', 'persian', 'british'],
     breedReason: '品种与多囊肾相关',
     byStage: {
-      LifeStage.kitten: StagePlan(frequency: '可与兽医讨论一次 PKD1 基因或超声，不必重复抽血“看看”', intervalDays: 365),
-      LifeStage.adult: StagePlan(frequency: '未知状态时做一次确认；阳性后改为肾病监测', intervalDays: 365),
-      LifeStage.mature: StagePlan(frequency: '若尚未筛查，仍可做一次；阳性猫按肾病复查', intervalDays: 365),
-      LifeStage.senior: StagePlan(frequency: '阳性或未知时把血压、尿检和 SDMA 纳入老年体检', intervalDays: 180),
+      LifeStage.kitten: StagePlan(
+        frequency: '可与兽医讨论一次 PKD1 基因或超声，不必重复抽血“看看”',
+        intervalDays: 365,
+      ),
+      LifeStage.adult: StagePlan(
+        frequency: '未知状态时做一次确认；阳性后改为肾病监测',
+        intervalDays: 365,
+      ),
+      LifeStage.mature: StagePlan(
+        frequency: '若尚未筛查，仍可做一次；阳性猫按肾病复查',
+        intervalDays: 365,
+      ),
+      LifeStage.senior: StagePlan(
+        frequency: '阳性或未知时把血压、尿检和 SDMA 纳入老年体检',
+        intervalDays: 180,
+      ),
     },
   ),
 ];

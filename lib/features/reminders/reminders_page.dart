@@ -55,28 +55,39 @@ class RemindersPage extends StatelessWidget {
                       }
                     },
                     child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Icon(_icon(item.channel), color: AppColors.olive),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(item.title, style: const TextStyle(fontWeight: FontWeight.w700)),
-                            const SizedBox(height: 4),
-                            Text(item.body, style: const TextStyle(height: 1.35)),
-                            const SizedBox(height: 6),
-                            Text(
-                              '${formatDate(item.when)} ${formatClock(item.when.hour, item.when.minute)}'
-                              '${item.repeatsDaily ? ' · 每天' : ''}',
-                              style: const TextStyle(color: AppColors.muted, fontSize: 12),
-                            ),
-                          ],
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Icon(_icon(item.channel), color: AppColors.olive),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                item.title,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                item.body,
+                                style: const TextStyle(height: 1.35),
+                              ),
+                              const SizedBox(height: 6),
+                              Text(
+                                '${formatDate(item.when)} ${formatClock(item.when.hour, item.when.minute)}'
+                                '${item.repeatsDaily ? ' · 每天' : ''}',
+                                style: const TextStyle(
+                                  color: AppColors.muted,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
-                    ],
-                  ),
+                      ],
+                    ),
                   ),
                 ),
               ),

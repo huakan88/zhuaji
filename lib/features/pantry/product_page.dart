@@ -30,6 +30,7 @@ class _ProductPageState extends State<ProductPage> {
   DateSource _source = DateSource.none;
   var _bestBefore = false;
   var _ready = false;
+  var _openToday = true;
   final _ocr = const DateOcrService();
   final _gs1 = const Gs1Parser();
 
@@ -38,7 +39,9 @@ class _ProductPageState extends State<ProductPage> {
     super.didChangeDependencies();
     if (_ready) return;
     final app = AppScope.of<AppController>(context);
-    final entry = widget.pantryId == null ? null : app.pantryById(widget.pantryId!);
+    final entry = widget.pantryId == null
+        ? null
+        : app.pantryById(widget.pantryId!);
     _production = entry?.item.productionDate;
     _expiry = entry?.item.expiryDate;
     _batch = entry?.item.batch;
@@ -53,7 +56,9 @@ class _ProductPageState extends State<ProductPage> {
     if (product == null) {
       return const Scaffold(body: Center(child: Text('找不到这款猫粮')));
     }
-    final entry = widget.pantryId == null ? null : app.pantryById(widget.pantryId!);
+    final entry = widget.pantryId == null
+        ? null
+        : app.pantryById(widget.pantryId!);
     return Scaffold(
       appBar: AppBar(title: const Text('这袋粮')),
       body: ListView(
@@ -79,11 +84,18 @@ class _ProductPageState extends State<ProductPage> {
             const SizedBox(height: 8),
             Text(
               '示例热量 ${product.kcalPer100g!.round()} kcal/100g。${product.isSample ? kSampleFoodNote : ''}',
-              style: const TextStyle(color: AppColors.muted, fontSize: 12, height: 1.4),
+              style: const TextStyle(
+                color: AppColors.muted,
+                fontSize: 12,
+                height: 1.4,
+              ),
             ),
           ],
           const SizedBox(height: 12),
-          const Text(kBarcodeNote, style: TextStyle(color: AppColors.muted, fontSize: 12, height: 1.4)),
+          const Text(
+            kBarcodeNote,
+            style: TextStyle(color: AppColors.muted, fontSize: 12, height: 1.4),
+          ),
           const SizedBox(height: Space.x4),
           FilledButton(onPressed: _scanGs1, child: const Text('扫描 GS1 日期码')),
           const SizedBox(height: 8),
@@ -105,6 +117,31 @@ class _ProductPageState extends State<ProductPage> {
             child: const Text('填入示例 GS1 日期'),
           ),
           const SizedBox(height: Space.x4),
+          if (entry == null) ...[
+            const Text(
+              '开封日默认是今天',
+              style: TextStyle(color: AppColors.muted, fontSize: 12),
+            ),
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 8,
+              children: [
+                ChoiceChip(
+                  label: const Text('今天开封'),
+                  selected: _openToday,
+                  selectedColor: AppColors.coral,
+                  onSelected: (_) => setState(() => _openToday = true),
+                ),
+                ChoiceChip(
+                  label: const Text('还没开封'),
+                  selected: !_openToday,
+                  selectedColor: AppColors.coral,
+                  onSelected: (_) => setState(() => _openToday = false),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+          ],
           FilledButton(
             onPressed: () => _save(app, product),
             child: Text(entry == null ? '登记到粮仓' : '保存日期'),
@@ -112,8 +149,14 @@ class _ProductPageState extends State<ProductPage> {
           if (entry != null) ...[
             const SizedBox(height: 8),
             OutlinedButton(
-              onPressed: entry.item.openedAt == null ? () => app.markOpened(entry) : null,
-              child: Text(entry.item.openedAt == null ? '标记已开封' : '已开封 ${formatDate(entry.item.openedAt!)}'),
+              onPressed: entry.item.openedAt == null
+                  ? () => app.markOpened(entry)
+                  : null,
+              child: Text(
+                entry.item.openedAt == null
+                    ? '标记已开封'
+                    : '已开封 ${formatDate(entry.item.openedAt!)}',
+              ),
             ),
             TextButton(
               onPressed: () async {
@@ -198,7 +241,9 @@ class _ProductPageState extends State<ProductPage> {
       batch: _batch,
       source: DateSource.ocr,
       bestBefore: false,
-      note: parsed.expiryInferred ? '保质期由「${parsed.shelfLifeText}」和生产日期推算，请核对。' : null,
+      note: parsed.expiryInferred
+          ? '保质期由「${parsed.shelfLifeText}」和生产日期推算，请核对。'
+          : null,
     );
   }
 
@@ -206,7 +251,10 @@ class _ProductPageState extends State<ProductPage> {
     final app = AppScope.of<AppController>(context);
     final production = await pickDate(context, _production ?? app.now);
     if (!mounted || production == null) return;
-    final expiry = await pickDate(context, _expiry ?? production.add(const Duration(days: 540)));
+    final expiry = await pickDate(
+      context,
+      _expiry ?? production.add(const Duration(days: 540)),
+    );
     if (!mounted || expiry == null) return;
     await _applyParsed(
       production: production,
@@ -236,8 +284,14 @@ class _ProductPageState extends State<ProductPage> {
           '${note ?? ''}\n请核对后再保存。',
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('取消')),
-          FilledButton(onPressed: () => Navigator.pop(context, true), child: const Text('采用')),
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('取消'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('采用'),
+          ),
         ],
       ),
     );
@@ -252,7 +306,9 @@ class _ProductPageState extends State<ProductPage> {
   }
 
   Future<void> _save(AppController app, FoodProduct product) async {
-    final existing = widget.pantryId == null ? null : app.pantryById(widget.pantryId!);
+    final existing = widget.pantryId == null
+        ? null
+        : app.pantryById(widget.pantryId!);
     final id = await app.savePantry(
       PantryDraft(
         id: existing?.item.id,
@@ -261,7 +317,9 @@ class _ProductPageState extends State<ProductPage> {
         expiryDate: _expiry,
         batch: _batch,
         dateSource: _source,
-        openedAt: existing?.item.openedAt,
+        openedAt: existing != null
+            ? existing.item.openedAt
+            : (_openToday ? app.now : null),
         afterOpenDays: existing?.item.afterOpenDays ?? product.afterOpenDays,
       ),
     );

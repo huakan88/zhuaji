@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:maokangji/core/widgets/paw_icon.dart';
 import 'package:maokangji/data/db/app_database.dart';
 import 'package:maokangji/data/repositories/drift_care_repository.dart';
 import 'package:maokangji/services/coat_recognizer.dart';
@@ -32,22 +31,36 @@ void main() {
 
   testWidgets('switching cats isolates weights and meals', (tester) async {
     await boot(tester, controller);
+    await tapText(tester, '健康');
     await revealText(tester, '最近 4.35 kg');
     expect(find.text('最近 4.35 kg'), findsOneWidget);
-    expect(controller.catFeedings.any((item) => item.foodName.contains('皇家')), isTrue);
+    expect(
+      controller.catFeedings.any((item) => item.foodName.contains('皇家')),
+      isTrue,
+    );
 
+    await tapText(tester, '今天');
     await tapText(tester, '橘座');
     await tapText(tester, '奶油');
 
     expect(controller.active?.name, '奶油');
+    await tapText(tester, '健康');
     await revealText(tester, '最近 4.05 kg');
     expect(find.text('最近 4.05 kg'), findsOneWidget);
     expect(find.text('最近 4.35 kg'), findsNothing);
-    expect(controller.catFeedings.where((item) => item.foodName.contains('皇家')), isEmpty);
-    expect(controller.photos.every((item) => item.catId == controller.activeCatId), isTrue);
+    expect(
+      controller.catFeedings.where((item) => item.foodName.contains('皇家')),
+      isEmpty,
+    );
+    expect(
+      controller.photos.every((item) => item.catId == controller.activeCatId),
+      isTrue,
+    );
   });
 
-  testWidgets('home cards, bell, diary and quick actions open real pages', (tester) async {
+  testWidgets('home cards, bell, diary and quick actions open real pages', (
+    tester,
+  ) async {
     await boot(tester, controller);
 
     await tester.tap(find.byIcon(Icons.notifications_none_rounded));
@@ -55,7 +68,8 @@ void main() {
     expect(find.text('开启通知权限'), findsOneWidget);
     await back(tester);
 
-    await tapText(tester, '全部');
+    await tapText(tester, '我的');
+    await tapText(tester, '体态对比');
     expect(find.textContaining('的体态'), findsOneWidget);
     await tapText(tester, '再拍一张');
     expect(find.text('从相册选择'), findsOneWidget);
@@ -63,43 +77,54 @@ void main() {
     expect(find.textContaining('没有拿到照片'), findsOneWidget);
     await back(tester);
 
+    await tapText(tester, '今天');
     await tapText(tester, '驱虫');
     expect(find.text('成长'), findsOneWidget);
-    await tapText(tester, '首页');
+    await tapText(tester, '今天');
 
     await tapText(tester, '临期猫粮');
     expect(find.text('在库'), findsOneWidget);
-    await tapText(tester, '首页');
+    await back(tester);
+    await tapText(tester, '今天');
 
     await tapText(tester, '下次疫苗');
     expect(find.text('体重趋势'), findsOneWidget);
-    await tapText(tester, '首页');
+    await tapText(tester, '今天');
 
-    await tapText(tester, '喂食');
-    expect(find.text('记一餐'), findsOneWidget);
-    await back(tester);
+    await tapText(tester, '已喂');
+    expect(
+      controller.todayFeedings.any((meal) => meal.slot.name == 'dinner'),
+      isTrue,
+    );
+    await tapText(tester, '呕吐');
+    expect(controller.catNotes.any((note) => note.content == '症状：呕吐'), isTrue);
+    await tapText(tester, '软便');
+    expect(controller.catNotes.any((note) => note.content == '便便：软便'), isTrue);
 
     await tapText(tester, '健康');
     expect(find.text('已经一起'), findsOneWidget);
-    await tapText(tester, '首页');
+    await tapText(tester, '今天');
 
-    await tapText(tester, '扫码');
+    await tapText(tester, '我的');
+    await tapText(tester, '粮仓');
+    await tapText(tester, '扫条码');
     expect(find.text('使用这段内容'), findsOneWidget);
     await back(tester);
   });
 
-  testWidgets('weight sheet validates, persists, and can be deleted', (tester) async {
+  testWidgets('weight sheet validates, persists, and can be deleted', (
+    tester,
+  ) async {
     await boot(tester, controller);
-    await tapText(tester, '体重');
+    await tapText(tester, '健康');
+    await tapText(tester, '记体重');
     expect(find.text('记录体重'), findsOneWidget);
-    await enter(tester, find.byType(TextField).last, '0');
-    await tapText(tester, '保存');
-    expect(find.text('请填写 0 到 20 kg 之间的体重'), findsOneWidget);
-
-    await enter(tester, find.byType(TextField).last, '4.20');
+    expect(find.text('4.35 kg'), findsWidgets);
+    await tapText(tester, '轻一点');
+    expect(find.text('4.30 kg'), findsWidgets);
     await tapText(tester, '保存');
     expect(find.text('记录体重'), findsNothing);
-    expect(controller.latestWeight?.weightKg, 4.2);
+    expect(controller.latestWeight?.weightKg, closeTo(4.30, 0.001));
 
     final again = AppController(
       repo: DriftCareRepository(database),
@@ -108,30 +133,38 @@ void main() {
       clock: () => DateTime(2026, 10, 12, 11),
     );
     await again.init();
-    expect(again.latestWeight?.weightKg, 4.2);
+    expect(again.latestWeight?.weightKg, closeTo(4.30, 0.001));
 
     await tapText(tester, '健康');
-    await tapText(tester, '4.20 kg');
+    await revealText(tester, '4.30 kg');
+    await tapText(tester, '4.30 kg');
     expect(find.text('记录体重'), findsOneWidget);
     Navigator.of(tester.element(find.text('记录体重'))).pop();
     await frames(tester);
 
-    final row = find.ancestor(of: find.text('4.20 kg'), matching: find.byType(ListTile));
+    final row = find.ancestor(
+      of: find.text('4.30 kg'),
+      matching: find.byType(ListTile),
+    );
     await tester.ensureVisible(row);
-    await tester.tap(find.descendant(of: row, matching: find.byIcon(Icons.delete_outline)));
+    await tester.tap(
+      find.descendant(of: row, matching: find.byIcon(Icons.delete_outline)),
+    );
     await frames(tester);
     await tapText(tester, '删除');
     expect(controller.latestWeight?.weightKg, 4.35);
   });
 
-  testWidgets('health records and notes can be added, opened, and deleted', (tester) async {
+  testWidgets('health records and notes can be added, opened, and deleted', (
+    tester,
+  ) async {
     await boot(tester, controller);
-    await tapText(tester, '健康', index: 1);
+    await tapText(tester, '健康');
     await tapText(tester, '互动');
     await tapText(tester, '今日喂食');
     expect(find.text('记一餐'), findsOneWidget);
     await back(tester);
-    await tapText(tester, '健康', index: 1);
+    await tapText(tester, '健康');
     await tapText(tester, '互动');
     await tapText(tester, '一周体重');
     expect(find.text('记录体重'), findsOneWidget);
@@ -185,12 +218,16 @@ void main() {
 
   testWidgets('feeding meal, reminder, and transition persist', (tester) async {
     await boot(tester, controller);
-    await tapText(tester, '喂食');
+    await tapText(tester, '我的');
+    await tapText(tester, '喂养');
     await tapText(tester, '记一餐');
     await enterField(tester, '食物名称', '午饭罐头');
     await tapText(tester, '保存');
     expect(find.textContaining('午饭罐头'), findsOneWidget);
-    expect(controller.catFeedings.any((item) => item.foodName == '午饭罐头'), isTrue);
+    expect(
+      controller.catFeedings.any((item) => item.foodName == '午饭罐头'),
+      isTrue,
+    );
     final mealTitle = find.textContaining('午饭罐头').first;
     await tester.ensureVisible(mealTitle);
     await tester.tap(mealTitle);
@@ -198,16 +235,30 @@ void main() {
     expect(find.text('这餐记录'), findsOneWidget);
     await tapText(tester, '关闭');
 
-    final meal = find.ancestor(of: find.textContaining('午饭罐头'), matching: find.byType(ListTile));
-    await tester.tap(find.descendant(of: meal, matching: find.byIcon(Icons.delete_outline)));
+    final meal = find.ancestor(
+      of: find.textContaining('午饭罐头'),
+      matching: find.byType(ListTile),
+    );
+    await tester.tap(
+      find.descendant(of: meal, matching: find.byIcon(Icons.delete_outline)),
+    );
     await frames(tester);
     await tapText(tester, '删除');
-    expect(controller.catFeedings.any((item) => item.foodName == '午饭罐头'), isFalse);
+    expect(
+      controller.catFeedings.any((item) => item.foodName == '午饭罐头'),
+      isFalse,
+    );
 
-    final before = controller.remindersFor(controller.activeCatId!).first.enabled;
+    final before = controller
+        .remindersFor(controller.activeCatId!)
+        .first
+        .enabled;
     await tester.tap(find.byType(Switch).first);
     await frames(tester);
-    expect(controller.remindersFor(controller.activeCatId!).first.enabled, isNot(before));
+    expect(
+      controller.remindersFor(controller.activeCatId!).first.enabled,
+      isNot(before),
+    );
 
     await tapText(tester, '调整早餐时间');
     expect(find.text('取消'), findsWidgets);
@@ -235,8 +286,11 @@ void main() {
     expect(controller.activeTransition?.toFood, '新粮');
   });
 
-  testWidgets('pantry dates, catalog search, and unknown barcode persist', (tester) async {
+  testWidgets('pantry dates, catalog search, and unknown barcode persist', (
+    tester,
+  ) async {
     await boot(tester, controller);
+    await tapText(tester, '我的');
     await tapText(tester, '粮仓');
     await tapText(tester, '查看并修改日期');
     expect(find.text('这袋粮'), findsOneWidget);
@@ -251,7 +305,11 @@ void main() {
     await enter(tester, find.byType(TextField).last, '');
     await tapText(tester, '使用这段内容');
     expect(find.text('先扫到一条内容，或在下面输入'), findsOneWidget);
-    await enter(tester, find.byType(TextField).last, '(11)251012(17)270412(10)DEMO');
+    await enter(
+      tester,
+      find.byType(TextField).last,
+      '(11)251012(17)270412(10)DEMO',
+    );
     await tapText(tester, '使用这段内容');
     await tapText(tester, '采用');
     expect(find.textContaining('DEMO'), findsWidgets);
@@ -261,7 +319,10 @@ void main() {
     await tapText(tester, '标记已开封');
     expect(find.textContaining('已开封'), findsWidgets);
     expect(
-      controller.pantry.any((item) => item.product.name.contains('浓汤') && item.item.openedAt != null),
+      controller.pantry.any(
+        (item) =>
+            item.product.name.contains('浓汤') && item.item.openedAt != null,
+      ),
       isTrue,
     );
 
@@ -271,6 +332,7 @@ void main() {
     expect(find.text('没有这款'), findsOneWidget);
     await enter(tester, find.byType(TextField).last, '幼猫慕斯');
     await tapText(tester, '皇家 Royal Canin 幼猫慕斯罐');
+    await revealText(tester, '登记到粮仓');
     expect(find.text('登记到粮仓'), findsOneWidget);
     await back(tester);
 
@@ -288,7 +350,9 @@ void main() {
     expect(controller.findBarcode('6900000000000')?.name, '测试粮');
   });
 
-  testWidgets('reminders, profile, cat form, and quick-add actions work', (tester) async {
+  testWidgets('reminders, profile, cat form, and quick-add actions work', (
+    tester,
+  ) async {
     await boot(tester, controller);
     await tapText(tester, '我的');
     await tapText(tester, '去看看');
@@ -304,7 +368,7 @@ void main() {
     await tester.tap(card);
     await frames(tester);
     final onFeeding = find.textContaining('的喂养').evaluate().isNotEmpty;
-    expect(onFeeding || find.text('首页').evaluate().isNotEmpty, isTrue);
+    expect(onFeeding || find.text('今天').evaluate().isNotEmpty, isTrue);
     if (onFeeding) await back(tester);
     if (find.byTooltip('返回').evaluate().isNotEmpty) await back(tester);
     await tapText(tester, '我的');
@@ -338,6 +402,9 @@ void main() {
     expect(find.textContaining('没有打开相机或相册'), findsWidgets);
     await enterField(tester, '名字', '小黑');
     await tapText(tester, '保存');
+    expect(find.text('先拍一张，或点示例图'), findsOneWidget);
+    await tapText(tester, '先用示例图');
+    await tapText(tester, '保存');
     expect(find.text('小黑'), findsWidgets);
     expect(controller.cats.any((item) => item.name == '小黑'), isTrue);
     await tapText(tester, '删除这只猫');
@@ -347,13 +414,11 @@ void main() {
     await tapText(tester, '删除');
     expect(controller.cats.any((item) => item.name == '小黑'), isFalse);
 
-    await tapText(tester, '首页');
-    await tester.tap(find.byType(PawIcon).last);
+    await tapText(tester, '今天');
+    await tapText(tester, '健康');
+    await tester.tap(find.byKey(const Key('tab-健康')));
     await frames(tester);
-    for (final label in ['记喂食', '记体重', '扫条码', '记疫苗', '记驱虫', '记就医', '写笔记', '开始换粮', '记饮水']) {
-      expect(find.text(label), findsOneWidget);
-    }
-    await tapText(tester, '记疫苗');
+    await tapText(tester, '添加');
     expect(find.text('添加疫苗'), findsOneWidget);
     await enterField(tester, '名称', '');
     await tapText(tester, '保存');
@@ -361,43 +426,44 @@ void main() {
     Navigator.of(tester.element(find.text('添加疫苗'))).pop();
     await frames(tester);
 
-    await tester.tap(find.byType(PawIcon).last);
-    await frames(tester);
-    await tapText(tester, '记驱虫');
+    await tapText(tester, '添加', index: 1);
     expect(find.text('添加驱虫'), findsOneWidget);
     Navigator.of(tester.element(find.text('添加驱虫'))).pop();
     await frames(tester);
 
-    await tester.tap(find.byType(PawIcon).last);
-    await frames(tester);
-    await tapText(tester, '记就医');
+    await tapText(tester, '添加', index: 2);
     expect(find.text('就医记录'), findsOneWidget);
     Navigator.of(tester.element(find.text('就医记录'))).pop();
     await frames(tester);
 
-    await tester.tap(find.byType(PawIcon).last);
-    await frames(tester);
-    await tapText(tester, '写笔记');
+    await tapText(tester, '互动');
+    await tapText(tester, '写一条');
     expect(find.text('健康笔记'), findsOneWidget);
     Navigator.of(tester.element(find.text('健康笔记'))).pop();
     await frames(tester);
 
-    await tester.tap(find.byType(PawIcon).last);
-    await frames(tester);
+    await tapText(tester, '成长');
     await tapText(tester, '记体重');
     expect(find.text('记录体重'), findsOneWidget);
     Navigator.of(tester.element(find.text('记录体重'))).pop();
     await frames(tester);
 
-    await tester.tap(find.byType(PawIcon).last);
-    await frames(tester);
+    await tapText(tester, '今天');
+    await tapText(tester, '我的');
+    await tapText(tester, '粮仓');
     await tapText(tester, '扫条码');
     expect(find.text('扫描商品条码'), findsOneWidget);
     await back(tester);
-
-    await tester.tap(find.byType(PawIcon).last);
-    await frames(tester);
-    await tapText(tester, '开始换粮');
+    await back(tester);
+    await tapText(tester, '喂养');
     expect(find.text('七日换粮'), findsOneWidget);
+    await back(tester);
+    await tapText(tester, '健康');
+    await revealText(tester, '成长');
+    await tester.tap(find.byKey(const Key('tab-健康')));
+    await frames(tester);
+    await revealText(tester, '记饮水 · 今日 180 ml');
+    await tapText(tester, '记饮水 · 今日 180 ml');
+    expect(find.text('记录饮水'), findsOneWidget);
   });
 }

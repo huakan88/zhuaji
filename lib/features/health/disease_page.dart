@@ -5,6 +5,7 @@ import '../../core/copy.dart';
 import '../../core/format.dart';
 import '../../core/theme/app_tokens.dart';
 import '../../core/widgets/common.dart';
+import '../../domain/health/checkup_catalog.dart';
 import '../../domain/health/disease_catalog.dart';
 import '../../state/app_controller.dart';
 import '../records/record_sheets.dart';
@@ -18,16 +19,29 @@ class DiseaseLibraryPage extends StatefulWidget {
 
 class _DiseaseLibraryPageState extends State<DiseaseLibraryPage> {
   var _query = '';
+  var _showAll = false;
+
+  bool _matchesDisease(DiseaseInfo disease, String query, Set<String> related) {
+    if (query.isNotEmpty) {
+      return disease.name.contains(query) || disease.summary.contains(query);
+    }
+    return _showAll || related.contains(disease.id);
+  }
 
   @override
   Widget build(BuildContext context) {
+    final app = AppScope.of<AppController>(context);
+    final cat = app.active;
     final query = _query.trim();
+    final related = <String>{
+      for (final item in app.catConditions) item.diseaseId,
+    };
+    if (breedMatches(cat?.breed, const ['缅因', '布偶', 'maine', 'ragdoll'])) {
+      related.add('hcm');
+    }
     final items = [
       for (final disease in diseaseCatalog)
-        if (query.isEmpty ||
-            disease.name.contains(query) ||
-            disease.summary.contains(query))
-          disease,
+        if (_matchesDisease(disease, query, related)) disease,
     ];
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -60,8 +74,27 @@ class _DiseaseLibraryPageState extends State<DiseaseLibraryPage> {
             onChanged: (value) => setState(() => _query = value),
           ),
           const SizedBox(height: 12),
+          if (query.isEmpty && cat != null)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Text(
+                _showAll ? '正在看全部疾病' : '先列出和${cat.name}有关的',
+                style: const TextStyle(color: AppColors.muted),
+              ),
+            ),
+          if (query.isEmpty && !_showAll)
+            Align(
+              alignment: Alignment.centerLeft,
+              child: TextButton(
+                onPressed: () => setState(() => _showAll = true),
+                child: const Text('看其他疾病'),
+              ),
+            ),
           if (items.isEmpty)
-            const EmptyHint(title: '没有这种病', body: '换个词，或从列表里点开常见病。')
+            EmptyHint(
+              title: query.isEmpty ? '还没有对上的病' : '没有这种病',
+              body: query.isEmpty ? '可以看其他疾病，或搜索名字。' : '换个词，或从列表里点开常见病。',
+            )
           else
             for (final disease in items) ...[
               SoftCard(

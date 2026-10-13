@@ -10,10 +10,7 @@ class PawIcon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return CustomPaint(
-      size: Size.square(size),
-      painter: _PawPainter(color),
-    );
+    return CustomPaint(size: Size.square(size), painter: _PawPainter(color));
   }
 }
 
@@ -56,5 +53,6 @@ class _PawPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant _PawPainter oldDelegate) => oldDelegate.color != color;
+  bool shouldRepaint(covariant _PawPainter oldDelegate) =>
+      oldDelegate.color != color;
 }
