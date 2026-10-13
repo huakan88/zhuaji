@@ -37,7 +37,7 @@ class _AppShellState extends State<AppShell> {
             )
           : app.error != null
           ? EmptyHint(
-              title: '数据没打开',
+              title: '没打开',
               body: app.error!,
               action: '重试',
               onAction: app.init,
@@ -57,12 +57,8 @@ class _AppShellState extends State<AppShell> {
                   label: '今天',
                 ),
                 NavigationDestination(
-                  icon: Icon(Icons.favorite_border_rounded),
-                  label: '健康',
-                ),
-                NavigationDestination(
-                  icon: Icon(Icons.person_outline_rounded),
-                  label: '我的',
+                  icon: Icon(Icons.pets_outlined),
+                  label: '猫',
                 ),
               ],
               onDestinationSelected: (index) => widget.shell.goBranch(index),

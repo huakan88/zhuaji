@@ -28,123 +28,26 @@ void main() {
     await database.close();
   });
 
-  testWidgets('home menu, diary, nav, and quick-add water open', (
-    tester,
-  ) async {
+  testWidgets('two tabs, and leaving a form comes back', (tester) async {
     await boot(tester, controller);
+    expect(find.text('今天'), findsWidgets);
+    expect(find.text('猫'), findsWidgets);
+    expect(find.text('我的'), findsNothing);
 
-    await tapText(tester, '橘座');
-    await tapText(tester, '添加猫咪');
+    await tapText(tester, '猫');
+    expect(find.text('体检'), findsOneWidget);
+    expect(find.text('看病'), findsOneWidget);
+    await tapText(tester, '添加');
     expect(find.text('建档'), findsOneWidget);
-    await tapText(tester, '更多');
-    await tapText(tester, '生日');
-    expect(find.text('取消'), findsWidgets);
-    await tapText(tester, '取消');
-    expect(find.text('建档'), findsOneWidget);
-    expect(find.text('已绝育'), findsOneWidget);
-    await tapText(tester, '已绝育');
     await back(tester);
+    expect(find.text('体检'), findsOneWidget);
 
-    await tapText(tester, '我的');
-    await tapText(tester, '粮仓');
-    expect(find.text('在库'), findsOneWidget);
-    await back(tester);
-
-    await tapText(tester, '健康');
-    await tapText(tester, '养护');
-    await tapText(tester, '慢性肾病');
-    await revealText(tester, '记饮水');
-    await tapText(tester, '记饮水');
-    expect(find.text('记录饮水'), findsOneWidget);
-    await enterField(tester, '大约喝了多少毫升', '0');
-    await tapText(tester, '保存');
-    expect(find.text('饮水量请填 1 到 2000 毫升'), findsOneWidget);
-    await enterField(tester, '大约喝了多少毫升', '40');
-    await tapText(tester, '保存');
-    expect(controller.todayWaterMl, 220);
-  });
-
-  testWidgets('me, profile, checkup delete, and recheck date work', (
-    tester,
-  ) async {
-    await boot(tester, controller);
-    await tapText(tester, '健康');
-    await tapText(tester, '体检');
-    expect(find.text('体检'), findsWidgets);
-    await revealText(tester, '仅供参考，请遵医嘱。');
-    expect(find.text('仅供参考，请遵医嘱。'), findsWidgets);
-    await revealText(tester, '删除最近一条');
-    await tapText(tester, '删除最近一条');
-    await tapText(tester, '删除');
+    await tapText(tester, '今天');
+    await tapText(tester, '室内成猫全价粮');
+    expect(find.text('室内成猫全价粮'), findsNothing);
     expect(
-      controller.catCheckups.where((item) => item.itemId == 'cbc'),
-      isEmpty,
+      controller.pantry.any((item) => item.product.name == '室内成猫全价粮'),
+      isFalse,
     );
-    await back(tester);
-
-    await tapText(tester, '养护');
-    expect(find.text('搜索'), findsOneWidget);
-    await tapText(tester, '慢性肾病');
-    expect(find.text('需要立即就医'), findsOneWidget);
-    await tapText(tester, '改复查日');
-    expect(find.text('确定'), findsOneWidget);
-    await tapText(tester, '确定');
-    expect(find.textContaining('复查日已改成'), findsOneWidget);
-    await back(tester);
-    await back(tester);
-
-    await tapText(tester, '我的');
-    await tapText(tester, '橘座');
-    expect(find.text('记录天数'), findsOneWidget);
-    await back(tester);
-    await tapText(tester, '健康');
-    await tapText(tester, '养护');
-    await tapText(tester, '看其他疾病');
-    expect(find.text('糖尿病'), findsOneWidget);
   });
-
-  testWidgets(
-    'pantry manual date, photo date, removal, and reminder cards work',
-    (tester) async {
-      await boot(tester, controller);
-      await tapText(tester, '我的');
-      await tapText(tester, '粮仓');
-      await tapText(tester, '查看并修改日期');
-      final before = controller.pantry.length;
-
-      await tapText(tester, '拍摄印刷日期');
-      expect(find.text('从相册选择'), findsOneWidget);
-      await tapText(tester, '拍照');
-      expect(find.textContaining('没有打开相机或相册'), findsWidgets);
-
-      await tapText(tester, '手动填写日期');
-      expect(find.text('确定'), findsOneWidget);
-      await tapText(tester, '确定');
-      expect(find.text('确定'), findsOneWidget);
-      await tapText(tester, '确定');
-      expect(find.text('确认日期'), findsOneWidget);
-      expect(find.textContaining('生产：'), findsOneWidget);
-      expect(find.textContaining('保质期：'), findsOneWidget);
-      await tapText(tester, '采用');
-      expect(find.text('保存日期'), findsOneWidget);
-
-      await tapText(tester, '移出粮仓');
-      await tapText(tester, '取消');
-      expect(controller.pantry, hasLength(before));
-      await tapText(tester, '移出粮仓');
-      await tapText(tester, '删除');
-      expect(controller.pantry, hasLength(before - 1));
-      expect(find.text('在库'), findsOneWidget);
-      await back(tester);
-
-      await tapText(tester, '今天');
-      await tapText(tester, '驱虫');
-      expect(find.text('记体重'), findsOneWidget);
-      await tapText(tester, '今天');
-      await tapText(tester, '橘座');
-      await tapText(tester, '奶油');
-      await tapText(tester, '临期猫粮');
-      expect(find.text('在库'), findsOneWidget);
-    },
-  );
 }

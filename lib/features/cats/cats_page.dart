@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../core/format.dart';
 import '../../core/theme/app_tokens.dart';
 import '../../core/widgets/common.dart';
 import '../../state/app_controller.dart';
+import '../records/record_sheets.dart';
 
 class CatsPage extends StatelessWidget {
   const CatsPage({super.key});
@@ -14,115 +14,127 @@ class CatsPage extends StatelessWidget {
     final app = AppScope.of<AppController>(context);
     final cat = app.active;
     return Scaffold(
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 12, 20, 96),
-          child: cat == null
-              ? EmptyHint(
-                  title: '还没有猫',
-                  body: '拍一张，写名字。',
-                  action: '添加',
-                  onAction: () => context.push('/cat-form'),
-                )
-              : Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    InkWell(
-                      onTap: () => context.push('/cat?id=${cat.id}'),
-                      child: Row(
+      backgroundColor: AppColors.background,
+      appBar: AppBar(title: const Text('猫')),
+      body: ListView(
+        padding: const EdgeInsets.fromLTRB(20, 8, 20, 120),
+        children: [
+          SizedBox(
+            height: 76,
+            child: ListView(
+              scrollDirection: Axis.horizontal,
+              children: [
+                for (final item in app.cats) ...[
+                  GestureDetector(
+                    onTap: () => app.selectCat(item.id),
+                    child: SizedBox(
+                      width: 64,
+                      child: Column(
                         children: [
-                          CatAvatar(path: cat.avatarPath, size: 56),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  cat.name,
-                                  style: const TextStyle(
-                                    fontSize: 22,
-                                    fontWeight: FontWeight.w700,
-                                  ),
-                                ),
-                                Text(
-                                  ageLabel(cat.birthday, app.now),
-                                  style: const TextStyle(
-                                    color: AppColors.muted,
-                                    fontSize: 13,
-                                  ),
-                                ),
-                              ],
-                            ),
+                          CatAvatar(
+                            path: item.avatarPath,
+                            size: 48,
+                            selected: item.id == cat?.id,
+                          ),
+                          Text(
+                            item.name,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(fontSize: 12),
                           ),
                         ],
                       ),
                     ),
-                    const SizedBox(height: 20),
-                    SizedBox(
-                      height: 96,
-                      child: ListView.separated(
-                        scrollDirection: Axis.horizontal,
-                        itemCount: app.cats.length + 1,
-                        separatorBuilder: (_, _) => const SizedBox(width: 16),
-                        itemBuilder: (context, index) {
-                          if (index == app.cats.length) {
-                            return GestureDetector(
-                              onTap: () => context.push('/cat-form'),
-                              child: const Column(
-                                children: [
-                                  SizedBox(
-                                    width: 64,
-                                    height: 64,
-                                    child: DecoratedBox(
-                                      decoration: BoxDecoration(
-                                        color: AppColors.card,
-                                        shape: BoxShape.circle,
-                                      ),
-                                      child: Icon(Icons.add_rounded),
-                                    ),
-                                  ),
-                                  SizedBox(height: 6),
-                                  Text('添加', style: TextStyle(fontSize: 12)),
-                                ],
-                              ),
-                            );
-                          }
-                          final item = app.cats[index];
-                          final selected = item.id == app.activeCatId;
-                          return GestureDetector(
-                            onTap: () => app.selectCat(item.id),
-                            child: Column(
-                              children: [
-                                CatAvatar(
-                                  path: item.avatarPath,
-                                  size: 64,
-                                  selected: selected,
-                                  ring: ringPalette[index % ringPalette.length],
-                                ),
-                                const SizedBox(height: 6),
-                                Text(
-                                  item.name,
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    fontWeight: selected
-                                        ? FontWeight.w700
-                                        : FontWeight.w400,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          );
-                        },
-                      ),
+                  ),
+                  const SizedBox(width: 8),
+                ],
+                GestureDetector(
+                  onTap: () => context.push('/cat-form'),
+                  child: const SizedBox(
+                    width: 64,
+                    child: Column(
+                      children: [
+                        CatAvatar(path: null, size: 48),
+                        Text('添加', style: TextStyle(fontSize: 12)),
+                      ],
                     ),
-                    const Spacer(),
-                    FilledButton(
-                      onPressed: () => context.push('/pantry'),
-                      child: const Text('粮仓'),
-                    ),
-                  ],
+                  ),
                 ),
-        ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 24),
+          if (cat == null)
+            EmptyHint(
+              title: '还没猫',
+              body: '',
+              action: '建档',
+              onAction: () => context.push('/cat-form'),
+            )
+          else ...[
+            Center(
+              child: CatAvatar(path: cat.avatarPath, size: 168, selected: true),
+            ),
+            const SizedBox(height: 12),
+            Center(
+              child: GestureDetector(
+                onTap: () => context.push('/cat-form?id=${cat.id}'),
+                child: Text(
+                  cat.name,
+                  style: const TextStyle(
+                    fontSize: 28,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 8),
+            Center(
+              child: GestureDetector(
+                onTap: () => showWeightSheet(context),
+                child: Text(
+                  app.latestWeight == null
+                      ? '— kg'
+                      : '${app.latestWeight!.weightKg.toStringAsFixed(2)} kg',
+                  style: const TextStyle(
+                    fontSize: 40,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.coralDeep,
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 28),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () => context.push('/checkups'),
+                    child: const Text('体检'),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () => context.push('/diseases'),
+                    child: const Text('看病'),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 24),
+            Center(
+              child: TextButton(
+                onPressed: () async {
+                  if (await confirmDelete(context, '删除${cat.name}？')) {
+                    await app.removeCat(cat.id);
+                  }
+                },
+                child: const Text('删除'),
+              ),
+            ),
+          ],
+        ],
       ),
     );
   }

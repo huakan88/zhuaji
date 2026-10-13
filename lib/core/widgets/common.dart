@@ -388,7 +388,6 @@ Future<bool> confirmDelete(BuildContext context, String title) async {
     context: context,
     builder: (context) => AlertDialog(
       title: Text(title),
-      content: const Text('删除后，相关提醒也会一起取消。'),
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context, false),

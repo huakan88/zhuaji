@@ -5,12 +5,9 @@ import 'package:go_router/go_router.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 
 import '../../core/widgets/common.dart';
-import '../../state/app_controller.dart';
 
 class ScanPage extends StatefulWidget {
-  const ScanPage({required this.mode, super.key});
-
-  final String mode;
+  const ScanPage({super.key});
 
   @override
   State<ScanPage> createState() => _ScanPageState();
@@ -31,45 +28,63 @@ class _ScanPageState extends State<ScanPage> {
 
   @override
   Widget build(BuildContext context) {
-    final gs1 = widget.mode == 'gs1';
     return Scaffold(
-      appBar: AppBar(title: Text(gs1 ? '日期码' : '扫码')),
-      body: Column(
+      backgroundColor: Colors.black,
+      body: Stack(
         children: [
-          Expanded(child: _cameraPane()),
-          if (_manualOpen)
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  TextField(
-                    controller: _manual,
-                    decoration: InputDecoration(
-                      hintText: gs1 ? '贴上日期码' : '条码数字',
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  FilledButton(
-                    onPressed: () => _finish(_manual.text),
-                    child: const Text('使用这段内容'),
-                  ),
-                ],
+          Positioned.fill(child: _cameraPane()),
+          SafeArea(
+            child: Align(
+              alignment: Alignment.topLeft,
+              child: IconButton(
+                onPressed: () => context.pop(),
+                icon: const Icon(Icons.close, color: Colors.white),
               ),
-            )
-          else
-            TextButton(
-              onPressed: () => setState(() => _manualOpen = true),
-              child: const Text('手输'),
             ),
+          ),
+          Align(
+            alignment: Alignment.bottomCenter,
+            child: SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
+                child: _manualOpen
+                    ? Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          TextField(
+                            controller: _manual,
+                            style: const TextStyle(color: Colors.white),
+                            decoration: const InputDecoration(
+                              labelText: '条码',
+                              labelStyle: TextStyle(color: Colors.white70),
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          FilledButton(
+                            onPressed: () => _finish(_manual.text),
+                            child: const Text('确定'),
+                          ),
+                        ],
+                      )
+                    : TextButton(
+                        onPressed: () => setState(() => _manualOpen = true),
+                        child: const Text(
+                          '手输',
+                          style: TextStyle(color: Colors.white),
+                        ),
+                      ),
+              ),
+            ),
+          ),
         ],
       ),
     );
   }
 
   Widget _cameraPane() {
-    const fallback = Center(child: Text('相机没开'));
-    // Widget tests have no camera implementation. Manual entry still works.
+    const fallback = Center(
+      child: Text('相机没开', style: TextStyle(color: Colors.white)),
+    );
     if (Platform.environment['FLUTTER_TEST'] == 'true') return fallback;
     final camera = _camera ??= MobileScannerController();
     return MobileScanner(
@@ -90,29 +105,14 @@ class _ScanPageState extends State<ScanPage> {
     final value = raw.trim();
     if (_handled) return;
     if (value.isEmpty) {
-      showMessage(context, '先扫到一条内容，或在下面输入');
+      showMessage(context, '还没扫到');
       return;
     }
     _handled = true;
     try {
       await _camera?.stop();
-    } catch (_) {
-      // 相机没起来时仍然可以用手动结果。
-    }
+    } catch (_) {}
     if (!mounted) return;
-    if (widget.mode == 'gs1') {
-      context.pop(value);
-      return;
-    }
-    final app = AppScope.of<AppController>(context);
-    final product = app.findBarcode(value);
-    if (!mounted) return;
-    if (product == null) {
-      context.pushReplacement(
-        '/product-form?barcode=${Uri.encodeComponent(value)}',
-      );
-    } else {
-      context.pushReplacement('/product?productId=${product.id}');
-    }
+    context.pushReplacement('/confirm?code=${Uri.encodeComponent(value)}');
   }
 }

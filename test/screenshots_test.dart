@@ -32,44 +32,29 @@ void main() {
     await controller.init();
     await tester.pumpWidget(ZhuajiApp(controller: controller));
     await _frames(tester);
-    await _shot(tester, 'home');
+    await _shot(tester, 'today');
 
-    await tester.tap(find.text('健康').last);
+    await _tapOnScreen(tester, '猫');
     await _frames(tester);
-    await _shot(tester, 'health');
+    await _shot(tester, 'cat');
 
     await _tapOnScreen(tester, '体检');
     await _frames(tester);
-    await _shot(tester, 'checkups');
-    await tester.tap(find.byTooltip('返回'));
-    await _frames(tester);
-    await _tapOnScreen(tester, '养护');
-    await _frames(tester);
-    await _tapOnScreen(tester, '慢性肾病');
-    await _frames(tester);
-    await _shot(tester, 'disease-ckd');
-    await tester.tap(find.byTooltip('返回'));
-    await _frames(tester);
+    await _shot(tester, 'checkup');
     await tester.tap(find.byTooltip('返回'));
     await _frames(tester);
 
-    await tester.tap(find.text('我的').last);
-    await _frames(tester);
-    await _shot(tester, 'me');
-
-    await tester.tap(find.text('今天').last);
-    await _frames(tester);
-    await _tapOnScreen(tester, '扫码');
-    await _frames(tester);
-    await _shot(tester, 'scan');
-
-    await tester.tap(find.byTooltip('返回'));
-    await _frames(tester);
-    await tester.tap(find.text('我的').last);
-    await _frames(tester);
     await _tapOnScreen(tester, '添加');
     await _frames(tester);
-    await _shot(tester, 'cat-form');
+    await _shot(tester, 'onboard');
+    await tester.tap(find.byTooltip('返回'));
+    await _frames(tester);
+
+    await _tapOnScreen(tester, '今天');
+    await _frames(tester);
+    await _tapOnScreen(tester, '扫粮');
+    await _frames(tester);
+    await _shot(tester, 'scan');
   });
 }
 
@@ -128,7 +113,7 @@ Future<void> _shot(WidgetTester tester, String name) async {
     );
     final image = await boundary.toImage(pixelRatio: 2);
     final data = await image.toByteData(format: ui.ImageByteFormat.png);
-    final file = File('/opt/cursor/artifacts/screenshots/v150/$name.png');
+    final file = File('/opt/cursor/artifacts/screenshots/v200/$name.png');
     await file.parent.create(recursive: true);
     await file.writeAsBytes(data!.buffer.asUint8List());
   });

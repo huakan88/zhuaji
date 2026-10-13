@@ -2,13 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 
-import '../../core/format.dart';
 import '../../core/theme/app_tokens.dart';
 import '../../core/widgets/common.dart';
 import '../../domain/models.dart';
 import '../../services/photo_store.dart';
 import '../../state/app_controller.dart';
-import '../records/record_sheets.dart';
 
 class CatFormPage extends StatefulWidget {
   const CatFormPage({this.catId, super.key});
@@ -21,26 +19,8 @@ class CatFormPage extends StatefulWidget {
 
 class _CatFormPageState extends State<CatFormPage> {
   final _name = TextEditingController();
-  final _coat = TextEditingController();
-  final _breed = TextEditingController();
-  final _notes = TextEditingController();
   final _photos = PhotoStore();
-  CatSex _sex = CatSex.unknown;
-  CareGoal _goal = CareGoal.maintain;
-  bool? _neutered;
-  DateTime? _birthday;
   String? _avatar;
-  String? _hint;
-  List<String> _coatChoices = const ['橘白', '乳白', '狸花', '纯黑', '纯白', '三花'];
-  List<String> _breedChoices = const [
-    '中华田园猫',
-    '英国短毛猫',
-    '美国短毛猫',
-    '布偶猫',
-    '暹罗猫',
-    '缅因猫',
-    '波斯猫',
-  ];
   var _loaded = false;
   var _busy = false;
 
@@ -53,15 +33,7 @@ class _CatFormPageState extends State<CatFormPage> {
         : AppScope.of<AppController>(context).catById(widget.catId!);
     if (existing != null) {
       _name.text = existing.name;
-      _coat.text = existing.coatColor ?? '';
-      _breed.text = existing.breed ?? '';
-      _notes.text = existing.notes;
-      _sex = existing.sex;
-      _goal = existing.goal;
-      _neutered = existing.neutered;
-      _birthday = existing.birthday;
       _avatar = existing.avatarPath;
-      _hint = existing.recognitionDetail;
     }
     _loaded = true;
   }
@@ -69,21 +41,19 @@ class _CatFormPageState extends State<CatFormPage> {
   @override
   void dispose() {
     _name.dispose();
-    _coat.dispose();
-    _breed.dispose();
-    _notes.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text(widget.catId == null ? '建档' : '编辑')),
+      backgroundColor: AppColors.background,
+      appBar: AppBar(title: Text(widget.catId == null ? '建档' : '改名')),
       body: ListView(
-        padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
+        padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
         children: [
-          Center(child: CatAvatar(path: _avatar, size: 112, selected: true)),
-          const SizedBox(height: 12),
+          Center(child: CatAvatar(path: _avatar, size: 140, selected: true)),
+          const SizedBox(height: 16),
           Row(
             children: [
               Expanded(
@@ -101,132 +71,25 @@ class _CatFormPageState extends State<CatFormPage> {
               ),
             ],
           ),
-          if (_avatar != null) ...[
-            const SizedBox(height: 8),
-            OutlinedButton(
-              onPressed: _busy ? null : _recognize,
-              child: Text(_busy ? '正在看毛色…' : '再认一次毛色'),
+          Align(
+            child: TextButton(
+              onPressed: _busy ? null : _sample,
+              child: const Text('示例'),
             ),
-          ],
-          if (_hint != null) ...[
-            const SizedBox(height: 8),
-            Text(
-              _hint!,
-              style: const TextStyle(color: AppColors.brown, height: 1.4),
-            ),
-          ],
-          const SizedBox(height: 16),
-          if (_avatar == null)
-            Align(
-              alignment: Alignment.centerLeft,
-              child: TextButton(
-                onPressed: () => setState(
-                  () => _avatar = 'asset:assets/cats/cat-orange.jpg',
-                ),
-                child: const Text('先用示例图'),
-              ),
-            ),
-          const SizedBox(height: 8),
+          ),
           TextField(
             controller: _name,
+            textInputAction: TextInputAction.done,
             decoration: const InputDecoration(labelText: '名字'),
           ),
-          const SizedBox(height: 12),
-          ExpansionTile(
-            title: const Text('更多'),
-            tilePadding: EdgeInsets.zero,
-            childrenPadding: const EdgeInsets.only(bottom: 8),
-            children: [
-              const Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  '性别',
-                  style: TextStyle(fontWeight: FontWeight.w700),
-                ),
-              ),
-              const SizedBox(height: 8),
-              Wrap(
-                spacing: 8,
-                children: [
-                  for (final sex in CatSex.values)
-                    ChoiceChip(
-                      label: Text(sexLabel(sex)),
-                      selected: _sex == sex,
-                      selectedColor: AppColors.coral,
-                      onSelected: (_) => setState(() => _sex = sex),
-                    ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              const Text('绝育', style: TextStyle(fontWeight: FontWeight.w700)),
-              const SizedBox(height: 8),
-              Wrap(
-                spacing: 8,
-                children: [
-                  ChoiceChip(
-                    label: const Text('已绝育'),
-                    selected: _neutered == true,
-                    selectedColor: AppColors.coral,
-                    onSelected: (_) => setState(() => _neutered = true),
-                  ),
-                  ChoiceChip(
-                    label: const Text('还没有'),
-                    selected: _neutered == false,
-                    selectedColor: AppColors.coral,
-                    onSelected: (_) => setState(() => _neutered = false),
-                  ),
-                ],
-              ),
-              ListTile(
-                contentPadding: EdgeInsets.zero,
-                title: const Text('生日'),
-                subtitle: Text(
-                  _birthday == null ? '选填' : formatDate(_birthday!),
-                ),
-                trailing: const Icon(Icons.calendar_today_outlined, size: 18),
-                onTap: () async {
-                  final picked = await pickDateWheel(
-                    context,
-                    _birthday ?? DateTime.now(),
-                  );
-                  if (picked != null) setState(() => _birthday = picked);
-                },
-              ),
-              const Text('毛色', style: TextStyle(fontWeight: FontWeight.w700)),
-              const SizedBox(height: 8),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: [
-                  for (final coat in _coatChoices)
-                    ChoiceChip(
-                      label: Text(coat),
-                      selected: _coat.text == coat,
-                      selectedColor: AppColors.coral,
-                      onSelected: (_) => setState(() => _coat.text = coat),
-                    ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              const Text('大致品种', style: TextStyle(fontWeight: FontWeight.w700)),
-              const SizedBox(height: 8),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: [
-                  for (final breed in _breedChoices)
-                    ChoiceChip(
-                      label: Text(breed),
-                      selected: _breed.text == breed,
-                      selectedColor: AppColors.coral,
-                      onSelected: (_) => setState(() => _breed.text = breed),
-                    ),
-                ],
-              ),
-            ],
+          const SizedBox(height: 24),
+          FilledButton(
+            onPressed: _busy ? null : _save,
+            style: FilledButton.styleFrom(
+              minimumSize: const Size.fromHeight(52),
+            ),
+            child: const Text('保存'),
           ),
-          const SizedBox(height: 20),
-          FilledButton(onPressed: _save, child: const Text('保存')),
         ],
       ),
     );
@@ -239,83 +102,56 @@ class _CatFormPageState extends State<CatFormPage> {
         maxWidth: 1600,
         imageQuality: 85,
       );
-      if (file == null) {
-        if (!mounted) return;
-        setState(() => _hint = '没有打开相机或相册，可以稍后再试');
-        showMessage(context, '没有打开相机或相册，可以稍后再试');
-        return;
-      }
+      if (file == null || !mounted) return;
       final stored = file.path.startsWith('asset:')
           ? file.path
           : await _photos.persist(file.path);
       if (!mounted) return;
       setState(() => _avatar = stored);
-      await _recognize();
     } catch (_) {
       if (!mounted) return;
-      setState(() => _hint = '没有打开相机或相册，可以稍后再试');
-      showMessage(context, '没有打开相机或相册，可以稍后再试');
+      showMessage(context, '没打开相机');
     }
   }
 
-  Future<void> _recognize() async {
-    final path = _avatar;
-    if (path == null || path.startsWith('asset:')) {
-      setState(() => _hint = '示例图不能跑端侧模型。换一张你拍的照片后再识别。');
-      return;
-    }
-    setState(() => _busy = true);
-    final app = AppScope.of<AppController>(context);
-    final suggestion = await app.recognizer.recognize(path);
-    if (!mounted) return;
-    setState(() {
-      _busy = false;
-      _coat.text = suggestion.coatColor;
-      _breed.text = suggestion.breed;
-      if (suggestion.coatChoices.isNotEmpty) {
-        _coatChoices = suggestion.coatChoices;
-      }
-      if (suggestion.breedChoices.isNotEmpty) {
-        _breedChoices = suggestion.breedChoices;
-      }
-      _hint = '${suggestion.detail}。不对就点下面改。';
-    });
+  void _sample() {
+    setState(() => _avatar = 'asset:assets/cats/cat-orange.jpg');
   }
 
   Future<void> _save() async {
-    if (_name.text.trim().isEmpty) {
-      showMessage(context, '先写一个名字');
+    final name = _name.text.trim();
+    if (name.isEmpty) {
+      showMessage(context, '先写名字');
       return;
     }
-    if (_avatar == null || _avatar!.isEmpty) {
-      showMessage(context, '先拍一张，或点示例图');
+    if (_avatar == null) {
+      showMessage(context, '先拍一张');
       return;
     }
     final app = AppScope.of<AppController>(context);
     final existing = widget.catId == null ? null : app.catById(widget.catId!);
-    final id = await app.saveCat(
-      CatDraft(
-        id: widget.catId,
-        name: _name.text,
-        sex: _sex,
-        birthday: _birthday,
-        neutered: _neutered ?? false,
-        goal: _goal,
-        coatColor: _coat.text,
-        breed: _breed.text,
-        avatarPath: _avatar,
-        notes: _notes.text,
-        isSample: existing?.isSample ?? false,
-        recognitionSource: existing?.recognitionSource,
-        recognitionConfidence: existing?.recognitionConfidence,
-        recognitionDetail: _hint ?? existing?.recognitionDetail,
-      ),
-    );
-    if (!mounted) return;
-    if (widget.catId == null) {
-      context.pushReplacement('/cat?id=$id');
-    } else {
+    setState(() => _busy = true);
+    try {
+      await app.saveCat(
+        CatDraft(
+          id: existing?.id,
+          name: name,
+          sex: existing?.sex ?? CatSex.unknown,
+          neutered: existing?.neutered ?? false,
+          birthday: existing?.birthday,
+          coatColor: existing?.coatColor,
+          breed: existing?.breed,
+          goal: existing?.goal ?? CareGoal.maintain,
+          notes: existing?.notes ?? '',
+          avatarPath: _avatar,
+          recognitionDetail: existing?.recognitionDetail,
+          recognitionSource: existing?.recognitionSource,
+        ),
+      );
+      if (!mounted) return;
       context.pop();
+    } finally {
+      if (mounted) setState(() => _busy = false);
     }
   }
 }

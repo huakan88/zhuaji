@@ -37,6 +37,7 @@ class AppController extends ChangeNotifier {
   List<ConditionRecord> conditions = [];
   List<CheckupRecord> checkups = [];
   List<WaterRecord> waters = [];
+  Set<String> weightAcks = {};
   String? permissionNote;
 
   DateTime get now => _clock();
@@ -135,6 +136,7 @@ class AppController extends ChangeNotifier {
 
   Future<int> saveCat(CatDraft draft) async {
     final id = await repo.upsertCat(draft);
+    activeCatId = id;
     await repo.setSetting('activeCatId', '$id');
     await _refresh();
     return id;
@@ -432,6 +434,29 @@ class AppController extends ChangeNotifier {
     conditions = await repo.conditions();
     checkups = await repo.checkups();
     waters = await repo.waters();
+    final raw = await repo.setting('weightAcks') ?? '';
+    weightAcks = raw.split(',').where((item) => item.isNotEmpty).toSet();
+  }
+
+  String weightAckKey(int catId, WeightChange change) =>
+      '$catId|${change.days}|${change.fromKg}|${change.toKg}';
+
+  bool weightAlertVisible(CatProfile cat) {
+    final change = weightChangeOverMonth(
+      weights.where((item) => item.catId == cat.id).toList(),
+    );
+    if (change == null || !change.notable) return false;
+    return !weightAcks.contains(weightAckKey(cat.id, change));
+  }
+
+  Future<void> ackWeightAlert(CatProfile cat) async {
+    final change = weightChangeOverMonth(
+      weights.where((item) => item.catId == cat.id).toList(),
+    );
+    if (change == null) return;
+    weightAcks.add(weightAckKey(cat.id, change));
+    await repo.setSetting('weightAcks', weightAcks.join(','));
+    notifyListeners();
   }
 
   Future<void> _reschedule() async {

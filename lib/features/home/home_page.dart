@@ -3,8 +3,8 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/format.dart';
 import '../../core/theme/app_tokens.dart';
+import '../../domain/dates.dart';
 import '../../core/widgets/common.dart';
-import '../../domain/care/easy_log.dart';
 import '../../domain/models.dart';
 import '../../state/app_controller.dart';
 
@@ -14,249 +14,183 @@ class HomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final app = AppScope.of<AppController>(context);
-    if (app.cats.isEmpty) {
-      return Scaffold(
-        body: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.all(Space.x6),
-            child: EmptyHint(
-              title: '还没有猫',
-              body: '拍一张，写名字。',
-              action: '添加',
-              onAction: () => context.push('/cat-form'),
-            ),
-          ),
-        ),
-      );
-    }
-    final cat = app.active!;
-    final alerts = _alerts(context, app);
-    final visible = alerts.take(3).toList();
-    final rest = alerts.skip(3).toList();
+    final cat = app.active;
+    final todos = _todos(context, app, cat);
     return Scaffold(
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 8, 20, 88),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              _CatHeader(app: app, cat: cat),
-              const SizedBox(height: 8),
-              const Divider(height: 1),
-              if (visible.isEmpty)
-                const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 28),
-                  child: Text(
-                    '今天没事',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(color: AppColors.muted),
-                  ),
-                )
-              else
-                for (final alert in visible) _AlertRow(alert: alert),
-              if (rest.isNotEmpty)
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: TextButton(
-                    onPressed: () => _showRest(context, rest),
-                    child: const Text('全部'),
-                  ),
-                ),
-              const Spacer(),
-              FilledButton(
-                onPressed: () => context.push('/scan'),
-                child: const Text('扫码'),
-              ),
-            ],
+      backgroundColor: AppColors.background,
+      appBar: AppBar(title: const Text('今天')),
+      body: ListView(
+        padding: const EdgeInsets.fromLTRB(20, 12, 20, 120),
+        children: [
+          Center(
+            child: cat == null
+                ? GestureDetector(
+                    onTap: () => context.push('/cat-form'),
+                    child: const CatAvatar(
+                      path: null,
+                      size: 96,
+                      selected: true,
+                    ),
+                  )
+                : CatAvatar(path: cat.avatarPath, size: 96, selected: true),
           ),
-        ),
+          if (cat != null) ...[
+            const SizedBox(height: 8),
+            Center(
+              child: Text(
+                cat.name,
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+          ],
+          const SizedBox(height: 28),
+          for (final todo in todos.take(3)) ...[
+            _TodoRow(todo: todo),
+            const SizedBox(height: 8),
+          ],
+          const SizedBox(height: 20),
+          FilledButton(
+            onPressed: () => context.push('/scan'),
+            style: FilledButton.styleFrom(
+              minimumSize: const Size.fromHeight(56),
+              textStyle: const TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            child: const Text('扫粮'),
+          ),
+        ],
       ),
     );
   }
 
-  List<_Alert> _alerts(BuildContext context, AppController app) {
-    final items = <_Alert>[];
-    final expiry = app.nearestExpiry?.item.expiryDate;
-    if (expiry != null && calendarDays(app.now, expiry) <= 30) {
-      final days = calendarDays(app.now, expiry);
+  List<_Todo> _todos(BuildContext context, AppController app, CatProfile? cat) {
+    final items = <_Todo>[];
+    final soon = dateOnly(app.now).add(const Duration(days: 30));
+    final foods =
+        [
+          for (final entry in app.pantry)
+            if (_foodDue(entry, soon)) entry,
+        ]..sort((a, b) {
+          final left = a.item.expiryDate ?? _useBy(a) ?? app.now;
+          final right = b.item.expiryDate ?? _useBy(b) ?? app.now;
+          return left.compareTo(right);
+        });
+    for (final entry in foods) {
       items.add(
-        _Alert(
-          title: '临期猫粮',
-          detail: days <= 0 ? '今天到期' : '还剩 $days 天',
-          onTap: () => context.push('/pantry'),
+        _Todo(
+          title: '到期粮',
+          detail: entry.product.name,
+          onTap: () async {
+            await app.removePantry(entry.item.id);
+            if (!context.mounted) return;
+            showMessage(context, '这袋记下了');
+          },
         ),
       );
     }
-    final vaccine = app.nextVaccine?.nextDue;
-    if (vaccine != null && calendarDays(app.now, vaccine) <= 30) {
-      items.add(
-        _Alert(
-          title: '下次疫苗',
-          detail: app.nextVaccine?.name ?? formatMonthDay(vaccine),
-          onTap: () => context.go('/health'),
-        ),
-      );
-    }
-    final deworm = app.nextExternal?.nextDue ?? app.nextInternal?.nextDue;
-    if (deworm != null && calendarDays(app.now, deworm) <= 14) {
-      items.add(
-        _Alert(
-          title: '驱虫',
-          detail: formatMonthDay(deworm),
-          onTap: () => context.go('/health'),
-        ),
-      );
-    }
-    final weight = weightChangeOverMonth(app.catWeights);
-    if (weight != null && weight.notable) {
-      final direction = weight.percent > 0 ? '上升' : '下降';
-      final percent = (weight.percent.abs() * 100).toStringAsFixed(0);
-      items.add(
-        _Alert(
-          title: '体重变化',
-          detail: '近${weight.days}天$direction $percent%',
-          onTap: () => context.go('/health'),
-        ),
-      );
+    if (cat != null) {
+      final soonShot = dateOnly(app.now).add(const Duration(days: 30));
+      final shots = [
+        for (final shot in app.catVaccines)
+          if (shot.nextDue != null &&
+              !dateOnly(shot.nextDue!).isAfter(soonShot))
+            shot,
+      ]..sort((a, b) => a.nextDue!.compareTo(b.nextDue!));
+      for (final shot in shots) {
+        items.add(
+          _Todo(
+            title: '疫苗',
+            detail: shot.name,
+            onTap: () async {
+              final next = await app.completeVaccine(shot);
+              if (!context.mounted) return;
+              showMessage(context, '下次 ${formatDate(next)}');
+            },
+          ),
+        );
+      }
+      if (app.weightAlertVisible(cat)) {
+        final kg = app.latestWeight?.weightKg;
+        items.add(
+          _Todo(
+            title: '体重',
+            detail: kg == null ? '去称一下' : '${kg.toStringAsFixed(2)} kg',
+            onTap: () async {
+              await app.ackWeightAlert(cat);
+              if (!context.mounted) return;
+              showMessage(context, '知道了');
+            },
+          ),
+        );
+      }
     }
     return items;
   }
 
-  void _showRest(BuildContext context, List<_Alert> rest) {
-    showModalBottomSheet<void>(
-      context: context,
-      backgroundColor: AppColors.background,
-      builder: (context) => SafeArea(
-        child: ListView(
-          shrinkWrap: true,
-          children: [
-            const ListTile(title: Text('全部')),
-            for (final alert in rest) _AlertRow(alert: alert, dismiss: true),
-          ],
-        ),
-      ),
-    );
+  bool _foodDue(PantryEntry entry, DateTime soon) {
+    final expiry = entry.item.expiryDate;
+    if (expiry != null && !dateOnly(expiry).isAfter(soon)) return true;
+    final useBy = _useBy(entry);
+    if (useBy != null && !dateOnly(useBy).isAfter(soon)) return true;
+    return false;
+  }
+
+  DateTime? _useBy(PantryEntry entry) {
+    final opened = entry.item.openedAt;
+    if (opened == null || entry.openWindowDays <= 0) return null;
+    return dateOnly(opened).add(Duration(days: entry.openWindowDays));
   }
 }
 
-int calendarDays(DateTime from, DateTime to) {
-  final start = DateTime(from.year, from.month, from.day);
-  final end = DateTime(to.year, to.month, to.day);
-  return end.difference(start).inDays;
-}
-
-class _Alert {
-  const _Alert({
-    required this.title,
-    required this.detail,
-    required this.onTap,
-  });
+class _Todo {
+  const _Todo({required this.title, required this.detail, required this.onTap});
 
   final String title;
   final String detail;
-  final VoidCallback onTap;
+  final Future<void> Function() onTap;
 }
 
-class _AlertRow extends StatelessWidget {
-  const _AlertRow({required this.alert, this.dismiss = false});
+class _TodoRow extends StatelessWidget {
+  const _TodoRow({required this.todo});
 
-  final _Alert alert;
-  final bool dismiss;
+  final _Todo todo;
 
   @override
   Widget build(BuildContext context) {
-    return ListTile(
-      contentPadding: EdgeInsets.zero,
-      dense: true,
-      title: Text(alert.title),
-      subtitle: Text(
-        alert.detail,
-        style: const TextStyle(color: AppColors.muted),
-      ),
-      trailing: const Icon(Icons.chevron_right_rounded, color: AppColors.muted),
-      onTap: () {
-        if (dismiss) Navigator.of(context).pop();
-        alert.onTap();
-      },
-    );
-  }
-}
-
-class _CatHeader extends StatelessWidget {
-  const _CatHeader({required this.app, required this.cat});
-
-  final AppController app;
-  final CatProfile cat;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        CatAvatar(path: cat.avatarPath, size: 44),
-        const SizedBox(width: 12),
-        Expanded(
-          child: _CatMenu(app: app, cat: cat),
-        ),
-        for (final item in app.cats)
-          if (item.id != cat.id)
-            Padding(
-              padding: const EdgeInsets.only(left: 8),
-              child: GestureDetector(
-                onTap: () => app.selectCat(item.id),
-                child: CatAvatar(path: item.avatarPath, size: 32),
-              ),
-            ),
-      ],
-    );
-  }
-}
-
-class _CatMenu extends StatelessWidget {
-  const _CatMenu({required this.app, required this.cat});
-
-  final AppController app;
-  final CatProfile cat;
-
-  @override
-  Widget build(BuildContext context) {
-    return PopupMenuButton<int>(
-      offset: const Offset(0, 36),
-      onSelected: (id) {
-        if (id == -1) {
-          context.push('/cat-form');
-          return;
-        }
-        app.selectCat(id);
-      },
-      itemBuilder: (context) => [
-        for (final item in app.cats)
-          PopupMenuItem(value: item.id, child: Text(item.name)),
-        const PopupMenuItem(value: -1, child: Text('添加猫咪')),
-      ],
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisSize: MainAxisSize.min,
+    return Material(
+      color: AppColors.card,
+      borderRadius: BorderRadius.circular(16),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(16),
+        onTap: todo.onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          child: Row(
             children: [
-              Flexible(
-                child: Text(
-                  cat.name,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.w700,
-                  ),
+              Text(
+                todo.title,
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
                 ),
               ),
-              const Icon(Icons.keyboard_arrow_down_rounded, size: 20),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  todo.detail,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(color: AppColors.muted),
+                ),
+              ),
             ],
           ),
-          Text(
-            ageLabel(cat.birthday, app.now),
-            style: const TextStyle(color: AppColors.muted, fontSize: 13),
-          ),
-        ],
+        ),
       ),
     );
   }
