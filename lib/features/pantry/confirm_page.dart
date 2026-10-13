@@ -184,15 +184,19 @@ class _ConfirmPageState extends State<ConfirmPage> {
                 ),
             ],
           ),
-          const SizedBox(height: 24),
-          FilledButton(
+        ],
+      ),
+      bottomNavigationBar: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 8, 20, 12),
+          child: FilledButton(
             onPressed: _busy ? null : _save,
             style: FilledButton.styleFrom(
               minimumSize: const Size.fromHeight(56),
             ),
             child: const Text('记下'),
           ),
-        ],
+        ),
       ),
     );
   }
