@@ -95,7 +95,7 @@ def main():
         cupertino = bundle.read(cupertino_name)
 
     errors = []
-    if b'"fvar"' in manifest:
+    if "fvar" in manifest:
         errors.append("FontManifest mentions a variable font")
     for label, blob in (("Regular", noto_reg), ("Bold", noto_bold)):
         faces = tables(blob)
