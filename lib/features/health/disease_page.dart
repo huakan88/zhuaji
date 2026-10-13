@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/theme/app_fonts.dart';
 import '../../core/theme/app_tokens.dart';
 import '../../core/widgets/common.dart';
 import '../../domain/health/checkup_catalog.dart';
@@ -66,7 +67,7 @@ class _DiseaseLibraryPageState extends State<DiseaseLibraryPage> {
                 contentPadding: EdgeInsets.zero,
                 title: Text(
                   disease.name,
-                  style: const TextStyle(fontWeight: FontWeight.w700),
+                  style: zhuaji.copyWith(fontWeight: FontWeight.w700),
                 ),
                 onTap: () => context.push('/disease?id=${disease.id}'),
               ),
@@ -100,9 +101,9 @@ class DiseaseDetailPage extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
         children: [
-          Text(disease.summary, style: const TextStyle(height: 1.4)),
+          Text(disease.summary, style: zhuaji.copyWith(height: 1.4)),
           const SizedBox(height: 16),
-          const Text('红灯', style: TextStyle(fontWeight: FontWeight.w700)),
+          Text('红灯', style: zhuaji.copyWith(fontWeight: FontWeight.w700)),
           const SizedBox(height: 6),
           for (final flag in disease.redFlags)
             Padding(
@@ -110,9 +111,9 @@ class DiseaseDetailPage extends StatelessWidget {
               child: Text('· $flag'),
             ),
           const SizedBox(height: 16),
-          const Text('喂养', style: TextStyle(fontWeight: FontWeight.w700)),
+          Text('喂养', style: zhuaji.copyWith(fontWeight: FontWeight.w700)),
           const SizedBox(height: 6),
-          Text(disease.diet, style: const TextStyle(height: 1.4)),
+          Text(disease.diet, style: zhuaji.copyWith(height: 1.4)),
           if (app.active != null) ...[
             const SizedBox(height: 20),
             FilledButton(

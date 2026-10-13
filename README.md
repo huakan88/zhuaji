@@ -29,10 +29,10 @@ Android：
 flutter run -d android
 ```
 
-打调试包：
+打 arm64 release 包。必须带 `--no-tree-shake-icons`，否则 Material 和 Cupertino 图标字体会被裁成几个字形，真机上变成方框：
 
 ```bash
-flutter build apk --debug
+flutter build apk --release --target-platform android-arm64 --no-tree-shake-icons
 ```
 
 iOS（需要 Mac）：

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/format.dart';
+import '../../core/theme/app_fonts.dart';
 import '../../core/theme/app_tokens.dart';
 import '../../core/widgets/common.dart';
 import '../../domain/models.dart';
@@ -61,7 +62,7 @@ class _ConfirmPageState extends State<ConfirmPage> {
             const SizedBox(height: 16),
             Text(
               '到期 ${formatDate(_expiry!)}',
-              style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700),
+              style: zhuaji.copyWith(fontSize: 22, fontWeight: FontWeight.w700),
             ),
           ],
           const SizedBox(height: 28),

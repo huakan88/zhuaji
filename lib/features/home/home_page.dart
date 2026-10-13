@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/format.dart';
+import '../../core/theme/app_fonts.dart';
 import '../../core/theme/app_tokens.dart';
 import '../../domain/dates.dart';
 import '../../core/widgets/common.dart';
@@ -39,7 +40,7 @@ class HomePage extends StatelessWidget {
             Center(
               child: Text(
                 cat.name,
-                style: const TextStyle(
+                style: zhuaji.copyWith(
                   fontSize: 20,
                   fontWeight: FontWeight.w700,
                 ),
@@ -56,7 +57,7 @@ class HomePage extends StatelessWidget {
             onPressed: () => context.push('/scan'),
             style: FilledButton.styleFrom(
               minimumSize: const Size.fromHeight(56),
-              textStyle: const TextStyle(
+              textStyle: zhuaji.copyWith(
                 fontSize: 18,
                 fontWeight: FontWeight.w700,
               ),
@@ -174,7 +175,7 @@ class _TodoRow extends StatelessWidget {
             children: [
               Text(
                 todo.title,
-                style: const TextStyle(
+                style: zhuaji.copyWith(
                   fontSize: 16,
                   fontWeight: FontWeight.w700,
                 ),
@@ -185,7 +186,7 @@ class _TodoRow extends StatelessWidget {
                   todo.detail,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(color: AppColors.muted),
+                  style: zhuaji.copyWith(color: AppColors.muted),
                 ),
               ),
             ],

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 
+import '../../core/theme/app_fonts.dart';
 import '../../core/widgets/common.dart';
 
 class ScanPage extends StatefulWidget {
@@ -53,10 +54,12 @@ class _ScanPageState extends State<ScanPage> {
                         children: [
                           TextField(
                             controller: _manual,
-                            style: const TextStyle(color: Colors.white),
-                            decoration: const InputDecoration(
+                            style: zhuaji.copyWith(color: Colors.white),
+                            decoration: InputDecoration(
                               labelText: '条码',
-                              labelStyle: TextStyle(color: Colors.white70),
+                              labelStyle: zhuaji.copyWith(
+                                color: Colors.white70,
+                              ),
                             ),
                           ),
                           const SizedBox(height: 8),
@@ -68,9 +71,9 @@ class _ScanPageState extends State<ScanPage> {
                       )
                     : TextButton(
                         onPressed: () => setState(() => _manualOpen = true),
-                        child: const Text(
+                        child: Text(
                           '手输',
-                          style: TextStyle(color: Colors.white),
+                          style: zhuaji.copyWith(color: Colors.white),
                         ),
                       ),
               ),
@@ -82,8 +85,8 @@ class _ScanPageState extends State<ScanPage> {
   }
 
   Widget _cameraPane() {
-    const fallback = Center(
-      child: Text('相机没开', style: TextStyle(color: Colors.white)),
+    final fallback = Center(
+      child: Text('相机没开', style: zhuaji.copyWith(color: Colors.white)),
     );
     if (Platform.environment['FLUTTER_TEST'] == 'true') return fallback;
     final camera = _camera ??= MobileScannerController();

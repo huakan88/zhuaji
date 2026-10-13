@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../../domain/dates.dart';
 import '../format.dart';
+import '../theme/app_fonts.dart';
 import '../theme/app_tokens.dart';
 import 'paw_icon.dart';
 
@@ -73,10 +74,10 @@ class TagChip extends StatelessWidget {
       ),
       child: Text(
         label,
-        style: TextStyle(
+        style: zhuaji.copyWith(
           fontSize: 12,
           color: color,
-          fontWeight: FontWeight.w600,
+          fontWeight: FontWeight.w700,
         ),
       ),
     );
@@ -124,9 +125,9 @@ class DisclaimerBanner extends StatelessWidget {
         color: AppColors.tintGreen,
         borderRadius: BorderRadius.circular(Radii.l),
       ),
-      child: const Text(
+      child: Text(
         '仅供参考，请遵医嘱。',
-        style: TextStyle(color: AppColors.muted, fontSize: 12),
+        style: zhuaji.copyWith(color: AppColors.muted, fontSize: 12),
       ),
     );
   }
@@ -172,7 +173,7 @@ class EmptyHint extends StatelessWidget {
           Text(
             body,
             textAlign: TextAlign.center,
-            style: const TextStyle(color: AppColors.muted, height: 1.4),
+            style: zhuaji.copyWith(color: AppColors.muted, height: 1.4),
           ),
           if (action != null) ...[
             const SizedBox(height: Space.x4),
@@ -292,7 +293,7 @@ class FoodDateCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(brand, style: const TextStyle(color: AppColors.muted)),
+          Text(brand, style: zhuaji.copyWith(color: AppColors.muted)),
           const SizedBox(height: Space.x1),
           Text(
             name,
@@ -341,11 +342,11 @@ class FoodDateCard extends StatelessWidget {
                   ),
           ),
           if (bestBeforeOnly)
-            const Padding(
-              padding: EdgeInsets.only(bottom: Space.x2),
+            Padding(
+              padding: const EdgeInsets.only(bottom: Space.x2),
               child: Text(
                 '这是最佳赏味期，不等于坏掉的日子。',
-                style: TextStyle(color: AppColors.brown, fontSize: 12),
+                style: zhuaji.copyWith(color: AppColors.brown, fontSize: 12),
               ),
             ),
           if (batch != null && batch!.isNotEmpty) _line('批号', batch!),
@@ -373,9 +374,9 @@ class FoodDateCard extends StatelessWidget {
         children: [
           SizedBox(
             width: 64,
-            child: Text(label, style: const TextStyle(color: AppColors.muted)),
+            child: Text(label, style: zhuaji.copyWith(color: AppColors.muted)),
           ),
-          Expanded(child: Text(value, style: const TextStyle(height: 1.35))),
+          Expanded(child: Text(value, style: zhuaji.copyWith(height: 1.35))),
           if (trailing != null) ...[const SizedBox(width: 8), trailing],
         ],
       ),

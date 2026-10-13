@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/theme/app_fonts.dart';
 import '../../core/theme/app_tokens.dart';
 import '../../core/widgets/common.dart';
 import '../../state/app_controller.dart';
@@ -40,7 +41,7 @@ class CatsPage extends StatelessWidget {
                             item.name,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(fontSize: 12),
+                            style: zhuaji.copyWith(fontSize: 12),
                           ),
                         ],
                       ),
@@ -50,12 +51,12 @@ class CatsPage extends StatelessWidget {
                 ],
                 GestureDetector(
                   onTap: () => context.push('/cat-form'),
-                  child: const SizedBox(
+                  child: SizedBox(
                     width: 64,
                     child: Column(
                       children: [
-                        CatAvatar(path: null, size: 48),
-                        Text('添加', style: TextStyle(fontSize: 12)),
+                        const CatAvatar(path: null, size: 48),
+                        Text('添加', style: zhuaji.copyWith(fontSize: 12)),
                       ],
                     ),
                   ),
@@ -81,7 +82,7 @@ class CatsPage extends StatelessWidget {
                 onTap: () => context.push('/cat-form?id=${cat.id}'),
                 child: Text(
                   cat.name,
-                  style: const TextStyle(
+                  style: zhuaji.copyWith(
                     fontSize: 28,
                     fontWeight: FontWeight.w700,
                   ),
@@ -96,7 +97,7 @@ class CatsPage extends StatelessWidget {
                   app.latestWeight == null
                       ? '— kg'
                       : '${app.latestWeight!.weightKg.toStringAsFixed(2)} kg',
-                  style: const TextStyle(
+                  style: zhuaji.copyWith(
                     fontSize: 40,
                     fontWeight: FontWeight.w700,
                     color: AppColors.coralDeep,

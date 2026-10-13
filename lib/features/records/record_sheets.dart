@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 import '../../core/format.dart';
+import '../../core/theme/app_fonts.dart';
 import '../../core/theme/app_tokens.dart';
 import '../../core/widgets/common.dart';
 import '../../domain/care/easy_log.dart';
@@ -26,12 +27,12 @@ Future<void> showWeightSheet(BuildContext context) async {
           children: [
             Text(
               '${value.toStringAsFixed(2)} kg',
-              style: const TextStyle(fontSize: 32, fontWeight: FontWeight.w700),
+              style: zhuaji.copyWith(fontSize: 32, fontWeight: FontWeight.w700),
             ),
             const SizedBox(height: 4),
-            const Text(
+            Text(
               '默认是上次的体重',
-              style: TextStyle(color: AppColors.muted, fontSize: 12),
+              style: zhuaji.copyWith(color: AppColors.muted, fontSize: 12),
             ),
             const SizedBox(height: 12),
             Row(
@@ -87,11 +88,11 @@ Future<void> showVaccineSheet(
       child: StatefulBuilder(
         builder: (context, setState) => Column(
           children: [
-            const Align(
+            Align(
               alignment: Alignment.centerLeft,
               child: Text(
                 '下次日期已按接种日自动算好',
-                style: TextStyle(color: AppColors.muted, fontSize: 12),
+                style: zhuaji.copyWith(color: AppColors.muted, fontSize: 12),
               ),
             ),
             const SizedBox(height: 8),
@@ -376,7 +377,7 @@ Future<void> _sheet(
                     const SizedBox(height: 12),
                     Text(
                       error,
-                      style: const TextStyle(color: AppColors.danger),
+                      style: zhuaji.copyWith(color: AppColors.danger),
                     ),
                   ],
                   const SizedBox(height: 16),

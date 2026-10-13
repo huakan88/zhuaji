@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 import 'dart:ui' as ui;
 
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -44,58 +45,79 @@ void main() {
     expect(ratio, greaterThan(0.02));
   });
 
-  testWidgets('Material icons draw glyphs instead of tofu boxes', (
+  testWidgets('screen icons and button labels draw ink, not boxes', (
     tester,
   ) async {
     await tester.runAsync(loadZhuajiFonts);
+    const icons = <IconData>[
+      Icons.today_outlined,
+      Icons.pets_outlined,
+      Icons.close,
+      Icons.arrow_back,
+      Icons.calendar_today_outlined,
+      CupertinoIcons.back,
+      CupertinoIcons.chevron_up,
+    ];
     await tester.pumpWidget(
-      const MaterialApp(
+      MaterialApp(
+        theme: buildAppTheme(),
         home: Scaffold(
-          body: Center(
-            child: RepaintBoundary(
-              key: Key('icons'),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    Icons.favorite_rounded,
+          body: Column(
+            children: [
+              for (var i = 0; i < icons.length; i++)
+                RepaintBoundary(
+                  key: Key('icon-$i'),
+                  child: Icon(
+                    icons[i],
                     size: 48,
+                    color: const Color(0xFF1E1E1E),
+                  ),
+                ),
+              const RepaintBoundary(
+                key: Key('button-label'),
+                child: Text(
+                  '扫粮体检看病',
+                  style: TextStyle(
+                    fontFamily: 'NotoSansSC',
+                    fontFamilyFallback: ['NotoSansSC'],
+                    fontWeight: FontWeight.w600,
+                    fontSize: 32,
                     color: Color(0xFF1E1E1E),
                   ),
-                  Icon(Icons.home_outlined, size: 48, color: Color(0xFF1E1E1E)),
-                  Icon(
-                    Icons.notifications_none_rounded,
-                    size: 48,
-                    color: Color(0xFF1E1E1E),
-                  ),
-                  Icon(
-                    Icons.keyboard_arrow_down_rounded,
-                    size: 48,
-                    color: Color(0xFF1E1E1E),
-                  ),
-                ],
+                ),
               ),
-            ),
+            ],
           ),
         ),
       ),
     );
     await tester.pump();
-    final boundary = tester.renderObject<RenderRepaintBoundary>(
-      find.byKey(const Key('icons')),
-    );
-    final image = await tester.runAsync(() => boundary.toImage(pixelRatio: 1));
-    final data = await tester.runAsync(
-      () => image!.toByteData(format: ui.ImageByteFormat.rawRgba),
-    );
-    final ratio = interiorDarkRatio(
-      data!,
-      image!.width,
-      image.height,
-      reason: 'Material icons painted no ink',
-    );
-    expect(ratio, greaterThan(0.08));
+    for (var i = 0; i < icons.length; i++) {
+      await _expectInk(
+        tester,
+        'icon-$i',
+        '图标 ${icons[i].codePoint.toRadixString(16)} 画成了方框',
+      );
+    }
+    await _expectInk(tester, 'button-label', '按钮上的中文画成了方框');
   });
+}
+
+Future<void> _expectInk(WidgetTester tester, String key, String reason) async {
+  final boundary = tester.renderObject<RenderRepaintBoundary>(
+    find.byKey(Key(key)),
+  );
+  final image = await tester.runAsync(() => boundary.toImage(pixelRatio: 1));
+  final data = await tester.runAsync(
+    () => image!.toByteData(format: ui.ImageByteFormat.rawRgba),
+  );
+  final ratio = interiorDarkRatio(
+    data!,
+    image!.width,
+    image.height,
+    reason: reason,
+  );
+  expect(ratio, greaterThan(0.02), reason: reason);
 }
 
 double interiorDarkRatio(

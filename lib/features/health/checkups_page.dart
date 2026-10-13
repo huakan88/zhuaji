@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../core/format.dart';
+import '../../core/theme/app_fonts.dart';
 import '../../core/theme/app_tokens.dart';
 import '../../core/widgets/common.dart';
 import '../../domain/health/checkup_catalog.dart';
@@ -30,7 +31,7 @@ class CheckupsPage extends StatelessWidget {
         children: [
           Text(
             '${ageLabel(cat.birthday, app.now)} · ${lifeStageLabel(plan.stage)}',
-            style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
+            style: zhuaji.copyWith(fontSize: 17, fontWeight: FontWeight.w700),
           ),
           const SizedBox(height: 8),
           for (final advice in plan.items) ...[
@@ -65,13 +66,13 @@ class _CheckupCard extends StatelessWidget {
         const SizedBox(height: 10),
         Text(
           advice.item.name,
-          style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
+          style: zhuaji.copyWith(fontWeight: FontWeight.w700, fontSize: 16),
         ),
         if (nextDue != null) ...[
           const SizedBox(height: 4),
           Text(
             formatDate(nextDue),
-            style: const TextStyle(color: AppColors.muted, fontSize: 12),
+            style: zhuaji.copyWith(color: AppColors.muted, fontSize: 12),
           ),
         ],
         TextButton(
