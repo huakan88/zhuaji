@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:maokangji/data/db/app_database.dart';
 import 'package:maokangji/data/repositories/drift_care_repository.dart';
@@ -46,22 +45,14 @@ void main() {
     await back(tester);
 
     await tapText(tester, '我的');
-    await tapText(tester, '体态对比');
-    expect(find.textContaining('的体态'), findsOneWidget);
-    await back(tester);
-
     await tapText(tester, '粮仓');
     expect(find.text('在库'), findsOneWidget);
     await back(tester);
-    expect(find.text('体检建议'), findsOneWidget);
 
-    await tapText(tester, '今天');
     await tapText(tester, '健康');
-    await revealText(tester, '成长');
-    await tester.tap(find.byKey(const Key('tab-健康')));
-    await frames(tester);
-    await revealText(tester, '记饮水 · 今日 180 ml');
-    await tapText(tester, '记饮水 · 今日 180 ml');
+    await tapText(tester, '慢性肾病');
+    await revealText(tester, '记饮水');
+    await tapText(tester, '记饮水');
     expect(find.text('记录饮水'), findsOneWidget);
     await enterField(tester, '大约喝了多少毫升', '0');
     await tapText(tester, '保存');
@@ -75,8 +66,8 @@ void main() {
     tester,
   ) async {
     await boot(tester, controller);
-    await tapText(tester, '我的');
-    await tapText(tester, '体检建议');
+    await tapText(tester, '健康');
+    await tapText(tester, '按年龄体检');
     expect(find.textContaining('的体检'), findsOneWidget);
     expect(find.text('仅供参考，请遵医嘱。'), findsWidgets);
     await revealText(tester, '删除最近一条');
@@ -99,20 +90,14 @@ void main() {
     await back(tester);
     await back(tester);
 
-    await tapText(tester, '当前档案');
+    await tapText(tester, '我的');
+    await tapText(tester, '橘座');
     expect(find.text('记录天数'), findsOneWidget);
-    await tapText(tester, '慢性肾病');
-    expect(find.text('饮食'), findsOneWidget);
     await back(tester);
-    await tapText(tester, '体检建议');
-    expect(find.textContaining('成年'), findsWidgets);
-    await back(tester);
+    await tapText(tester, '健康');
     await tapText(tester, '疾病养护');
     await tapText(tester, '看其他疾病');
     expect(find.text('糖尿病'), findsOneWidget);
-    await back(tester);
-    await tapText(tester, '体态对比');
-    expect(find.text('再拍一张'), findsOneWidget);
   });
 
   testWidgets(
@@ -149,32 +134,13 @@ void main() {
       expect(find.text('在库'), findsOneWidget);
       await back(tester);
 
-      await tapText(tester, '我的');
-      await tapText(tester, '喂养');
-      await tapText(tester, '结束这次换粮');
-      await tapText(tester, '删除');
-      await tester.tap(find.byType(Switch).at(0));
-      await frames(tester);
-      await tester.tap(find.byType(Switch).at(1));
-      await frames(tester);
-      await back(tester);
-      await tapText(tester, '提醒');
-      await revealText(tester, '橘座的驱虫提醒');
-      await tapText(tester, '橘座的驱虫提醒');
-      expect(find.text('成长'), findsWidgets);
+      await tapText(tester, '今天');
+      await tapText(tester, '驱虫');
+      expect(find.text('记体重'), findsOneWidget);
       await tapText(tester, '今天');
       await tapText(tester, '橘座');
       await tapText(tester, '奶油');
-      await tapText(tester, '我的');
-      await tapText(tester, '喂养');
-      await tester.tap(find.byType(Switch).at(0));
-      await frames(tester);
-      await tester.tap(find.byType(Switch).at(1));
-      await frames(tester);
-      await back(tester);
-      await tapText(tester, '提醒');
-      await revealText(tester, '猫粮即将到期');
-      await tapText(tester, '猫粮即将到期');
+      await tapText(tester, '临期猫粮');
       expect(find.text('在库'), findsOneWidget);
     },
   );

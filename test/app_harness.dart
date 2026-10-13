@@ -40,6 +40,15 @@ bool _offstage(Element element) {
       hidden = true;
       return false;
     }
+    // IndexedStack hides inactive branches with a private visibility scope
+    // instead of Offstage, so those texts are still in the tree.
+    if (widget.runtimeType.toString() == '_VisibilityScope') {
+      final visible = (widget as dynamic).isVisible == true;
+      if (!visible) {
+        hidden = true;
+        return false;
+      }
+    }
     return true;
   });
   return hidden;

@@ -131,7 +131,7 @@ class _CatFormPageState extends State<CatFormPage> {
           ),
           const SizedBox(height: 8),
           const Text(
-            '照片和名字就够了，下面都可以以后再补。',
+            '照片和名字就够了。',
             style: TextStyle(color: AppColors.muted, fontSize: 12),
           ),
           const SizedBox(height: 12),
@@ -213,24 +213,6 @@ class _CatFormPageState extends State<CatFormPage> {
                   selectedColor: AppColors.coral,
                   onSelected: (_) => setState(() => _breed.text = breed),
                 ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Wrap(
-            spacing: 8,
-            children: [
-              ChoiceChip(
-                label: const Text('维持'),
-                selected: _goal == CareGoal.maintain,
-                selectedColor: AppColors.green,
-                onSelected: (_) => setState(() => _goal = CareGoal.maintain),
-              ),
-              ChoiceChip(
-                label: const Text('减重'),
-                selected: _goal == CareGoal.loss,
-                selectedColor: AppColors.green,
-                onSelected: (_) => setState(() => _goal = CareGoal.loss),
-              ),
             ],
           ),
           const SizedBox(height: 20),

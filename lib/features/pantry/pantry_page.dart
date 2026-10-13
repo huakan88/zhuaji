@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../core/copy.dart';
 import '../../core/format.dart';
 import '../../core/theme/app_tokens.dart';
 import '../../core/widgets/common.dart';
@@ -54,7 +53,7 @@ class _PantryPageState extends State<PantryPage> {
             ),
             const SizedBox(height: 8),
             const Text(
-              kSampleFoodNote,
+              '扫码后带出粮食，到期前会提醒。',
               style: TextStyle(color: AppColors.muted, fontSize: 12),
             ),
             const SizedBox(height: Space.x4),

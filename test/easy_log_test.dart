@@ -3,12 +3,7 @@ import 'package:maokangji/domain/care/easy_log.dart';
 import 'package:maokangji/domain/models.dart';
 
 void main() {
-  test('portion stays near the last meal and vaccine dates follow age', () {
-    expect(gramsForPortion(40, Portion.less), 28);
-    expect(gramsForPortion(40, Portion.normal), 40);
-    expect(gramsForPortion(40, Portion.more), 52);
-    expect(feedingBaseline(const [], dailyGrams: 80), 40);
-
+  test('vaccine dates follow age', () {
     final adult = nextVaccineDate(DateTime(2020, 1, 1), DateTime(2026, 10, 12));
     expect(adult, DateTime(2027, 10, 12));
     final kitten = nextVaccineDate(

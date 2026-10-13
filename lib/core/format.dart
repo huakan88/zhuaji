@@ -14,8 +14,6 @@ String sexLabel(CatSex sex) => switch (sex) {
   CatSex.unknown => '未知',
 };
 
-String goalLabel(CareGoal goal) => goal == CareGoal.loss ? '减重' : '维持';
-
 String formLabel(FoodForm form) => switch (form) {
   FoodForm.dry => '干粮',
   FoodForm.wet => '湿粮',

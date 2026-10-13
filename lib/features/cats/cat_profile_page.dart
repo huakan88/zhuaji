@@ -4,10 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../core/format.dart';
 import '../../core/theme/app_tokens.dart';
 import '../../core/widgets/common.dart';
-import '../../core/widgets/weight_chart.dart';
 import '../../domain/dates.dart';
-import '../../domain/health/disease_catalog.dart';
-import '../../domain/models.dart';
 import '../../state/app_controller.dart';
 
 class CatProfilePage extends StatelessWidget {
@@ -27,19 +24,12 @@ class CatProfilePage extends StatelessWidget {
         if (app.activeCatId != cat.id) app.selectCat(cat.id);
       });
     }
-    final ownPhotos = app.activeCatId == cat.id
-        ? app.photos
-        : const <CatPhoto>[];
-    final ownConditions = app.activeCatId == cat.id
-        ? app.catConditions
-        : const <ConditionRecord>[];
     final weights = app.weights.where((item) => item.catId == cat.id).toList();
     final vaccines = app.vaccines.where((item) => item.catId == cat.id).length;
     final deworms = app.deworms.where((item) => item.catId == cat.id).length;
     final points = <DateTime>[
       cat.createdAt,
       for (final item in weights) item.loggedOn,
-      for (final item in ownPhotos) item.takenAt,
     ];
     final earliest = points
         .map(dateOnly)
@@ -152,131 +142,9 @@ class CatProfilePage extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                if (cat.recognitionDetail != null) ...[
-                  SoftCard(
-                    color: AppColors.tintCoral,
-                    child: Text(
-                      cat.recognitionDetail!,
-                      style: const TextStyle(height: 1.45),
-                    ),
-                  ),
-                  const SizedBox(height: 14),
-                ],
-                const SectionHeader(title: '成长记录'),
-                const SizedBox(height: 10),
-                SoftCard(child: WeightChart(weights: weights, compact: true)),
-                const SizedBox(height: 16),
-                SectionHeader(
-                  title: '最近日记',
-                  action: '对比',
-                  onAction: () async {
-                    await app.selectCat(cat.id);
-                    if (context.mounted) context.push('/photos');
-                  },
-                ),
-                const SizedBox(height: 10),
-                SizedBox(
-                  height: 108,
-                  child: ownPhotos.isEmpty
-                      ? const Align(
-                          alignment: Alignment.centerLeft,
-                          child: Text(
-                            '还没有体态照片',
-                            style: TextStyle(color: AppColors.muted),
-                          ),
-                        )
-                      : ListView.separated(
-                          scrollDirection: Axis.horizontal,
-                          itemCount: ownPhotos.length,
-                          separatorBuilder: (_, _) => const SizedBox(width: 10),
-                          itemBuilder: (context, index) {
-                            final photo =
-                                ownPhotos[ownPhotos.length - 1 - index];
-                            return ClipRRect(
-                              borderRadius: BorderRadius.circular(Radii.m),
-                              child: SizedBox(
-                                width: 108,
-                                child: CatImage(path: photo.path),
-                              ),
-                            );
-                          },
-                        ),
-                ),
-                const SizedBox(height: 16),
-                SoftCard(
-                  child: Column(
-                    children: [
-                      _row('年龄', ageLabel(cat.birthday, app.now)),
-                      _row('目标', goalLabel(cat.goal)),
-                      _row(
-                        '最近体重',
-                        latest == null
-                            ? '未记录'
-                            : '${latest.toStringAsFixed(2)} kg',
-                      ),
-                      if (cat.notes.isNotEmpty) _row('备注', cat.notes),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Row(
-                  children: [
-                    Expanded(
-                      child: FilledButton(
-                        onPressed: () => context.push('/cat-form?id=${cat.id}'),
-                        child: const Text('编辑资料'),
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: OutlinedButton(
-                        onPressed: () async {
-                          await app.selectCat(cat.id);
-                          if (context.mounted) context.push('/photos');
-                        },
-                        child: const Text('体态对比'),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                OutlinedButton(
-                  onPressed: () async {
-                    await app.selectCat(cat.id);
-                    if (context.mounted) context.push('/checkups');
-                  },
-                  child: const Text('体检建议'),
-                ),
-                if (ownConditions.isEmpty)
-                  const Padding(
-                    padding: EdgeInsets.only(top: 8),
-                    child: Text(
-                      '还没有标记确诊疾病',
-                      style: TextStyle(color: AppColors.muted),
-                    ),
-                  )
-                else
-                  for (final condition in ownConditions)
-                    ListTile(
-                      contentPadding: EdgeInsets.zero,
-                      title: Text(
-                        diseaseById(condition.diseaseId)?.name ?? '已标记的疾病',
-                      ),
-                      subtitle: Text(
-                        condition.stageLabel.isEmpty
-                            ? '已确诊'
-                            : condition.stageLabel,
-                      ),
-                      trailing: const Icon(Icons.chevron_right_rounded),
-                      onTap: () =>
-                          context.push('/disease?id=${condition.diseaseId}'),
-                    ),
-                TextButton(
-                  onPressed: () async {
-                    await app.selectCat(cat.id);
-                    if (context.mounted) context.push('/diseases');
-                  },
-                  child: const Text('疾病养护'),
+                FilledButton(
+                  onPressed: () => context.push('/cat-form?id=${cat.id}'),
+                  child: const Text('编辑资料'),
                 ),
                 TextButton(
                   onPressed: () async {
@@ -312,22 +180,6 @@ class CatProfilePage extends StatelessWidget {
             ),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _row(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            width: 72,
-            child: Text(label, style: const TextStyle(color: AppColors.muted)),
-          ),
-          Expanded(child: Text(value, style: const TextStyle(height: 1.35))),
-        ],
       ),
     );
   }

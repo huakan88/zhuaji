@@ -1,34 +1,13 @@
 import 'package:flutter/foundation.dart';
 
 import '../core/format.dart';
-import '../domain/care/easy_log.dart';
 import '../domain/dates.dart';
-import '../domain/feeding/feeding_math.dart';
 import '../domain/health/checkup_catalog.dart';
 import '../domain/health/disease_catalog.dart';
 import '../domain/models.dart';
 import '../domain/reminders/reminder_planner.dart';
 import '../domain/repositories/care_repository.dart';
 import '../services/notification_service.dart';
-
-class DailyTask {
-  const DailyTask({
-    required this.title,
-    required this.detail,
-    required this.done,
-  });
-
-  final String title;
-  final String detail;
-  final bool done;
-}
-
-class CareSlice {
-  const CareSlice({required this.label, required this.done});
-
-  final String label;
-  final bool done;
-}
 
 class AppController extends ChangeNotifier {
   AppController({
@@ -48,15 +27,10 @@ class AppController extends ChangeNotifier {
 
   List<CatProfile> cats = [];
   int? activeCatId;
-  List<CatPhoto> photos = [];
   List<VaccineRecord> vaccines = [];
   List<DewormRecord> deworms = [];
   List<VetRecord> visits = [];
   List<WeightRecord> weights = [];
-  List<HealthNote> notes = [];
-  List<FeedingRecord> feedings = [];
-  List<TransitionPlan> transitions = [];
-  List<FeedingReminder> feedingSlots = [];
   List<FoodProduct> products = [];
   List<PantryEntry> pantry = [];
   List<ConditionRecord> conditions = [];
@@ -81,10 +55,6 @@ class AppController extends ChangeNotifier {
       visits.where((item) => item.catId == activeCatId).toList();
   List<WeightRecord> get catWeights =>
       weights.where((item) => item.catId == activeCatId).toList();
-  List<HealthNote> get catNotes =>
-      notes.where((item) => item.catId == activeCatId).toList();
-  List<FeedingRecord> get catFeedings =>
-      feedings.where((item) => item.catId == activeCatId).toList();
   List<ConditionRecord> get catConditions =>
       conditions.where((item) => item.catId == activeCatId).toList();
   List<CheckupRecord> get catCheckups =>
@@ -98,35 +68,6 @@ class AppController extends ChangeNotifier {
 
   WeightRecord? get latestWeight => catWeights.isEmpty ? null : catWeights.last;
 
-  List<FeedingRecord> get todayFeedings =>
-      catFeedings.where((item) => isSameDay(item.loggedAt, now)).toList();
-
-  double get todayGrams =>
-      todayFeedings.fold<double>(0, (sum, item) => sum + item.grams);
-
-  CalorieEstimate? get calories {
-    final weight = latestWeight?.weightKg;
-    final cat = active;
-    if (weight == null || cat == null) return null;
-    return estimateCalories(
-      weightKg: weight,
-      neutered: cat.neutered,
-      kitten: isKitten(cat.birthday, now),
-      goal: cat.goal,
-      kcalPer100g: _density,
-    );
-  }
-
-  double? get _density {
-    for (final meal in catFeedings) {
-      final id = meal.productId;
-      if (id == null) continue;
-      final product = productById(id);
-      if (product?.kcalPer100g != null) return product!.kcalPer100g;
-    }
-    return null;
-  }
-
   VaccineRecord? get nextVaccine => _soonestDue(catVaccines);
   DewormRecord? get nextInternal => _soonestDeworm(DewormKind.internal);
   DewormRecord? get nextExternal => _soonestDeworm(DewormKind.external);
@@ -136,89 +77,6 @@ class AppController extends ChangeNotifier {
       ..sort((a, b) => a.item.expiryDate!.compareTo(b.item.expiryDate!));
     return dated.isEmpty ? null : dated.first;
   }
-
-  TransitionPlan? get activeTransition {
-    for (final plan in transitions.where((item) => item.catId == activeCatId)) {
-      final day = transitionDayNumber(plan.startDate, now);
-      if (day >= 1 && day <= plan.days) return plan;
-    }
-    return null;
-  }
-
-  List<FeedingReminder> remindersFor(int catId) =>
-      feedingSlots.where((item) => item.catId == catId).toList();
-
-  List<DailyTask> get todayTasks {
-    final fed = todayFeedings.isNotEmpty;
-    final weighed = catWeights.any(
-      (item) => now.difference(item.loggedOn).inDays <= 7,
-    );
-    final vaccine = nextVaccine;
-    final vaccineOk =
-        vaccine?.nextDue != null &&
-        !dateOnly(vaccine!.nextDue!).isBefore(dateOnly(now));
-    return [
-      DailyTask(
-        title: '今日喂食',
-        detail: fed ? '已记录 ${todayGrams.round()} g' : '还没有记下这一餐',
-        done: fed,
-      ),
-      DailyTask(
-        title: '一周体重',
-        detail: weighed ? '最近 7 天有称重' : '记一次体重，曲线才走得动',
-        done: weighed,
-      ),
-      DailyTask(
-        title: '疫苗日期',
-        detail: vaccine?.nextDue == null
-            ? '还没有下一次日期'
-            : formatDate(vaccine!.nextDue!),
-        done: vaccineOk,
-      ),
-    ];
-  }
-
-  int get careScore {
-    var score = 0;
-    if (todayFeedings.isNotEmpty) score++;
-    if (catWeights.any((item) => now.difference(item.loggedOn).inDays <= 7)) {
-      score++;
-    }
-    if (_dueOk(nextVaccine?.nextDue)) score++;
-    if (_dueOk(nextInternal?.nextDue) && _dueOk(nextExternal?.nextDue)) {
-      score++;
-    }
-    if (active?.avatarPath != null) score++;
-    return score;
-  }
-
-  String get careLevel {
-    final ratio = careScore / 5;
-    if (ratio >= 0.8) return '细心铲屎官';
-    if (ratio >= 0.4) return '稳定陪伴';
-    return '初识爪记';
-  }
-
-  String get mood {
-    if (careScore >= 4) return '状态不错';
-    if (careScore >= 2) return '平稳';
-    return '多看一眼';
-  }
-
-  List<CareSlice> get careRing => [
-    CareSlice(label: '疫苗', done: _dueOk(nextVaccine?.nextDue)),
-    CareSlice(label: '体内驱虫', done: _dueOk(nextInternal?.nextDue)),
-    CareSlice(label: '体外驱虫', done: _dueOk(nextExternal?.nextDue)),
-    CareSlice(
-      label: '体重',
-      done: catWeights.any(
-        (item) => now.difference(item.loggedOn).inDays <= 14,
-      ),
-    ),
-    CareSlice(label: '今日喂食', done: todayFeedings.isNotEmpty),
-  ];
-
-  List<PlannedNotification> get upcoming => _plan().take(6).toList();
 
   Future<void> init() async {
     loading = true;
@@ -247,12 +105,7 @@ class AppController extends ChangeNotifier {
       if (epoch != _selectEpoch) {
         final current = activeCatId;
         if (current != null) await repo.setSetting('activeCatId', '$current');
-        return;
       }
-      final nextPhotos = await repo.photosOf(id);
-      if (epoch != _selectEpoch) return;
-      photos = nextPhotos;
-      notifyListeners();
     } catch (error, stack) {
       debugPrint('切换猫咪没有完成：$error\n$stack');
     }
@@ -281,28 +134,6 @@ class AppController extends ChangeNotifier {
   Future<void> removeCat(int id) async {
     await repo.deleteCat(id);
     if (activeCatId == id) activeCatId = null;
-    await _refresh();
-  }
-
-  Future<void> addPhoto({
-    required String path,
-    double? weightKg,
-    String note = '',
-  }) async {
-    final cat = active;
-    if (cat == null) return;
-    await repo.addPhoto(
-      catId: cat.id,
-      path: path,
-      takenAt: now,
-      weightKg: weightKg,
-      note: note,
-    );
-    await _refresh();
-  }
-
-  Future<void> removePhoto(int id) async {
-    await repo.deletePhoto(id);
     await _refresh();
   }
 
@@ -345,87 +176,6 @@ class AppController extends ChangeNotifier {
 
   Future<void> removeWeight(int id) async {
     await repo.deleteWeight(id);
-    await _refresh();
-  }
-
-  Future<void> addNote(String content) async {
-    final cat = active;
-    if (cat == null) return;
-    await repo.addNote(catId: cat.id, notedOn: now, content: content);
-    await _refresh();
-  }
-
-  Future<void> removeNote(int id) async {
-    await repo.deleteNote(id);
-    await _refresh();
-  }
-
-  Future<void> markFed(MealSlot slot, Portion portion) async {
-    final cat = active;
-    if (cat == null) return;
-    final history = catFeedings;
-    FeedingRecord? previous;
-    for (final meal in history) {
-      if (previous == null || meal.loggedAt.isAfter(previous.loggedAt)) {
-        previous = meal;
-      }
-    }
-    final grams = gramsForPortion(
-      feedingBaseline(history, dailyGrams: calories?.grams),
-      portion,
-    );
-    await saveFeeding(
-      FeedingDraft(
-        catId: cat.id,
-        loggedAt: now,
-        foodName: previous?.foodName ?? '口粮',
-        foodForm: previous?.foodForm ?? FoodForm.dry,
-        grams: grams,
-        slot: slot,
-        productId: previous?.productId,
-        kcal: mealKcal(grams: grams, kcalPer100g: _density ?? 380),
-      ),
-    );
-  }
-
-  Future<void> saveFeeding(FeedingDraft draft) async {
-    await repo.upsertFeeding(draft);
-    await _refresh();
-  }
-
-  Future<void> removeFeeding(int id) async {
-    await repo.deleteFeeding(id);
-    await _refresh();
-  }
-
-  Future<void> startTransition({
-    required String fromFood,
-    required String toFood,
-  }) async {
-    final cat = active;
-    if (cat == null) return;
-    await repo.addTransition(
-      catId: cat.id,
-      fromFood: fromFood,
-      toFood: toFood,
-      startDate: dateOnly(now),
-    );
-    await _refresh();
-  }
-
-  Future<void> removeTransition(int id) async {
-    await repo.deleteTransition(id);
-    await _refresh();
-  }
-
-  Future<void> saveReminder(FeedingReminder reminder) async {
-    await repo.saveFeedingReminder(
-      catId: reminder.catId,
-      slot: reminder.slot,
-      hour: reminder.hour,
-      minute: reminder.minute,
-      enabled: reminder.enabled,
-    );
     await _refresh();
   }
 
@@ -630,23 +380,11 @@ class AppController extends ChangeNotifier {
     deworms = await repo.deworms();
     visits = await repo.visits();
     weights = await repo.weights();
-    notes = await repo.notes();
-    feedings = await repo.feedings();
-    transitions = await repo.transitions();
-    feedingSlots = await repo.feedingReminders();
     products = await repo.products();
     pantry = await repo.pantry();
     conditions = await repo.conditions();
     checkups = await repo.checkups();
     waters = await repo.waters();
-    final epoch = _selectEpoch;
-    final photoCatId = activeCatId;
-    final nextPhotos = photoCatId == null
-        ? <CatPhoto>[]
-        : await repo.photosOf(photoCatId);
-    if (epoch == _selectEpoch && activeCatId == photoCatId) {
-      photos = nextPhotos;
-    }
   }
 
   Future<void> _reschedule() async {
@@ -699,29 +437,6 @@ class AppController extends ChangeNotifier {
               afterOpenDays: entry.openWindowDays,
             ),
       ],
-      feedings: [
-        for (final slot in feedingSlots)
-          FeedingInput(
-            catId: slot.catId,
-            catName: _name(slot.catId),
-            slot: slot.slot,
-            hour: slot.hour,
-            minute: slot.minute,
-            enabled: slot.enabled,
-          ),
-      ],
-      transitions: [
-        for (final plan in transitions)
-          if (transitionDayNumber(plan.startDate, now) <= plan.days)
-            TransitionInput(
-              id: plan.id,
-              catName: _name(plan.catId),
-              fromFood: plan.fromFood,
-              toFood: plan.toFood,
-              startDate: plan.startDate,
-              days: plan.days,
-            ),
-      ],
       followUps: [
         for (final item in checkups)
           if (item.nextDue != null)
@@ -761,7 +476,4 @@ class AppController extends ChangeNotifier {
           ..sort((a, b) => a.nextDue!.compareTo(b.nextDue!));
     return dated.isEmpty ? null : dated.first;
   }
-
-  bool _dueOk(DateTime? due) =>
-      due != null && !dateOnly(due).isBefore(dateOnly(now));
 }

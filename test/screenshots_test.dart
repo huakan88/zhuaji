@@ -38,9 +38,6 @@ void main() {
     await _frames(tester);
     await _shot(tester, 'health');
 
-    await tester.tap(find.byKey(const Key('tab-健康')));
-    await _frames(tester);
-    await _shot(tester, 'health-care');
     await _tapOnScreen(tester, '按年龄体检');
     await _frames(tester);
     await _shot(tester, 'checkups');
@@ -51,67 +48,12 @@ void main() {
     await _shot(tester, 'disease-ckd');
     await tester.tap(find.byTooltip('返回'));
     await _frames(tester);
-    await _tapOnScreen(tester, '疾病养护');
-    await _frames(tester);
-    await _shot(tester, 'diseases');
-    await tester.tap(find.byTooltip('返回'));
-    await _frames(tester);
-
-    await tester.tap(find.text('互动'));
-    await _frames(tester);
-    await _shot(tester, 'health-notes');
-    await tester.tap(find.text('成长'));
-    await _frames(tester);
-
-    await tester.tap(find.text('我的'));
-    await _frames(tester);
-    await _tapOnScreen(tester, '粮仓');
-    await _frames(tester);
-    await _shot(tester, 'pantry');
-
-    await tester.tap(find.text('查看并修改日期').first);
-    await _frames(tester);
-    await _shot(tester, 'food');
-
-    await tester.tap(find.byTooltip('返回'));
-    await _frames(tester);
-    await tester.tap(find.byTooltip('返回'));
-    await _frames(tester);
-    await _shot(tester, 'me');
-
-    await tester.tap(find.text('橘座').first);
-    await _frames(tester);
-    await _shot(tester, 'profile');
-
-    await tester.tap(find.byTooltip('返回'));
-    await _frames(tester);
-    await tester.tap(find.text('提醒').first);
-    await _frames(tester);
-    await _shot(tester, 'reminders');
-
-    await tester.tap(find.byTooltip('返回'));
-    await _frames(tester);
-    await tester.tap(find.text('今天'));
-    await _frames(tester);
-    await _shot(tester, 'quick-add');
-
-    await tester.tap(find.text('健康').last);
-    await _frames(tester);
-    await _tapOnScreen(tester, '记体重');
-    await _frames(tester);
-    await _shot(tester, 'weight-sheet');
-    Navigator.of(tester.element(find.text('记录体重'))).pop();
-    await _frames(tester);
 
     await tester.tap(find.text('我的').last);
     await _frames(tester);
-    await _tapOnScreen(tester, '喂养');
-    await _frames(tester);
-    await _shot(tester, 'feeding');
+    await _shot(tester, 'me');
 
-    await tester.tap(find.byTooltip('返回'));
-    await _frames(tester);
-    await _tapOnScreen(tester, '粮仓');
+    await tester.tap(find.text('今天').last);
     await _frames(tester);
     await _tapOnScreen(tester, '扫条码');
     await _frames(tester);
@@ -119,7 +61,7 @@ void main() {
 
     await tester.tap(find.byTooltip('返回'));
     await _frames(tester);
-    await tester.tap(find.byTooltip('返回'));
+    await tester.tap(find.text('我的').last);
     await _frames(tester);
     await _tapOnScreen(tester, '添加');
     await _frames(tester);
@@ -134,6 +76,13 @@ bool _hidden(Element element) {
     if (widget is Offstage && widget.offstage) {
       hidden = true;
       return false;
+    }
+    if (widget.runtimeType.toString() == '_VisibilityScope') {
+      final visible = (widget as dynamic).isVisible == true;
+      if (!visible) {
+        hidden = true;
+        return false;
+      }
     }
     return true;
   });

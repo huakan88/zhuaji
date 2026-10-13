@@ -181,7 +181,7 @@ class _CheckupCard extends StatelessWidget {
                     intervalDays: advice.plan.intervalDays,
                   );
                   if (!context.mounted) return;
-                  showMessage(context, message ?? '已加入提醒，可在提醒页查看');
+                  showMessage(context, message ?? '已加入提醒，到期前会通知');
                 },
                 child: const Text('加入提醒'),
               ),

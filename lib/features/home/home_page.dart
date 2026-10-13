@@ -21,7 +21,7 @@ class HomePage extends StatelessWidget {
             padding: const EdgeInsets.all(Space.x6),
             child: EmptyHint(
               title: '还没有猫咪',
-              body: '拍一张照片，写个名字就能开始。其他资料可以以后再补。',
+              body: '拍一张，写个名字。',
               action: '添加第一只猫',
               onAction: () => context.push('/cat-form'),
             ),
@@ -33,76 +33,43 @@ class HomePage extends StatelessWidget {
     final alerts = _alerts(app);
     return Scaffold(
       body: SafeArea(
-        child: ListView(
-          padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
-          children: [
-            Row(
-              children: [
-                CatAvatar(path: cat.avatarPath, size: 48),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: _CatMenu(app: app, cat: cat),
-                ),
-                IconButton(
-                  tooltip: '提醒',
-                  onPressed: () => context.push('/reminders'),
-                  icon: const Icon(Icons.notifications_none_rounded),
-                ),
-              ],
-            ),
-            const SizedBox(height: 18),
-            const SectionHeader(title: '今天'),
-            const SizedBox(height: 10),
-            _MealRow(
-              app: app,
-              slot: MealSlot.breakfast,
-              title: '早餐',
-              time: '08:00',
-            ),
-            const SizedBox(height: 10),
-            _MealRow(
-              app: app,
-              slot: MealSlot.dinner,
-              title: '晚餐',
-              time: '18:30',
-            ),
-            const SizedBox(height: 16),
-            const Text(
-              '不舒服就点一下',
-              style: TextStyle(fontWeight: FontWeight.w700),
-            ),
-            const SizedBox(height: 8),
-            _TagRow(
-              labels: const ['呕吐', '腹泻', '精神差', '食欲差'],
-              prefix: '症状',
-              notes: app.catNotes,
-              now: app.now,
-              onPick: (label) => app.addNote('症状：$label'),
-            ),
-            const SizedBox(height: 14),
-            const Text('便便', style: TextStyle(fontWeight: FontWeight.w700)),
-            const SizedBox(height: 8),
-            _TagRow(
-              labels: const ['正常', '软便', '干硬', '没拉'],
-              prefix: '便便',
-              notes: app.catNotes,
-              now: app.now,
-              onPick: (label) => app.addNote('便便：$label'),
-            ),
-            const SizedBox(height: 18),
-            const SectionHeader(title: '需要留意'),
-            const SizedBox(height: 10),
-            if (alerts.isEmpty)
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 8, 20, 88),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Row(
+                children: [
+                  CatAvatar(path: cat.avatarPath, size: 48),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _CatMenu(app: app, cat: cat),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 20),
               const Text(
-                '今天没有额外要处理的事。',
-                style: TextStyle(color: AppColors.muted),
-              )
-            else
-              for (final alert in alerts) ...[
-                _AlertTile(alert: alert),
-                const SizedBox(height: 8),
-              ],
-          ],
+                '今天',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+              ),
+              const SizedBox(height: 8),
+              if (alerts.isEmpty)
+                const Text(
+                  '今天没有要处理的事',
+                  style: TextStyle(color: AppColors.muted),
+                )
+              else
+                for (final alert in alerts) ...[
+                  _AlertTile(alert: alert),
+                  const SizedBox(height: 8),
+                ],
+              const Spacer(),
+              FilledButton(
+                onPressed: () => context.push('/scan'),
+                child: const Text('扫条码'),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -127,7 +94,7 @@ class HomePage extends StatelessWidget {
       items.add(
         _Alert(
           title: '驱虫',
-          detail: '计划在 ${formatMonthDay(deworm)}',
+          detail: formatMonthDay(deworm),
           onTap: (context) => context.go('/health'),
         ),
       );
@@ -137,17 +104,18 @@ class HomePage extends StatelessWidget {
       items.add(
         _Alert(
           title: '下次疫苗',
-          detail: app.nextVaccine?.name ?? formatDate(vaccine),
+          detail: app.nextVaccine?.name ?? formatMonthDay(vaccine),
           onTap: (context) => context.go('/health'),
         ),
       );
     }
     final expiry = app.nearestExpiry?.item.expiryDate;
     if (expiry != null && calendarDays(app.now, expiry) <= 30) {
+      final days = calendarDays(app.now, expiry);
       items.add(
         _Alert(
           title: '临期猫粮',
-          detail: app.nearestExpiry?.product.name ?? '去粮仓看看',
+          detail: days <= 0 ? '今天到期' : '还剩 $days 天',
           onTap: (context) => context.push('/pantry'),
         ),
       );
@@ -160,115 +128,6 @@ int calendarDays(DateTime from, DateTime to) {
   final start = DateTime(from.year, from.month, from.day);
   final end = DateTime(to.year, to.month, to.day);
   return end.difference(start).inDays;
-}
-
-class _MealRow extends StatelessWidget {
-  const _MealRow({
-    required this.app,
-    required this.slot,
-    required this.title,
-    required this.time,
-  });
-
-  final AppController app;
-  final MealSlot slot;
-  final String title;
-  final String time;
-
-  @override
-  Widget build(BuildContext context) {
-    final fed = app.todayFeedings.where((meal) => meal.slot == slot).toList();
-    return SoftCard(
-      child: fed.isEmpty
-          ? Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  '$title · $time',
-                  style: const TextStyle(fontWeight: FontWeight.w700),
-                ),
-                const SizedBox(height: 4),
-                const Text(
-                  '按上次分量，点一下就记上',
-                  style: TextStyle(color: AppColors.muted, fontSize: 12),
-                ),
-                const SizedBox(height: 8),
-                Wrap(
-                  spacing: 8,
-                  children: [
-                    ActionChip(
-                      label: const Text('少'),
-                      onPressed: () => app.markFed(slot, Portion.less),
-                    ),
-                    ActionChip(
-                      label: const Text('已喂'),
-                      backgroundColor: AppColors.coral,
-                      onPressed: () => app.markFed(slot, Portion.normal),
-                    ),
-                    ActionChip(
-                      label: const Text('多'),
-                      onPressed: () => app.markFed(slot, Portion.more),
-                    ),
-                  ],
-                ),
-              ],
-            )
-          : Row(
-              children: [
-                const Icon(Icons.check_circle_rounded, color: AppColors.sage),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    '$title已喂 ${fed.fold<double>(0, (sum, meal) => sum + meal.grams).round()} g',
-                    style: const TextStyle(fontWeight: FontWeight.w700),
-                  ),
-                ),
-              ],
-            ),
-    );
-  }
-}
-
-class _TagRow extends StatelessWidget {
-  const _TagRow({
-    required this.labels,
-    required this.prefix,
-    required this.notes,
-    required this.now,
-    required this.onPick,
-  });
-
-  final List<String> labels;
-  final String prefix;
-  final List<HealthNote> notes;
-  final DateTime now;
-  final Future<void> Function(String label) onPick;
-
-  @override
-  Widget build(BuildContext context) {
-    return Wrap(
-      spacing: 8,
-      runSpacing: 8,
-      children: [
-        for (final label in labels)
-          FilterChip(
-            label: Text(label),
-            selected: notes.any(
-              (note) =>
-                  note.content == '$prefix：$label' &&
-                  isSameDay(note.notedOn, now),
-            ),
-            selectedColor: AppColors.coral,
-            showCheckmark: false,
-            onSelected: (selected) async {
-              if (!selected) return;
-              await onPick(label);
-              if (context.mounted) showMessage(context, '已记下');
-            },
-          ),
-      ],
-    );
-  }
 }
 
 class _Alert {
@@ -291,9 +150,10 @@ class _AlertTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SoftCard(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 2),
       child: ListTile(
         contentPadding: EdgeInsets.zero,
+        dense: true,
         title: Text(
           alert.title,
           style: const TextStyle(fontWeight: FontWeight.w700),

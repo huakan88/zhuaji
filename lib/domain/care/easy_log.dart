@@ -1,30 +1,5 @@
 import '../models.dart';
 
-enum Portion { less, normal, more }
-
-/// Household portion around the last real meal, or half of a daily estimate.
-double gramsForPortion(double baseline, Portion portion) {
-  final base = baseline <= 0 ? 40.0 : baseline;
-  final scaled = switch (portion) {
-    Portion.less => base * 0.7,
-    Portion.normal => base,
-    Portion.more => base * 1.3,
-  };
-  return (scaled.clamp(5, 500) * 10).round() / 10;
-}
-
-/// Latest meal size, otherwise half of [dailyGrams] so breakfast and dinner share a day.
-double feedingBaseline(List<FeedingRecord> history, {double? dailyGrams}) {
-  if (history.isNotEmpty) {
-    final latest = history.reduce(
-      (a, b) => a.loggedAt.isAfter(b.loggedAt) ? a : b,
-    );
-    if (latest.grams > 0) return latest.grams;
-  }
-  if (dailyGrams != null && dailyGrams > 0) return dailyGrams / 2;
-  return 40;
-}
-
 /// Core vaccines: kittens get a short booster window, adults a year.
 DateTime nextVaccineDate(DateTime? birthday, DateTime givenOn) {
   if (birthday != null && givenOn.difference(birthday).inDays < 365) {

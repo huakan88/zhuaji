@@ -88,7 +88,6 @@ class NotificationService implements ReminderNotifier {
   NotificationDetails _details(ReminderChannel channel) {
     final (id, name) = switch (channel) {
       ReminderChannel.health => ('zhuaji_health', '健康提醒'),
-      ReminderChannel.feeding => ('zhuaji_feeding', '喂养提醒'),
       ReminderChannel.food => ('zhuaji_food', '粮仓提醒'),
     };
     return NotificationDetails(

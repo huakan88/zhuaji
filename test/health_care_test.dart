@@ -40,8 +40,6 @@ void main() {
 
     await tester.tap(find.text('健康').last);
     await frames(tester);
-    await tester.tap(find.byKey(const Key('tab-健康')));
-    await frames(tester);
     expect(find.text('按年龄体检'), findsOneWidget);
     expect(find.text('慢性肾病'), findsOneWidget);
     expect(find.textContaining('仅供参考，请遵医嘱'), findsWidgets);

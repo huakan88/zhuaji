@@ -1,7 +1,6 @@
 import '../dates.dart';
-import '../feeding/feeding_math.dart';
 
-enum ReminderChannel { health, feeding, food }
+enum ReminderChannel { health, food }
 
 class PlannedNotification {
   const PlannedNotification({
@@ -63,24 +62,6 @@ class OpenedInput {
   final int afterOpenDays;
 }
 
-class FeedingInput {
-  const FeedingInput({
-    required this.catId,
-    required this.catName,
-    required this.slot,
-    required this.hour,
-    required this.minute,
-    required this.enabled,
-  });
-
-  final int catId;
-  final String catName;
-  final int slot;
-  final int hour;
-  final int minute;
-  final bool enabled;
-}
-
 class FollowUpInput {
   const FollowUpInput({
     required this.id,
@@ -99,40 +80,18 @@ class FollowUpInput {
   final bool recheck;
 }
 
-class TransitionInput {
-  const TransitionInput({
-    required this.id,
-    required this.catName,
-    required this.fromFood,
-    required this.toFood,
-    required this.startDate,
-    this.days = 7,
-  });
-
-  final int id;
-  final String catName;
-  final String fromFood;
-  final String toFood;
-  final DateTime startDate;
-  final int days;
-}
-
 /// Pure reminder schedule. Callers decide which of these to register
 /// with the OS (the service keeps the soonest 60).
 class ReminderPlanner {
   const ReminderPlanner();
 
   static const healthHour = 9;
-  static const transitionHour = 8;
-  static const transitionMinute = 30;
 
   List<PlannedNotification> plan({
     required DateTime now,
     List<DueInput> dues = const [],
     List<ExpiryInput> expiries = const [],
     List<OpenedInput> opened = const [],
-    List<FeedingInput> feedings = const [],
-    List<TransitionInput> transitions = const [],
     List<FollowUpInput> followUps = const [],
   }) {
     final items = <PlannedNotification>[];
@@ -147,13 +106,6 @@ class ReminderPlanner {
     }
     for (final bag in opened) {
       items.addAll(_opened(bag, now));
-    }
-    for (final feeding in feedings) {
-      final next = _feeding(feeding, now);
-      if (next != null) items.add(next);
-    }
-    for (final transition in transitions) {
-      items.addAll(_transition(transition, now));
     }
     items.sort((a, b) => a.when.compareTo(b.when));
     return items;
@@ -233,47 +185,6 @@ class ReminderPlanner {
           : '「${bag.productName}」开封后还剩约 $offset 天建议喂完窗口。',
       channel: ReminderChannel.food,
     );
-  }
-
-  PlannedNotification? _feeding(FeedingInput feeding, DateTime now) {
-    if (!feeding.enabled) return null;
-    var when = atTime(now, feeding.hour, feeding.minute);
-    if (!when.isAfter(now)) {
-      when = when.add(const Duration(days: 1));
-    }
-    final slotName = feeding.slot == 0 ? '早餐' : '晚餐';
-    return PlannedNotification(
-      id: 50000000 + feeding.catId * 10 + feeding.slot,
-      when: when,
-      title: '该喂${feeding.catName}了',
-      body: '$slotName时间到了。记得按今天的分量记录。',
-      channel: ReminderChannel.feeding,
-      repeatsDaily: true,
-    );
-  }
-
-  List<PlannedNotification> _transition(TransitionInput plan, DateTime now) {
-    final items = <PlannedNotification>[];
-    for (var day = 1; day <= plan.days; day++) {
-      final when = atTime(
-        dateOnly(plan.startDate).add(Duration(days: day - 1)),
-        transitionHour,
-        transitionMinute,
-      );
-      if (!when.isAfter(now)) continue;
-      final ratio = transitionRatio(day);
-      items.add(
-        PlannedNotification(
-          id: 60000000 + plan.id * 10 + day,
-          when: when,
-          title: '${plan.catName}换粮第 $day 天',
-          body:
-              '旧粮 ${plan.fromFood} ${ratio.oldPercent}% ，新粮 ${plan.toFood} ${ratio.newPercent}%。',
-          channel: ReminderChannel.feeding,
-        ),
-      );
-    }
-    return items;
   }
 
   List<PlannedNotification> _offsets({

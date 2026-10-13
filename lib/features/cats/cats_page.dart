@@ -15,251 +15,132 @@ class CatsPage extends StatelessWidget {
     final cat = app.active;
     return Scaffold(
       body: SafeArea(
-        child: ListView(
-          padding: const EdgeInsets.fromLTRB(20, 12, 20, 120),
-          children: [
-            if (cat == null)
-              EmptyHint(
-                title: '还没有猫咪',
-                body: '添加后可以在这里切换档案。',
-                action: '添加猫咪',
-                onAction: () => context.push('/cat-form'),
-              )
-            else ...[
-              Row(
-                children: [
-                  CatAvatar(
-                    path: cat.avatarPath,
-                    size: 72,
-                    ring: AppColors.coral,
-                  ),
-                  const SizedBox(width: 14),
-                  Expanded(
-                    child: GestureDetector(
-                      onTap: () => context.push('/cat?id=${cat.id}'),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            cat.name,
-                            style: const TextStyle(
-                              fontSize: 22,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            [
-                              if (cat.breed != null) cat.breed!,
-                              ageLabel(cat.birthday, app.now),
-                            ].join(' · '),
-                            style: const TextStyle(
-                              color: AppColors.muted,
-                              fontSize: 13,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  TextButton(
-                    onPressed: () => context.push('/cat-form?id=${cat.id}'),
-                    child: const Text('编辑'),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 18),
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF3E6D4),
-                  borderRadius: BorderRadius.circular(Radii.l),
-                ),
-                child: Row(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 12, 20, 96),
+          child: cat == null
+              ? EmptyHint(
+                  title: '还没有猫咪',
+                  body: '拍一张，写个名字。',
+                  action: '添加猫咪',
+                  onAction: () => context.push('/cat-form'),
+                )
+              : Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    const Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                    GestureDetector(
+                      onTap: () => context.push('/cat?id=${cat.id}'),
+                      child: Row(
                         children: [
-                          Text(
-                            '家庭照护',
-                            style: TextStyle(fontWeight: FontWeight.w700),
+                          CatAvatar(
+                            path: cat.avatarPath,
+                            size: 64,
+                            ring: AppColors.coral,
                           ),
-                          SizedBox(height: 4),
-                          Text(
-                            '疫苗、驱虫和猫粮提醒都留在这台手机上。',
-                            style: TextStyle(
-                              color: AppColors.muted,
-                              fontSize: 12,
-                              height: 1.35,
+                          const SizedBox(width: 14),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  cat.name,
+                                  style: const TextStyle(
+                                    fontSize: 22,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  ageLabel(cat.birthday, app.now),
+                                  style: const TextStyle(
+                                    color: AppColors.muted,
+                                    fontSize: 13,
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                         ],
                       ),
                     ),
-                    const SizedBox(width: 8),
+                    const SizedBox(height: 16),
                     FilledButton(
-                      onPressed: () => context.push('/reminders'),
-                      child: const Text('去看看'),
+                      onPressed: () => context.push('/cat-form?id=${cat.id}'),
+                      child: const Text('编辑资料'),
+                    ),
+                    const SizedBox(height: 18),
+                    SizedBox(
+                      height: 96,
+                      child: ListView.separated(
+                        scrollDirection: Axis.horizontal,
+                        itemCount: app.cats.length + 1,
+                        separatorBuilder: (_, _) => const SizedBox(width: 16),
+                        itemBuilder: (context, index) {
+                          if (index == app.cats.length) {
+                            return GestureDetector(
+                              onTap: () => context.push('/cat-form'),
+                              child: const Column(
+                                children: [
+                                  SizedBox(
+                                    width: 64,
+                                    height: 64,
+                                    child: DecoratedBox(
+                                      decoration: BoxDecoration(
+                                        color: AppColors.card,
+                                        shape: BoxShape.circle,
+                                      ),
+                                      child: Icon(Icons.add_rounded),
+                                    ),
+                                  ),
+                                  SizedBox(height: 6),
+                                  Text('添加', style: TextStyle(fontSize: 12)),
+                                ],
+                              ),
+                            );
+                          }
+                          final item = app.cats[index];
+                          final selected = item.id == app.activeCatId;
+                          return GestureDetector(
+                            onTap: () => app.selectCat(item.id),
+                            child: Column(
+                              children: [
+                                CatAvatar(
+                                  path: item.avatarPath,
+                                  size: 64,
+                                  selected: selected,
+                                  ring: ringPalette[index % ringPalette.length],
+                                ),
+                                const SizedBox(height: 6),
+                                Text(
+                                  item.name,
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: selected
+                                        ? FontWeight.w700
+                                        : FontWeight.w400,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                    ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      leading: const Icon(Icons.kitchen_outlined),
+                      title: const Text(
+                        '粮仓',
+                        style: TextStyle(fontWeight: FontWeight.w700),
+                      ),
+                      subtitle: const Text(
+                        '扫码和到期',
+                        style: TextStyle(color: AppColors.muted, fontSize: 12),
+                      ),
+                      trailing: const Icon(Icons.chevron_right_rounded),
+                      onTap: () => context.push('/pantry'),
                     ),
                   ],
                 ),
-              ),
-              const SizedBox(height: 22),
-              const SectionHeader(title: '我的宠物'),
-              const SizedBox(height: 12),
-              SizedBox(
-                height: 108,
-                child: ListView.separated(
-                  scrollDirection: Axis.horizontal,
-                  itemCount: app.cats.length + 1,
-                  separatorBuilder: (_, _) => const SizedBox(width: 16),
-                  itemBuilder: (context, index) {
-                    if (index == app.cats.length) {
-                      return GestureDetector(
-                        onTap: () => context.push('/cat-form'),
-                        child: const Column(
-                          children: [
-                            SizedBox(
-                              width: 68,
-                              height: 68,
-                              child: DecoratedBox(
-                                decoration: BoxDecoration(
-                                  color: AppColors.card,
-                                  shape: BoxShape.circle,
-                                  boxShadow: softShadow,
-                                ),
-                                child: Icon(Icons.add_rounded),
-                              ),
-                            ),
-                            SizedBox(height: 8),
-                            Text('添加', style: TextStyle(fontSize: 12)),
-                          ],
-                        ),
-                      );
-                    }
-                    final item = app.cats[index];
-                    final selected = item.id == app.activeCatId;
-                    return GestureDetector(
-                      onTap: () async {
-                        await app.selectCat(item.id);
-                        if (context.mounted) context.push('/cat?id=${item.id}');
-                      },
-                      child: Column(
-                        children: [
-                          CatAvatar(
-                            path: item.avatarPath,
-                            size: 68,
-                            selected: selected,
-                            ring: ringPalette[index % ringPalette.length],
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            item.name,
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: selected
-                                  ? FontWeight.w700
-                                  : FontWeight.w400,
-                            ),
-                          ),
-                        ],
-                      ),
-                    );
-                  },
-                ),
-              ),
-              const SizedBox(height: 8),
-              _setting(
-                context,
-                Icons.notifications_none_rounded,
-                '提醒',
-                '喂食、疫苗、保质期',
-                () => context.push('/reminders'),
-              ),
-              _setting(
-                context,
-                Icons.restaurant_outlined,
-                '喂养',
-                '热量估算和七日换粮',
-                () => context.push('/feeding'),
-              ),
-              _setting(
-                context,
-                Icons.kitchen_outlined,
-                '粮仓',
-                '扫码、日期和开封',
-                () => context.push('/pantry'),
-              ),
-              _setting(
-                context,
-                Icons.photo_outlined,
-                '体态对比',
-                '并排看较早和最近的照片',
-                () => context.push('/photos'),
-              ),
-              _setting(
-                context,
-                Icons.pets_outlined,
-                '当前档案',
-                cat.name,
-                () => context.push('/cat?id=${cat.id}'),
-              ),
-              _setting(
-                context,
-                Icons.medical_services_outlined,
-                '体检建议',
-                '按年龄和品种',
-                () => context.push('/checkups'),
-              ),
-              _setting(
-                context,
-                Icons.healing_outlined,
-                '疾病养护',
-                '确诊后的居家护理',
-                () => context.push('/diseases'),
-              ),
-              const SizedBox(height: 12),
-              const DisclaimerBanner(),
-            ],
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _setting(
-    BuildContext context,
-    IconData icon,
-    String title,
-    String detail,
-    VoidCallback onTap,
-  ) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 10),
-      child: SoftCard(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
-        child: ListTile(
-          contentPadding: EdgeInsets.zero,
-          leading: Container(
-            width: 40,
-            height: 40,
-            decoration: const BoxDecoration(
-              color: AppColors.cream,
-              shape: BoxShape.circle,
-            ),
-            child: Icon(icon, size: 20),
-          ),
-          title: Text(
-            title,
-            style: const TextStyle(fontWeight: FontWeight.w600),
-          ),
-          subtitle: Text(
-            detail,
-            style: const TextStyle(color: AppColors.muted, fontSize: 12),
-          ),
-          trailing: const Icon(Icons.chevron_right, color: AppColors.muted),
-          onTap: onTap,
         ),
       ),
     );
