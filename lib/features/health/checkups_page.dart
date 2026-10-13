@@ -37,7 +37,9 @@ class CheckupsPage extends StatelessWidget {
           ),
           const SizedBox(height: 6),
           Text(
-            cat.breed == null || cat.breed!.isEmpty ? '品种还没写' : '品种：${cat.breed}',
+            cat.breed == null || cat.breed!.isEmpty
+                ? '品种还没写'
+                : '品种：${cat.breed}',
             style: const TextStyle(color: AppColors.muted),
           ),
           if (plan.birthdayMissing) ...[
@@ -49,8 +51,20 @@ class CheckupsPage extends StatelessWidget {
           ],
           const SizedBox(height: 12),
           const Text(
+            '仅供参考，请遵医嘱。',
+            style: TextStyle(
+              color: AppColors.olive,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(height: 8),
+          const Text(
             kGuidelineSources,
-            style: TextStyle(color: AppColors.muted, fontSize: 12, height: 1.45),
+            style: TextStyle(
+              color: AppColors.muted,
+              fontSize: 12,
+              height: 1.45,
+            ),
           ),
           const SizedBox(height: 16),
           for (final advice in plan.items) ...[
@@ -77,10 +91,12 @@ class _CheckupCard extends StatelessWidget {
     DateTime? nextDue;
     for (final log in logs) {
       if (log.completedOn != null &&
-          (latestDone == null || log.completedOn!.isAfter(latestDone.completedOn!))) {
+          (latestDone == null ||
+              log.completedOn!.isAfter(latestDone.completedOn!))) {
         latestDone = log;
       }
-      if (log.nextDue != null && (nextDue == null || log.nextDue!.isBefore(nextDue))) {
+      if (log.nextDue != null &&
+          (nextDue == null || log.nextDue!.isBefore(nextDue))) {
         nextDue = log.nextDue;
       }
     }
@@ -93,20 +109,37 @@ class _CheckupCard extends StatelessWidget {
               Expanded(
                 child: Text(
                   advice.item.name,
-                  style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 16,
+                  ),
                 ),
               ),
               if (advice.becauseOfBreed)
-                const TagChip(label: '品种相关', tint: AppColors.tintCoral, color: AppColors.coralDeep),
+                const TagChip(
+                  label: '品种相关',
+                  tint: AppColors.tintCoral,
+                  color: AppColors.coralDeep,
+                ),
             ],
           ),
           const SizedBox(height: 6),
           Text(advice.plan.frequency, style: const TextStyle(height: 1.4)),
           const SizedBox(height: 6),
-          Text(advice.item.why, style: const TextStyle(color: AppColors.muted, height: 1.4, fontSize: 13)),
+          Text(
+            advice.item.why,
+            style: const TextStyle(
+              color: AppColors.muted,
+              height: 1.4,
+              fontSize: 13,
+            ),
+          ),
           if (advice.becauseOfBreed) ...[
             const SizedBox(height: 4),
-            Text(advice.item.breedReason, style: const TextStyle(color: AppColors.brown, fontSize: 12)),
+            Text(
+              advice.item.breedReason,
+              style: const TextStyle(color: AppColors.brown, fontSize: 12),
+            ),
           ],
           const SizedBox(height: 6),
           Text(
@@ -148,10 +181,7 @@ class _CheckupCard extends StatelessWidget {
                     intervalDays: advice.plan.intervalDays,
                   );
                   if (!context.mounted) return;
-                  showMessage(
-                    context,
-                    message ?? '已加入提醒，可在提醒页查看',
-                  );
+                  showMessage(context, message ?? '已加入提醒，可在提醒页查看');
                 },
                 child: const Text('加入提醒'),
               ),
@@ -159,7 +189,10 @@ class _CheckupCard extends StatelessWidget {
                 TextButton(
                   onPressed: () async {
                     final target = latestDone ?? logs.first;
-                    if (await confirmDelete(context, '删除「${advice.item.name}」最近的一条记录？')) {
+                    if (await confirmDelete(
+                      context,
+                      '删除「${advice.item.name}」最近的一条记录？',
+                    )) {
                       await app.removeCheckup(target.id);
                     }
                   },

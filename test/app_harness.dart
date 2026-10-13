@@ -17,7 +17,9 @@ Future<void> boot(WidgetTester tester, AppController controller) async {
 
 Future<void> frames(WidgetTester tester) async {
   await tester.pump();
-  await tester.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 30)));
+  await tester.runAsync(
+    () => Future<void>.delayed(const Duration(milliseconds: 30)),
+  );
   await tester.pump(const Duration(milliseconds: 350));
 }
 
@@ -27,16 +29,64 @@ Finder downScrollables() {
   });
 }
 
-Future<void> revealText(WidgetTester tester, String text, {int index = 0}) async {
-  final scrollable = downScrollables();
-  if (scrollable.evaluate().isNotEmpty && find.text(text).evaluate().length <= index) {
-    final state = tester.state<ScrollableState>(scrollable.first);
-    state.position.jumpTo(0);
-    await tester.pump();
-    final max = state.position.maxScrollExtent;
-    for (var offset = 180.0; find.text(text).evaluate().length <= index && offset <= max + 180; offset += 180) {
-      state.position.jumpTo(offset.clamp(0, max));
+bool _offstage(Element element) {
+  var hidden = false;
+  element.visitAncestorElements((ancestor) {
+    final widget = ancestor.widget;
+    if (widget is Offstage && widget.offstage) {
+      hidden = true;
+      return false;
+    }
+    return true;
+  });
+  return hidden;
+}
+
+/// Scrolls until [text] is built. List extent grows as later children are laid
+/// out, so the offset has to advance in steps instead of jumping to the first
+/// reported max.
+Future<void> revealText(
+  WidgetTester tester,
+  String text, {
+  int index = 0,
+}) async {
+  if (find.text(text).evaluate().length <= index) {
+    final states = <ScrollableState>[];
+    for (final element in downScrollables().evaluate()) {
+      if (_offstage(element)) continue;
+      states.add(
+        tester.state<ScrollableState>(
+          find.byElementPredicate((candidate) => candidate == element),
+        ),
+      );
+    }
+    for (final state in states.reversed) {
+      if (find.text(text).evaluate().length > index) break;
+      if (!state.position.hasContentDimensions) continue;
+      state.position.jumpTo(0);
       await tester.pump();
+      var stalled = 0;
+      for (
+        var step = 0;
+        step < 30 && find.text(text).evaluate().length <= index;
+        step++
+      ) {
+        final position = state.position;
+        if (!position.hasContentDimensions) break;
+        final next = (position.pixels + 280).clamp(
+          0.0,
+          position.maxScrollExtent,
+        );
+        if (next <= position.pixels + 0.5) {
+          stalled += 1;
+          if (stalled > 1) break;
+          await tester.pump();
+          continue;
+        }
+        stalled = 0;
+        position.jumpTo(next);
+        await tester.pump();
+      }
     }
   }
   if (find.text(text).evaluate().length <= index) {
@@ -50,7 +100,12 @@ Future<void> revealText(WidgetTester tester, String text, {int index = 0}) async
   if (bottom > height - 110) {
     final position = Scrollable.maybeOf(tester.element(target))?.position;
     if (position != null && position.maxScrollExtent > 0) {
-      position.jumpTo((position.pixels + bottom - (height - 160)).clamp(0, position.maxScrollExtent));
+      position.jumpTo(
+        (position.pixels + bottom - (height - 160)).clamp(
+          0,
+          position.maxScrollExtent,
+        ),
+      );
       await tester.pump();
     }
   }
@@ -65,7 +120,8 @@ Future<void> revealFinder(WidgetTester tester, Finder finder) async {
 Future<void> tapText(WidgetTester tester, String text, {int index = 0}) async {
   final scaffolds = find.byType(Scaffold);
   if (scaffolds.evaluate().isNotEmpty) {
-    ScaffoldMessenger.maybeOf(tester.element(scaffolds.last))?.hideCurrentSnackBar();
+    ScaffoldMessenger.maybeOf(tester.element(scaffolds.last))
+        ?.hideCurrentSnackBar();
     await tester.pump();
   }
   await revealText(tester, text, index: index);
@@ -122,9 +178,13 @@ Future<void> enterField(WidgetTester tester, String label, String value) async {
 }
 
 Future<void> deleteRow(WidgetTester tester, String title) async {
-  final row = find.ancestor(of: find.textContaining(title), matching: find.byType(ListTile)).first;
+  final row = find
+      .ancestor(of: find.textContaining(title), matching: find.byType(ListTile))
+      .first;
   await tester.ensureVisible(row);
-  await tester.tap(find.descendant(of: row, matching: find.byIcon(Icons.delete_outline)));
+  await tester.tap(
+    find.descendant(of: row, matching: find.byIcon(Icons.delete_outline)),
+  );
   await frames(tester);
   await tapText(tester, '删除');
 }

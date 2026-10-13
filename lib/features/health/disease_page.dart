@@ -36,8 +36,20 @@ class _DiseaseLibraryPageState extends State<DiseaseLibraryPage> {
         padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
         children: [
           const Text(
+            '仅供参考，请遵医嘱。',
+            style: TextStyle(
+              color: AppColors.olive,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(height: 8),
+          const Text(
             kGuidelineSources,
-            style: TextStyle(color: AppColors.muted, fontSize: 12, height: 1.45),
+            style: TextStyle(
+              color: AppColors.muted,
+              fontSize: 12,
+              height: 1.45,
+            ),
           ),
           const SizedBox(height: 12),
           TextField(
@@ -53,15 +65,24 @@ class _DiseaseLibraryPageState extends State<DiseaseLibraryPage> {
           else
             for (final disease in items) ...[
               SoftCard(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 4,
+                ),
                 child: ListTile(
                   contentPadding: EdgeInsets.zero,
-                  title: Text(disease.name, style: const TextStyle(fontWeight: FontWeight.w700)),
+                  title: Text(
+                    disease.name,
+                    style: const TextStyle(fontWeight: FontWeight.w700),
+                  ),
                   subtitle: Text(
                     disease.summary,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(color: AppColors.muted, height: 1.35),
+                    style: const TextStyle(
+                      color: AppColors.muted,
+                      height: 1.35,
+                    ),
                   ),
                   trailing: const Icon(Icons.chevron_right_rounded),
                   onTap: () => context.push('/disease?id=${disease.id}'),
@@ -100,11 +121,23 @@ class DiseaseDetailPage extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
         children: [
+          const Text(
+            '仅供参考，请遵医嘱。',
+            style: TextStyle(
+              color: AppColors.olive,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(height: 8),
           Text(disease.summary, style: const TextStyle(height: 1.45)),
           const SizedBox(height: 8),
           Text(
             '出处：${disease.sources}',
-            style: const TextStyle(color: AppColors.olive, fontSize: 12, height: 1.4),
+            style: const TextStyle(
+              color: AppColors.olive,
+              fontSize: 12,
+              height: 1.4,
+            ),
           ),
           const SizedBox(height: 12),
           SoftCard(
@@ -112,19 +145,28 @@ class DiseaseDetailPage extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('需要立即就医', style: TextStyle(fontWeight: FontWeight.w700)),
+                const Text(
+                  '需要立即就医',
+                  style: TextStyle(fontWeight: FontWeight.w700),
+                ),
                 const SizedBox(height: 8),
                 for (final flag in disease.redFlags)
                   Padding(
                     padding: const EdgeInsets.only(bottom: 4),
-                    child: Text('· $flag', style: const TextStyle(height: 1.35)),
+                    child: Text(
+                      '· $flag',
+                      style: const TextStyle(height: 1.35),
+                    ),
                   ),
               ],
             ),
           ),
           const SizedBox(height: 12),
           if (cat == null)
-            const Text('先在首页选择一只猫，才能标记确诊和记饮水。', style: TextStyle(color: AppColors.brown))
+            const Text(
+              '先在首页选择一只猫，才能标记确诊和记饮水。',
+              style: TextStyle(color: AppColors.brown),
+            )
           else
             _MarkCard(disease: disease, catName: cat.name),
           const SizedBox(height: 12),
@@ -184,7 +226,11 @@ class DiseaseDetailPage extends StatelessWidget {
           const SizedBox(height: 12),
           const Text(
             kGuidelineSources,
-            style: TextStyle(color: AppColors.muted, fontSize: 12, height: 1.45),
+            style: TextStyle(
+              color: AppColors.muted,
+              fontSize: 12,
+              height: 1.45,
+            ),
           ),
           const SizedBox(height: 12),
           const DisclaimerBanner(),
@@ -227,13 +273,19 @@ class _MarkCardState extends State<_MarkCard> {
   Widget build(BuildContext context) {
     final app = AppScope.of<AppController>(context);
     final marked = app.conditionFor(widget.disease.id);
-    final stage = _stage ?? (marked == null || marked.stageLabel.isEmpty ? null : marked.stageLabel);
+    final stage =
+        _stage ??
+        (marked == null || marked.stageLabel.isEmpty
+            ? null
+            : marked.stageLabel);
     return SoftCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            marked == null ? '还没有标成${widget.catName}的确诊' : '已标为${widget.catName}的确诊',
+            marked == null
+                ? '还没有标成${widget.catName}的确诊'
+                : '已标为${widget.catName}的确诊',
             style: const TextStyle(fontWeight: FontWeight.w700),
           ),
           if (marked != null) ...[
@@ -247,7 +299,9 @@ class _MarkCardState extends State<_MarkCard> {
           if (widget.disease.stages.isNotEmpty) ...[
             const SizedBox(height: 8),
             DropdownButtonFormField<String>(
-              initialValue: widget.disease.stages.contains(stage) ? stage : null,
+              initialValue: widget.disease.stages.contains(stage)
+                  ? stage
+                  : null,
               decoration: const InputDecoration(labelText: '兽医给出的分期'),
               items: [
                 for (final item in widget.disease.stages)
@@ -289,7 +343,10 @@ class _MarkCardState extends State<_MarkCard> {
               if (marked != null)
                 TextButton(
                   onPressed: () async {
-                    if (await confirmDelete(context, '取消${widget.catName}的这项确诊标记？')) {
+                    if (await confirmDelete(
+                      context,
+                      '取消${widget.catName}的这项确诊标记？',
+                    )) {
                       await app.removeCondition(marked.id);
                     }
                   },

@@ -30,7 +30,9 @@ void main() {
     await database.close();
   });
 
-  testWidgets('checkups, disease care, and water logs persist per cat', (tester) async {
+  testWidgets('checkups, disease care, and water logs persist per cat', (
+    tester,
+  ) async {
     await boot(tester, controller);
     expect(controller.active?.name, '橘座');
     expect(controller.catConditions.map((item) => item.diseaseId), ['ckd']);
@@ -64,10 +66,7 @@ void main() {
       clock: () => DateTime(2026, 10, 12, 11),
     );
     await again.init();
-    expect(
-      again.checkups.any((item) => item.result.contains('年度体检')),
-      isTrue,
-    );
+    expect(again.checkups.any((item) => item.result.contains('年度体检')), isTrue);
 
     await tapText(tester, '加入提醒');
     expect(find.textContaining('已经有未到的提醒'), findsOneWidget);
@@ -100,10 +99,16 @@ void main() {
     expect(find.textContaining('对乙酰氨基酚'), findsOneWidget);
     await tapText(tester, '标记确诊');
     expect(find.textContaining('已记到橘座'), findsOneWidget);
-    expect(controller.catConditions.map((item) => item.diseaseId), contains('stomatitis'));
+    expect(
+      controller.catConditions.map((item) => item.diseaseId),
+      contains('stomatitis'),
+    );
     await tapText(tester, '取消标记');
     await tapText(tester, '删除');
-    expect(controller.catConditions.map((item) => item.diseaseId), isNot(contains('stomatitis')));
+    expect(
+      controller.catConditions.map((item) => item.diseaseId),
+      isNot(contains('stomatitis')),
+    );
     await back(tester);
     await back(tester);
 
