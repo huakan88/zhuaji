@@ -5726,6 +5726,1176 @@ class FeedingRemindersCompanion extends UpdateCompanion<FeedingReminderRow> {
   }
 }
 
+class $CatConditionsTable extends CatConditions
+    with TableInfo<$CatConditionsTable, CatConditionRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $CatConditionsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _catIdMeta = const VerificationMeta('catId');
+  @override
+  late final GeneratedColumn<int> catId = GeneratedColumn<int>(
+    'cat_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES cats (id) ON DELETE CASCADE',
+    ),
+  );
+  static const VerificationMeta _diseaseIdMeta = const VerificationMeta(
+    'diseaseId',
+  );
+  @override
+  late final GeneratedColumn<String> diseaseId = GeneratedColumn<String>(
+    'disease_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _diagnosedOnMeta = const VerificationMeta(
+    'diagnosedOn',
+  );
+  @override
+  late final GeneratedColumn<DateTime> diagnosedOn = GeneratedColumn<DateTime>(
+    'diagnosed_on',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _stageLabelMeta = const VerificationMeta(
+    'stageLabel',
+  );
+  @override
+  late final GeneratedColumn<String> stageLabel = GeneratedColumn<String>(
+    'stage_label',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(''),
+  );
+  static const VerificationMeta _noteMeta = const VerificationMeta('note');
+  @override
+  late final GeneratedColumn<String> note = GeneratedColumn<String>(
+    'note',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(''),
+  );
+  static const VerificationMeta _nextRecheckMeta = const VerificationMeta(
+    'nextRecheck',
+  );
+  @override
+  late final GeneratedColumn<DateTime> nextRecheck = GeneratedColumn<DateTime>(
+    'next_recheck',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    catId,
+    diseaseId,
+    diagnosedOn,
+    stageLabel,
+    note,
+    nextRecheck,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'cat_conditions';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<CatConditionRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('cat_id')) {
+      context.handle(
+        _catIdMeta,
+        catId.isAcceptableOrUnknown(data['cat_id']!, _catIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_catIdMeta);
+    }
+    if (data.containsKey('disease_id')) {
+      context.handle(
+        _diseaseIdMeta,
+        diseaseId.isAcceptableOrUnknown(data['disease_id']!, _diseaseIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_diseaseIdMeta);
+    }
+    if (data.containsKey('diagnosed_on')) {
+      context.handle(
+        _diagnosedOnMeta,
+        diagnosedOn.isAcceptableOrUnknown(
+          data['diagnosed_on']!,
+          _diagnosedOnMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_diagnosedOnMeta);
+    }
+    if (data.containsKey('stage_label')) {
+      context.handle(
+        _stageLabelMeta,
+        stageLabel.isAcceptableOrUnknown(data['stage_label']!, _stageLabelMeta),
+      );
+    }
+    if (data.containsKey('note')) {
+      context.handle(
+        _noteMeta,
+        note.isAcceptableOrUnknown(data['note']!, _noteMeta),
+      );
+    }
+    if (data.containsKey('next_recheck')) {
+      context.handle(
+        _nextRecheckMeta,
+        nextRecheck.isAcceptableOrUnknown(
+          data['next_recheck']!,
+          _nextRecheckMeta,
+        ),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  CatConditionRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return CatConditionRow(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      catId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}cat_id'],
+      )!,
+      diseaseId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}disease_id'],
+      )!,
+      diagnosedOn: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}diagnosed_on'],
+      )!,
+      stageLabel: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}stage_label'],
+      )!,
+      note: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}note'],
+      )!,
+      nextRecheck: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}next_recheck'],
+      ),
+    );
+  }
+
+  @override
+  $CatConditionsTable createAlias(String alias) {
+    return $CatConditionsTable(attachedDatabase, alias);
+  }
+}
+
+class CatConditionRow extends DataClass implements Insertable<CatConditionRow> {
+  final int id;
+  final int catId;
+  final String diseaseId;
+  final DateTime diagnosedOn;
+  final String stageLabel;
+  final String note;
+  final DateTime? nextRecheck;
+  const CatConditionRow({
+    required this.id,
+    required this.catId,
+    required this.diseaseId,
+    required this.diagnosedOn,
+    required this.stageLabel,
+    required this.note,
+    this.nextRecheck,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['cat_id'] = Variable<int>(catId);
+    map['disease_id'] = Variable<String>(diseaseId);
+    map['diagnosed_on'] = Variable<DateTime>(diagnosedOn);
+    map['stage_label'] = Variable<String>(stageLabel);
+    map['note'] = Variable<String>(note);
+    if (!nullToAbsent || nextRecheck != null) {
+      map['next_recheck'] = Variable<DateTime>(nextRecheck);
+    }
+    return map;
+  }
+
+  CatConditionsCompanion toCompanion(bool nullToAbsent) {
+    return CatConditionsCompanion(
+      id: Value(id),
+      catId: Value(catId),
+      diseaseId: Value(diseaseId),
+      diagnosedOn: Value(diagnosedOn),
+      stageLabel: Value(stageLabel),
+      note: Value(note),
+      nextRecheck: nextRecheck == null && nullToAbsent
+          ? const Value.absent()
+          : Value(nextRecheck),
+    );
+  }
+
+  factory CatConditionRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return CatConditionRow(
+      id: serializer.fromJson<int>(json['id']),
+      catId: serializer.fromJson<int>(json['catId']),
+      diseaseId: serializer.fromJson<String>(json['diseaseId']),
+      diagnosedOn: serializer.fromJson<DateTime>(json['diagnosedOn']),
+      stageLabel: serializer.fromJson<String>(json['stageLabel']),
+      note: serializer.fromJson<String>(json['note']),
+      nextRecheck: serializer.fromJson<DateTime?>(json['nextRecheck']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'catId': serializer.toJson<int>(catId),
+      'diseaseId': serializer.toJson<String>(diseaseId),
+      'diagnosedOn': serializer.toJson<DateTime>(diagnosedOn),
+      'stageLabel': serializer.toJson<String>(stageLabel),
+      'note': serializer.toJson<String>(note),
+      'nextRecheck': serializer.toJson<DateTime?>(nextRecheck),
+    };
+  }
+
+  CatConditionRow copyWith({
+    int? id,
+    int? catId,
+    String? diseaseId,
+    DateTime? diagnosedOn,
+    String? stageLabel,
+    String? note,
+    Value<DateTime?> nextRecheck = const Value.absent(),
+  }) => CatConditionRow(
+    id: id ?? this.id,
+    catId: catId ?? this.catId,
+    diseaseId: diseaseId ?? this.diseaseId,
+    diagnosedOn: diagnosedOn ?? this.diagnosedOn,
+    stageLabel: stageLabel ?? this.stageLabel,
+    note: note ?? this.note,
+    nextRecheck: nextRecheck.present ? nextRecheck.value : this.nextRecheck,
+  );
+  CatConditionRow copyWithCompanion(CatConditionsCompanion data) {
+    return CatConditionRow(
+      id: data.id.present ? data.id.value : this.id,
+      catId: data.catId.present ? data.catId.value : this.catId,
+      diseaseId: data.diseaseId.present ? data.diseaseId.value : this.diseaseId,
+      diagnosedOn: data.diagnosedOn.present
+          ? data.diagnosedOn.value
+          : this.diagnosedOn,
+      stageLabel: data.stageLabel.present
+          ? data.stageLabel.value
+          : this.stageLabel,
+      note: data.note.present ? data.note.value : this.note,
+      nextRecheck: data.nextRecheck.present
+          ? data.nextRecheck.value
+          : this.nextRecheck,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CatConditionRow(')
+          ..write('id: $id, ')
+          ..write('catId: $catId, ')
+          ..write('diseaseId: $diseaseId, ')
+          ..write('diagnosedOn: $diagnosedOn, ')
+          ..write('stageLabel: $stageLabel, ')
+          ..write('note: $note, ')
+          ..write('nextRecheck: $nextRecheck')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    catId,
+    diseaseId,
+    diagnosedOn,
+    stageLabel,
+    note,
+    nextRecheck,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is CatConditionRow &&
+          other.id == this.id &&
+          other.catId == this.catId &&
+          other.diseaseId == this.diseaseId &&
+          other.diagnosedOn == this.diagnosedOn &&
+          other.stageLabel == this.stageLabel &&
+          other.note == this.note &&
+          other.nextRecheck == this.nextRecheck);
+}
+
+class CatConditionsCompanion extends UpdateCompanion<CatConditionRow> {
+  final Value<int> id;
+  final Value<int> catId;
+  final Value<String> diseaseId;
+  final Value<DateTime> diagnosedOn;
+  final Value<String> stageLabel;
+  final Value<String> note;
+  final Value<DateTime?> nextRecheck;
+  const CatConditionsCompanion({
+    this.id = const Value.absent(),
+    this.catId = const Value.absent(),
+    this.diseaseId = const Value.absent(),
+    this.diagnosedOn = const Value.absent(),
+    this.stageLabel = const Value.absent(),
+    this.note = const Value.absent(),
+    this.nextRecheck = const Value.absent(),
+  });
+  CatConditionsCompanion.insert({
+    this.id = const Value.absent(),
+    required int catId,
+    required String diseaseId,
+    required DateTime diagnosedOn,
+    this.stageLabel = const Value.absent(),
+    this.note = const Value.absent(),
+    this.nextRecheck = const Value.absent(),
+  }) : catId = Value(catId),
+       diseaseId = Value(diseaseId),
+       diagnosedOn = Value(diagnosedOn);
+  static Insertable<CatConditionRow> custom({
+    Expression<int>? id,
+    Expression<int>? catId,
+    Expression<String>? diseaseId,
+    Expression<DateTime>? diagnosedOn,
+    Expression<String>? stageLabel,
+    Expression<String>? note,
+    Expression<DateTime>? nextRecheck,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (catId != null) 'cat_id': catId,
+      if (diseaseId != null) 'disease_id': diseaseId,
+      if (diagnosedOn != null) 'diagnosed_on': diagnosedOn,
+      if (stageLabel != null) 'stage_label': stageLabel,
+      if (note != null) 'note': note,
+      if (nextRecheck != null) 'next_recheck': nextRecheck,
+    });
+  }
+
+  CatConditionsCompanion copyWith({
+    Value<int>? id,
+    Value<int>? catId,
+    Value<String>? diseaseId,
+    Value<DateTime>? diagnosedOn,
+    Value<String>? stageLabel,
+    Value<String>? note,
+    Value<DateTime?>? nextRecheck,
+  }) {
+    return CatConditionsCompanion(
+      id: id ?? this.id,
+      catId: catId ?? this.catId,
+      diseaseId: diseaseId ?? this.diseaseId,
+      diagnosedOn: diagnosedOn ?? this.diagnosedOn,
+      stageLabel: stageLabel ?? this.stageLabel,
+      note: note ?? this.note,
+      nextRecheck: nextRecheck ?? this.nextRecheck,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (catId.present) {
+      map['cat_id'] = Variable<int>(catId.value);
+    }
+    if (diseaseId.present) {
+      map['disease_id'] = Variable<String>(diseaseId.value);
+    }
+    if (diagnosedOn.present) {
+      map['diagnosed_on'] = Variable<DateTime>(diagnosedOn.value);
+    }
+    if (stageLabel.present) {
+      map['stage_label'] = Variable<String>(stageLabel.value);
+    }
+    if (note.present) {
+      map['note'] = Variable<String>(note.value);
+    }
+    if (nextRecheck.present) {
+      map['next_recheck'] = Variable<DateTime>(nextRecheck.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CatConditionsCompanion(')
+          ..write('id: $id, ')
+          ..write('catId: $catId, ')
+          ..write('diseaseId: $diseaseId, ')
+          ..write('diagnosedOn: $diagnosedOn, ')
+          ..write('stageLabel: $stageLabel, ')
+          ..write('note: $note, ')
+          ..write('nextRecheck: $nextRecheck')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $CheckupLogsTable extends CheckupLogs
+    with TableInfo<$CheckupLogsTable, CheckupLogRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $CheckupLogsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _catIdMeta = const VerificationMeta('catId');
+  @override
+  late final GeneratedColumn<int> catId = GeneratedColumn<int>(
+    'cat_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES cats (id) ON DELETE CASCADE',
+    ),
+  );
+  static const VerificationMeta _itemIdMeta = const VerificationMeta('itemId');
+  @override
+  late final GeneratedColumn<String> itemId = GeneratedColumn<String>(
+    'item_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _completedOnMeta = const VerificationMeta(
+    'completedOn',
+  );
+  @override
+  late final GeneratedColumn<DateTime> completedOn = GeneratedColumn<DateTime>(
+    'completed_on',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _resultMeta = const VerificationMeta('result');
+  @override
+  late final GeneratedColumn<String> result = GeneratedColumn<String>(
+    'result',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(''),
+  );
+  static const VerificationMeta _nextDueMeta = const VerificationMeta(
+    'nextDue',
+  );
+  @override
+  late final GeneratedColumn<DateTime> nextDue = GeneratedColumn<DateTime>(
+    'next_due',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    catId,
+    itemId,
+    completedOn,
+    result,
+    nextDue,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'checkup_logs';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<CheckupLogRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('cat_id')) {
+      context.handle(
+        _catIdMeta,
+        catId.isAcceptableOrUnknown(data['cat_id']!, _catIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_catIdMeta);
+    }
+    if (data.containsKey('item_id')) {
+      context.handle(
+        _itemIdMeta,
+        itemId.isAcceptableOrUnknown(data['item_id']!, _itemIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_itemIdMeta);
+    }
+    if (data.containsKey('completed_on')) {
+      context.handle(
+        _completedOnMeta,
+        completedOn.isAcceptableOrUnknown(
+          data['completed_on']!,
+          _completedOnMeta,
+        ),
+      );
+    }
+    if (data.containsKey('result')) {
+      context.handle(
+        _resultMeta,
+        result.isAcceptableOrUnknown(data['result']!, _resultMeta),
+      );
+    }
+    if (data.containsKey('next_due')) {
+      context.handle(
+        _nextDueMeta,
+        nextDue.isAcceptableOrUnknown(data['next_due']!, _nextDueMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  CheckupLogRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return CheckupLogRow(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      catId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}cat_id'],
+      )!,
+      itemId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}item_id'],
+      )!,
+      completedOn: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}completed_on'],
+      ),
+      result: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}result'],
+      )!,
+      nextDue: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}next_due'],
+      ),
+    );
+  }
+
+  @override
+  $CheckupLogsTable createAlias(String alias) {
+    return $CheckupLogsTable(attachedDatabase, alias);
+  }
+}
+
+class CheckupLogRow extends DataClass implements Insertable<CheckupLogRow> {
+  final int id;
+  final int catId;
+  final String itemId;
+  final DateTime? completedOn;
+  final String result;
+  final DateTime? nextDue;
+  const CheckupLogRow({
+    required this.id,
+    required this.catId,
+    required this.itemId,
+    this.completedOn,
+    required this.result,
+    this.nextDue,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['cat_id'] = Variable<int>(catId);
+    map['item_id'] = Variable<String>(itemId);
+    if (!nullToAbsent || completedOn != null) {
+      map['completed_on'] = Variable<DateTime>(completedOn);
+    }
+    map['result'] = Variable<String>(result);
+    if (!nullToAbsent || nextDue != null) {
+      map['next_due'] = Variable<DateTime>(nextDue);
+    }
+    return map;
+  }
+
+  CheckupLogsCompanion toCompanion(bool nullToAbsent) {
+    return CheckupLogsCompanion(
+      id: Value(id),
+      catId: Value(catId),
+      itemId: Value(itemId),
+      completedOn: completedOn == null && nullToAbsent
+          ? const Value.absent()
+          : Value(completedOn),
+      result: Value(result),
+      nextDue: nextDue == null && nullToAbsent
+          ? const Value.absent()
+          : Value(nextDue),
+    );
+  }
+
+  factory CheckupLogRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return CheckupLogRow(
+      id: serializer.fromJson<int>(json['id']),
+      catId: serializer.fromJson<int>(json['catId']),
+      itemId: serializer.fromJson<String>(json['itemId']),
+      completedOn: serializer.fromJson<DateTime?>(json['completedOn']),
+      result: serializer.fromJson<String>(json['result']),
+      nextDue: serializer.fromJson<DateTime?>(json['nextDue']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'catId': serializer.toJson<int>(catId),
+      'itemId': serializer.toJson<String>(itemId),
+      'completedOn': serializer.toJson<DateTime?>(completedOn),
+      'result': serializer.toJson<String>(result),
+      'nextDue': serializer.toJson<DateTime?>(nextDue),
+    };
+  }
+
+  CheckupLogRow copyWith({
+    int? id,
+    int? catId,
+    String? itemId,
+    Value<DateTime?> completedOn = const Value.absent(),
+    String? result,
+    Value<DateTime?> nextDue = const Value.absent(),
+  }) => CheckupLogRow(
+    id: id ?? this.id,
+    catId: catId ?? this.catId,
+    itemId: itemId ?? this.itemId,
+    completedOn: completedOn.present ? completedOn.value : this.completedOn,
+    result: result ?? this.result,
+    nextDue: nextDue.present ? nextDue.value : this.nextDue,
+  );
+  CheckupLogRow copyWithCompanion(CheckupLogsCompanion data) {
+    return CheckupLogRow(
+      id: data.id.present ? data.id.value : this.id,
+      catId: data.catId.present ? data.catId.value : this.catId,
+      itemId: data.itemId.present ? data.itemId.value : this.itemId,
+      completedOn: data.completedOn.present
+          ? data.completedOn.value
+          : this.completedOn,
+      result: data.result.present ? data.result.value : this.result,
+      nextDue: data.nextDue.present ? data.nextDue.value : this.nextDue,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CheckupLogRow(')
+          ..write('id: $id, ')
+          ..write('catId: $catId, ')
+          ..write('itemId: $itemId, ')
+          ..write('completedOn: $completedOn, ')
+          ..write('result: $result, ')
+          ..write('nextDue: $nextDue')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode =>
+      Object.hash(id, catId, itemId, completedOn, result, nextDue);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is CheckupLogRow &&
+          other.id == this.id &&
+          other.catId == this.catId &&
+          other.itemId == this.itemId &&
+          other.completedOn == this.completedOn &&
+          other.result == this.result &&
+          other.nextDue == this.nextDue);
+}
+
+class CheckupLogsCompanion extends UpdateCompanion<CheckupLogRow> {
+  final Value<int> id;
+  final Value<int> catId;
+  final Value<String> itemId;
+  final Value<DateTime?> completedOn;
+  final Value<String> result;
+  final Value<DateTime?> nextDue;
+  const CheckupLogsCompanion({
+    this.id = const Value.absent(),
+    this.catId = const Value.absent(),
+    this.itemId = const Value.absent(),
+    this.completedOn = const Value.absent(),
+    this.result = const Value.absent(),
+    this.nextDue = const Value.absent(),
+  });
+  CheckupLogsCompanion.insert({
+    this.id = const Value.absent(),
+    required int catId,
+    required String itemId,
+    this.completedOn = const Value.absent(),
+    this.result = const Value.absent(),
+    this.nextDue = const Value.absent(),
+  }) : catId = Value(catId),
+       itemId = Value(itemId);
+  static Insertable<CheckupLogRow> custom({
+    Expression<int>? id,
+    Expression<int>? catId,
+    Expression<String>? itemId,
+    Expression<DateTime>? completedOn,
+    Expression<String>? result,
+    Expression<DateTime>? nextDue,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (catId != null) 'cat_id': catId,
+      if (itemId != null) 'item_id': itemId,
+      if (completedOn != null) 'completed_on': completedOn,
+      if (result != null) 'result': result,
+      if (nextDue != null) 'next_due': nextDue,
+    });
+  }
+
+  CheckupLogsCompanion copyWith({
+    Value<int>? id,
+    Value<int>? catId,
+    Value<String>? itemId,
+    Value<DateTime?>? completedOn,
+    Value<String>? result,
+    Value<DateTime?>? nextDue,
+  }) {
+    return CheckupLogsCompanion(
+      id: id ?? this.id,
+      catId: catId ?? this.catId,
+      itemId: itemId ?? this.itemId,
+      completedOn: completedOn ?? this.completedOn,
+      result: result ?? this.result,
+      nextDue: nextDue ?? this.nextDue,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (catId.present) {
+      map['cat_id'] = Variable<int>(catId.value);
+    }
+    if (itemId.present) {
+      map['item_id'] = Variable<String>(itemId.value);
+    }
+    if (completedOn.present) {
+      map['completed_on'] = Variable<DateTime>(completedOn.value);
+    }
+    if (result.present) {
+      map['result'] = Variable<String>(result.value);
+    }
+    if (nextDue.present) {
+      map['next_due'] = Variable<DateTime>(nextDue.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CheckupLogsCompanion(')
+          ..write('id: $id, ')
+          ..write('catId: $catId, ')
+          ..write('itemId: $itemId, ')
+          ..write('completedOn: $completedOn, ')
+          ..write('result: $result, ')
+          ..write('nextDue: $nextDue')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $WaterLogsTable extends WaterLogs
+    with TableInfo<$WaterLogsTable, WaterLogRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $WaterLogsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _catIdMeta = const VerificationMeta('catId');
+  @override
+  late final GeneratedColumn<int> catId = GeneratedColumn<int>(
+    'cat_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES cats (id) ON DELETE CASCADE',
+    ),
+  );
+  static const VerificationMeta _loggedOnMeta = const VerificationMeta(
+    'loggedOn',
+  );
+  @override
+  late final GeneratedColumn<DateTime> loggedOn = GeneratedColumn<DateTime>(
+    'logged_on',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _millilitersMeta = const VerificationMeta(
+    'milliliters',
+  );
+  @override
+  late final GeneratedColumn<double> milliliters = GeneratedColumn<double>(
+    'milliliters',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [id, catId, loggedOn, milliliters];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'water_logs';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<WaterLogRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('cat_id')) {
+      context.handle(
+        _catIdMeta,
+        catId.isAcceptableOrUnknown(data['cat_id']!, _catIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_catIdMeta);
+    }
+    if (data.containsKey('logged_on')) {
+      context.handle(
+        _loggedOnMeta,
+        loggedOn.isAcceptableOrUnknown(data['logged_on']!, _loggedOnMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_loggedOnMeta);
+    }
+    if (data.containsKey('milliliters')) {
+      context.handle(
+        _millilitersMeta,
+        milliliters.isAcceptableOrUnknown(
+          data['milliliters']!,
+          _millilitersMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_millilitersMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  WaterLogRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return WaterLogRow(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      catId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}cat_id'],
+      )!,
+      loggedOn: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}logged_on'],
+      )!,
+      milliliters: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}milliliters'],
+      )!,
+    );
+  }
+
+  @override
+  $WaterLogsTable createAlias(String alias) {
+    return $WaterLogsTable(attachedDatabase, alias);
+  }
+}
+
+class WaterLogRow extends DataClass implements Insertable<WaterLogRow> {
+  final int id;
+  final int catId;
+  final DateTime loggedOn;
+  final double milliliters;
+  const WaterLogRow({
+    required this.id,
+    required this.catId,
+    required this.loggedOn,
+    required this.milliliters,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['cat_id'] = Variable<int>(catId);
+    map['logged_on'] = Variable<DateTime>(loggedOn);
+    map['milliliters'] = Variable<double>(milliliters);
+    return map;
+  }
+
+  WaterLogsCompanion toCompanion(bool nullToAbsent) {
+    return WaterLogsCompanion(
+      id: Value(id),
+      catId: Value(catId),
+      loggedOn: Value(loggedOn),
+      milliliters: Value(milliliters),
+    );
+  }
+
+  factory WaterLogRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return WaterLogRow(
+      id: serializer.fromJson<int>(json['id']),
+      catId: serializer.fromJson<int>(json['catId']),
+      loggedOn: serializer.fromJson<DateTime>(json['loggedOn']),
+      milliliters: serializer.fromJson<double>(json['milliliters']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'catId': serializer.toJson<int>(catId),
+      'loggedOn': serializer.toJson<DateTime>(loggedOn),
+      'milliliters': serializer.toJson<double>(milliliters),
+    };
+  }
+
+  WaterLogRow copyWith({
+    int? id,
+    int? catId,
+    DateTime? loggedOn,
+    double? milliliters,
+  }) => WaterLogRow(
+    id: id ?? this.id,
+    catId: catId ?? this.catId,
+    loggedOn: loggedOn ?? this.loggedOn,
+    milliliters: milliliters ?? this.milliliters,
+  );
+  WaterLogRow copyWithCompanion(WaterLogsCompanion data) {
+    return WaterLogRow(
+      id: data.id.present ? data.id.value : this.id,
+      catId: data.catId.present ? data.catId.value : this.catId,
+      loggedOn: data.loggedOn.present ? data.loggedOn.value : this.loggedOn,
+      milliliters: data.milliliters.present
+          ? data.milliliters.value
+          : this.milliliters,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('WaterLogRow(')
+          ..write('id: $id, ')
+          ..write('catId: $catId, ')
+          ..write('loggedOn: $loggedOn, ')
+          ..write('milliliters: $milliliters')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(id, catId, loggedOn, milliliters);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is WaterLogRow &&
+          other.id == this.id &&
+          other.catId == this.catId &&
+          other.loggedOn == this.loggedOn &&
+          other.milliliters == this.milliliters);
+}
+
+class WaterLogsCompanion extends UpdateCompanion<WaterLogRow> {
+  final Value<int> id;
+  final Value<int> catId;
+  final Value<DateTime> loggedOn;
+  final Value<double> milliliters;
+  const WaterLogsCompanion({
+    this.id = const Value.absent(),
+    this.catId = const Value.absent(),
+    this.loggedOn = const Value.absent(),
+    this.milliliters = const Value.absent(),
+  });
+  WaterLogsCompanion.insert({
+    this.id = const Value.absent(),
+    required int catId,
+    required DateTime loggedOn,
+    required double milliliters,
+  }) : catId = Value(catId),
+       loggedOn = Value(loggedOn),
+       milliliters = Value(milliliters);
+  static Insertable<WaterLogRow> custom({
+    Expression<int>? id,
+    Expression<int>? catId,
+    Expression<DateTime>? loggedOn,
+    Expression<double>? milliliters,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (catId != null) 'cat_id': catId,
+      if (loggedOn != null) 'logged_on': loggedOn,
+      if (milliliters != null) 'milliliters': milliliters,
+    });
+  }
+
+  WaterLogsCompanion copyWith({
+    Value<int>? id,
+    Value<int>? catId,
+    Value<DateTime>? loggedOn,
+    Value<double>? milliliters,
+  }) {
+    return WaterLogsCompanion(
+      id: id ?? this.id,
+      catId: catId ?? this.catId,
+      loggedOn: loggedOn ?? this.loggedOn,
+      milliliters: milliliters ?? this.milliliters,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (catId.present) {
+      map['cat_id'] = Variable<int>(catId.value);
+    }
+    if (loggedOn.present) {
+      map['logged_on'] = Variable<DateTime>(loggedOn.value);
+    }
+    if (milliliters.present) {
+      map['milliliters'] = Variable<double>(milliliters.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('WaterLogsCompanion(')
+          ..write('id: $id, ')
+          ..write('catId: $catId, ')
+          ..write('loggedOn: $loggedOn, ')
+          ..write('milliliters: $milliliters')
+          ..write(')'))
+        .toString();
+  }
+}
+
 class $AppSettingsTable extends AppSettings
     with TableInfo<$AppSettingsTable, SettingRow> {
   @override
@@ -5953,6 +7123,9 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $FeedingRemindersTable feedingReminders = $FeedingRemindersTable(
     this,
   );
+  late final $CatConditionsTable catConditions = $CatConditionsTable(this);
+  late final $CheckupLogsTable checkupLogs = $CheckupLogsTable(this);
+  late final $WaterLogsTable waterLogs = $WaterLogsTable(this);
   late final $AppSettingsTable appSettings = $AppSettingsTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
@@ -5971,6 +7144,9 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     foodTransitions,
     pantryItems,
     feedingReminders,
+    catConditions,
+    checkupLogs,
+    waterLogs,
     appSettings,
   ];
   @override
@@ -6051,6 +7227,27 @@ abstract class _$AppDatabase extends GeneratedDatabase {
         limitUpdateKind: UpdateKind.delete,
       ),
       result: [TableUpdate('feeding_reminders', kind: UpdateKind.delete)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'cats',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('cat_conditions', kind: UpdateKind.delete)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'cats',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('checkup_logs', kind: UpdateKind.delete)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'cats',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('water_logs', kind: UpdateKind.delete)],
     ),
   ]);
 }
@@ -6255,6 +7452,60 @@ final class $$CatsTableReferences
     final cache = $_typedResult.readTableOrNull(
       _feedingRemindersRefsTable($_db),
     );
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+
+  static MultiTypedResultKey<$CatConditionsTable, List<CatConditionRow>>
+  _catConditionsRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
+    db.catConditions,
+    aliasName: 'cats__id__cat_conditions__cat_id',
+  );
+
+  $$CatConditionsTableProcessedTableManager get catConditionsRefs {
+    final manager = $$CatConditionsTableTableManager(
+      $_db,
+      $_db.catConditions,
+    ).filter((f) => f.catId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_catConditionsRefsTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+
+  static MultiTypedResultKey<$CheckupLogsTable, List<CheckupLogRow>>
+  _checkupLogsRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
+    db.checkupLogs,
+    aliasName: 'cats__id__checkup_logs__cat_id',
+  );
+
+  $$CheckupLogsTableProcessedTableManager get checkupLogsRefs {
+    final manager = $$CheckupLogsTableTableManager(
+      $_db,
+      $_db.checkupLogs,
+    ).filter((f) => f.catId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_checkupLogsRefsTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+
+  static MultiTypedResultKey<$WaterLogsTable, List<WaterLogRow>>
+  _waterLogsRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
+    db.waterLogs,
+    aliasName: 'cats__id__water_logs__cat_id',
+  );
+
+  $$WaterLogsTableProcessedTableManager get waterLogsRefs {
+    final manager = $$WaterLogsTableTableManager(
+      $_db,
+      $_db.waterLogs,
+    ).filter((f) => f.catId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_waterLogsRefsTable($_db));
     return ProcessedTableManager(
       manager.$state.copyWith(prefetchedData: cache),
     );
@@ -6560,6 +7811,81 @@ class $$CatsTableFilterComposer extends Composer<_$AppDatabase, $CatsTable> {
           }) => $$FeedingRemindersTableFilterComposer(
             $db: $db,
             $table: $db.feedingReminders,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<bool> catConditionsRefs(
+    Expression<bool> Function($$CatConditionsTableFilterComposer f) f,
+  ) {
+    final $$CatConditionsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.catConditions,
+      getReferencedColumn: (t) => t.catId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$CatConditionsTableFilterComposer(
+            $db: $db,
+            $table: $db.catConditions,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<bool> checkupLogsRefs(
+    Expression<bool> Function($$CheckupLogsTableFilterComposer f) f,
+  ) {
+    final $$CheckupLogsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.checkupLogs,
+      getReferencedColumn: (t) => t.catId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$CheckupLogsTableFilterComposer(
+            $db: $db,
+            $table: $db.checkupLogs,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<bool> waterLogsRefs(
+    Expression<bool> Function($$WaterLogsTableFilterComposer f) f,
+  ) {
+    final $$WaterLogsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.waterLogs,
+      getReferencedColumn: (t) => t.catId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$WaterLogsTableFilterComposer(
+            $db: $db,
+            $table: $db.waterLogs,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer:
@@ -6940,6 +8266,81 @@ class $$CatsTableAnnotationComposer
     );
     return f(composer);
   }
+
+  Expression<T> catConditionsRefs<T extends Object>(
+    Expression<T> Function($$CatConditionsTableAnnotationComposer a) f,
+  ) {
+    final $$CatConditionsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.catConditions,
+      getReferencedColumn: (t) => t.catId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$CatConditionsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.catConditions,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<T> checkupLogsRefs<T extends Object>(
+    Expression<T> Function($$CheckupLogsTableAnnotationComposer a) f,
+  ) {
+    final $$CheckupLogsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.checkupLogs,
+      getReferencedColumn: (t) => t.catId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$CheckupLogsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.checkupLogs,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<T> waterLogsRefs<T extends Object>(
+    Expression<T> Function($$WaterLogsTableAnnotationComposer a) f,
+  ) {
+    final $$WaterLogsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.waterLogs,
+      getReferencedColumn: (t) => t.catId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$WaterLogsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.waterLogs,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
 }
 
 class $$CatsTableTableManager
@@ -6965,6 +8366,9 @@ class $$CatsTableTableManager
             bool feedingLogsRefs,
             bool foodTransitionsRefs,
             bool feedingRemindersRefs,
+            bool catConditionsRefs,
+            bool checkupLogsRefs,
+            bool waterLogsRefs,
           })
         > {
   $$CatsTableTableManager(_$AppDatabase db, $CatsTable table)
@@ -7065,6 +8469,9 @@ class $$CatsTableTableManager
                 feedingLogsRefs = false,
                 foodTransitionsRefs = false,
                 feedingRemindersRefs = false,
+                catConditionsRefs = false,
+                checkupLogsRefs = false,
+                waterLogsRefs = false,
               }) {
                 return PrefetchHooks(
                   db: db,
@@ -7078,6 +8485,9 @@ class $$CatsTableTableManager
                     if (feedingLogsRefs) db.feedingLogs,
                     if (foodTransitionsRefs) db.foodTransitions,
                     if (feedingRemindersRefs) db.feedingReminders,
+                    if (catConditionsRefs) db.catConditions,
+                    if (checkupLogsRefs) db.checkupLogs,
+                    if (waterLogsRefs) db.waterLogs,
                   ],
                   addJoins: null,
                   getPrefetchedDataCallback: (items) async {
@@ -7259,6 +8669,66 @@ class $$CatsTableTableManager
                           ) => referencedItems.where((e) => e.catId == item.id),
                           typedResults: items,
                         ),
+                      if (catConditionsRefs)
+                        await $_getPrefetchedData<
+                          CatRow,
+                          $CatsTable,
+                          CatConditionRow
+                        >(
+                          currentTable: table,
+                          referencedTable: $$CatsTableReferences
+                              ._catConditionsRefsTable(db),
+                          managerFromTypedResult: (p0) => $$CatsTableReferences(
+                            db,
+                            table,
+                            p0,
+                          ).catConditionsRefs,
+                          referencedItemsForCurrentItem: (
+                            item,
+                            referencedItems,
+                          ) => referencedItems.where((e) => e.catId == item.id),
+                          typedResults: items,
+                        ),
+                      if (checkupLogsRefs)
+                        await $_getPrefetchedData<
+                          CatRow,
+                          $CatsTable,
+                          CheckupLogRow
+                        >(
+                          currentTable: table,
+                          referencedTable: $$CatsTableReferences
+                              ._checkupLogsRefsTable(db),
+                          managerFromTypedResult: (p0) => $$CatsTableReferences(
+                            db,
+                            table,
+                            p0,
+                          ).checkupLogsRefs,
+                          referencedItemsForCurrentItem: (
+                            item,
+                            referencedItems,
+                          ) => referencedItems.where((e) => e.catId == item.id),
+                          typedResults: items,
+                        ),
+                      if (waterLogsRefs)
+                        await $_getPrefetchedData<
+                          CatRow,
+                          $CatsTable,
+                          WaterLogRow
+                        >(
+                          currentTable: table,
+                          referencedTable: $$CatsTableReferences
+                              ._waterLogsRefsTable(db),
+                          managerFromTypedResult: (p0) => $$CatsTableReferences(
+                            db,
+                            table,
+                            p0,
+                          ).waterLogsRefs,
+                          referencedItemsForCurrentItem: (
+                            item,
+                            referencedItems,
+                          ) => referencedItems.where((e) => e.catId == item.id),
+                          typedResults: items,
+                        ),
                     ];
                   },
                 );
@@ -7289,6 +8759,9 @@ typedef $$CatsTableProcessedTableManager =
         bool feedingLogsRefs,
         bool foodTransitionsRefs,
         bool feedingRemindersRefs,
+        bool catConditionsRefs,
+        bool checkupLogsRefs,
+        bool waterLogsRefs,
       })
     >;
 typedef $$CatPhotosTableCreateCompanionBuilder = CatPhotosCompanion Function({
@@ -11262,6 +12735,985 @@ typedef $$FeedingRemindersTableProcessedTableManager =
       FeedingReminderRow,
       PrefetchHooks Function({bool catId})
     >;
+typedef $$CatConditionsTableCreateCompanionBuilder =
+    CatConditionsCompanion Function({
+      Value<int> id,
+      required int catId,
+      required String diseaseId,
+      required DateTime diagnosedOn,
+      Value<String> stageLabel,
+      Value<String> note,
+      Value<DateTime?> nextRecheck,
+    });
+typedef $$CatConditionsTableUpdateCompanionBuilder =
+    CatConditionsCompanion Function({
+      Value<int> id,
+      Value<int> catId,
+      Value<String> diseaseId,
+      Value<DateTime> diagnosedOn,
+      Value<String> stageLabel,
+      Value<String> note,
+      Value<DateTime?> nextRecheck,
+    });
+
+final class $$CatConditionsTableReferences
+    extends
+        BaseReferences<_$AppDatabase, $CatConditionsTable, CatConditionRow> {
+  $$CatConditionsTableReferences(
+    super.$_db,
+    super.$_table,
+    super.$_typedResult,
+  );
+
+  static $CatsTable _catIdTable(_$AppDatabase db) =>
+      db.cats.createAlias('cat_conditions__cat_id__cats__id');
+
+  $$CatsTableProcessedTableManager get catId {
+    final $_column = $_itemColumn<int>('cat_id')!;
+
+    final manager = $$CatsTableTableManager(
+      $_db,
+      $_db.cats,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_catIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$CatConditionsTableFilterComposer
+    extends Composer<_$AppDatabase, $CatConditionsTable> {
+  $$CatConditionsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get diseaseId => $composableBuilder(
+    column: $table.diseaseId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get diagnosedOn => $composableBuilder(
+    column: $table.diagnosedOn,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get stageLabel => $composableBuilder(
+    column: $table.stageLabel,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get note => $composableBuilder(
+    column: $table.note,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get nextRecheck => $composableBuilder(
+    column: $table.nextRecheck,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$CatsTableFilterComposer get catId {
+    final $$CatsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.catId,
+      referencedTable: $db.cats,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$CatsTableFilterComposer(
+            $db: $db,
+            $table: $db.cats,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$CatConditionsTableOrderingComposer
+    extends Composer<_$AppDatabase, $CatConditionsTable> {
+  $$CatConditionsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get diseaseId => $composableBuilder(
+    column: $table.diseaseId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get diagnosedOn => $composableBuilder(
+    column: $table.diagnosedOn,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get stageLabel => $composableBuilder(
+    column: $table.stageLabel,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get note => $composableBuilder(
+    column: $table.note,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get nextRecheck => $composableBuilder(
+    column: $table.nextRecheck,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$CatsTableOrderingComposer get catId {
+    final $$CatsTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.catId,
+      referencedTable: $db.cats,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$CatsTableOrderingComposer(
+            $db: $db,
+            $table: $db.cats,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$CatConditionsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $CatConditionsTable> {
+  $$CatConditionsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get diseaseId =>
+      $composableBuilder(column: $table.diseaseId, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get diagnosedOn => $composableBuilder(
+    column: $table.diagnosedOn,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get stageLabel => $composableBuilder(
+    column: $table.stageLabel,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get note =>
+      $composableBuilder(column: $table.note, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get nextRecheck => $composableBuilder(
+    column: $table.nextRecheck,
+    builder: (column) => column,
+  );
+
+  $$CatsTableAnnotationComposer get catId {
+    final $$CatsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.catId,
+      referencedTable: $db.cats,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$CatsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.cats,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$CatConditionsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $CatConditionsTable,
+          CatConditionRow,
+          $$CatConditionsTableFilterComposer,
+          $$CatConditionsTableOrderingComposer,
+          $$CatConditionsTableAnnotationComposer,
+          $$CatConditionsTableCreateCompanionBuilder,
+          $$CatConditionsTableUpdateCompanionBuilder,
+          (CatConditionRow, $$CatConditionsTableReferences),
+          CatConditionRow,
+          PrefetchHooks Function({bool catId})
+        > {
+  $$CatConditionsTableTableManager(_$AppDatabase db, $CatConditionsTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$CatConditionsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$CatConditionsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$CatConditionsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<int> catId = const Value.absent(),
+                Value<String> diseaseId = const Value.absent(),
+                Value<DateTime> diagnosedOn = const Value.absent(),
+                Value<String> stageLabel = const Value.absent(),
+                Value<String> note = const Value.absent(),
+                Value<DateTime?> nextRecheck = const Value.absent(),
+              }) => CatConditionsCompanion(
+                id: id,
+                catId: catId,
+                diseaseId: diseaseId,
+                diagnosedOn: diagnosedOn,
+                stageLabel: stageLabel,
+                note: note,
+                nextRecheck: nextRecheck,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required int catId,
+                required String diseaseId,
+                required DateTime diagnosedOn,
+                Value<String> stageLabel = const Value.absent(),
+                Value<String> note = const Value.absent(),
+                Value<DateTime?> nextRecheck = const Value.absent(),
+              }) => CatConditionsCompanion.insert(
+                id: id,
+                catId: catId,
+                diseaseId: diseaseId,
+                diagnosedOn: diagnosedOn,
+                stageLabel: stageLabel,
+                note: note,
+                nextRecheck: nextRecheck,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<$CatConditionsTable, CatConditionRow>(table),
+                  $$CatConditionsTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({catId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins:
+                  <
+                    T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic
+                    >
+                  >(state) {
+                    if (catId) {
+                      state = state.withJoin(
+                        currentTable: table,
+                        currentColumn: table.catId,
+                        referencedTable: $$CatConditionsTableReferences
+                            ._catIdTable(db),
+                        referencedColumn: $$CatConditionsTableReferences
+                            ._catIdTable(db)
+                            .id,
+                      ) as T;
+                    }
+
+                    return state;
+                  },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$CatConditionsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $CatConditionsTable,
+      CatConditionRow,
+      $$CatConditionsTableFilterComposer,
+      $$CatConditionsTableOrderingComposer,
+      $$CatConditionsTableAnnotationComposer,
+      $$CatConditionsTableCreateCompanionBuilder,
+      $$CatConditionsTableUpdateCompanionBuilder,
+      (CatConditionRow, $$CatConditionsTableReferences),
+      CatConditionRow,
+      PrefetchHooks Function({bool catId})
+    >;
+typedef $$CheckupLogsTableCreateCompanionBuilder =
+    CheckupLogsCompanion Function({
+      Value<int> id,
+      required int catId,
+      required String itemId,
+      Value<DateTime?> completedOn,
+      Value<String> result,
+      Value<DateTime?> nextDue,
+    });
+typedef $$CheckupLogsTableUpdateCompanionBuilder =
+    CheckupLogsCompanion Function({
+      Value<int> id,
+      Value<int> catId,
+      Value<String> itemId,
+      Value<DateTime?> completedOn,
+      Value<String> result,
+      Value<DateTime?> nextDue,
+    });
+
+final class $$CheckupLogsTableReferences
+    extends BaseReferences<_$AppDatabase, $CheckupLogsTable, CheckupLogRow> {
+  $$CheckupLogsTableReferences(super.$_db, super.$_table, super.$_typedResult);
+
+  static $CatsTable _catIdTable(_$AppDatabase db) =>
+      db.cats.createAlias('checkup_logs__cat_id__cats__id');
+
+  $$CatsTableProcessedTableManager get catId {
+    final $_column = $_itemColumn<int>('cat_id')!;
+
+    final manager = $$CatsTableTableManager(
+      $_db,
+      $_db.cats,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_catIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$CheckupLogsTableFilterComposer
+    extends Composer<_$AppDatabase, $CheckupLogsTable> {
+  $$CheckupLogsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get itemId => $composableBuilder(
+    column: $table.itemId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get completedOn => $composableBuilder(
+    column: $table.completedOn,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get result => $composableBuilder(
+    column: $table.result,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get nextDue => $composableBuilder(
+    column: $table.nextDue,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$CatsTableFilterComposer get catId {
+    final $$CatsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.catId,
+      referencedTable: $db.cats,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$CatsTableFilterComposer(
+            $db: $db,
+            $table: $db.cats,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$CheckupLogsTableOrderingComposer
+    extends Composer<_$AppDatabase, $CheckupLogsTable> {
+  $$CheckupLogsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get itemId => $composableBuilder(
+    column: $table.itemId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get completedOn => $composableBuilder(
+    column: $table.completedOn,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get result => $composableBuilder(
+    column: $table.result,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get nextDue => $composableBuilder(
+    column: $table.nextDue,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$CatsTableOrderingComposer get catId {
+    final $$CatsTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.catId,
+      referencedTable: $db.cats,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$CatsTableOrderingComposer(
+            $db: $db,
+            $table: $db.cats,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$CheckupLogsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $CheckupLogsTable> {
+  $$CheckupLogsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get itemId =>
+      $composableBuilder(column: $table.itemId, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get completedOn => $composableBuilder(
+    column: $table.completedOn,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get result =>
+      $composableBuilder(column: $table.result, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get nextDue =>
+      $composableBuilder(column: $table.nextDue, builder: (column) => column);
+
+  $$CatsTableAnnotationComposer get catId {
+    final $$CatsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.catId,
+      referencedTable: $db.cats,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$CatsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.cats,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$CheckupLogsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $CheckupLogsTable,
+          CheckupLogRow,
+          $$CheckupLogsTableFilterComposer,
+          $$CheckupLogsTableOrderingComposer,
+          $$CheckupLogsTableAnnotationComposer,
+          $$CheckupLogsTableCreateCompanionBuilder,
+          $$CheckupLogsTableUpdateCompanionBuilder,
+          (CheckupLogRow, $$CheckupLogsTableReferences),
+          CheckupLogRow,
+          PrefetchHooks Function({bool catId})
+        > {
+  $$CheckupLogsTableTableManager(_$AppDatabase db, $CheckupLogsTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$CheckupLogsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$CheckupLogsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$CheckupLogsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<int> catId = const Value.absent(),
+                Value<String> itemId = const Value.absent(),
+                Value<DateTime?> completedOn = const Value.absent(),
+                Value<String> result = const Value.absent(),
+                Value<DateTime?> nextDue = const Value.absent(),
+              }) => CheckupLogsCompanion(
+                id: id,
+                catId: catId,
+                itemId: itemId,
+                completedOn: completedOn,
+                result: result,
+                nextDue: nextDue,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required int catId,
+                required String itemId,
+                Value<DateTime?> completedOn = const Value.absent(),
+                Value<String> result = const Value.absent(),
+                Value<DateTime?> nextDue = const Value.absent(),
+              }) => CheckupLogsCompanion.insert(
+                id: id,
+                catId: catId,
+                itemId: itemId,
+                completedOn: completedOn,
+                result: result,
+                nextDue: nextDue,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<$CheckupLogsTable, CheckupLogRow>(table),
+                  $$CheckupLogsTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({catId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins:
+                  <
+                    T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic
+                    >
+                  >(state) {
+                    if (catId) {
+                      state = state.withJoin(
+                        currentTable: table,
+                        currentColumn: table.catId,
+                        referencedTable: $$CheckupLogsTableReferences
+                            ._catIdTable(db),
+                        referencedColumn: $$CheckupLogsTableReferences
+                            ._catIdTable(db)
+                            .id,
+                      ) as T;
+                    }
+
+                    return state;
+                  },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$CheckupLogsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $CheckupLogsTable,
+      CheckupLogRow,
+      $$CheckupLogsTableFilterComposer,
+      $$CheckupLogsTableOrderingComposer,
+      $$CheckupLogsTableAnnotationComposer,
+      $$CheckupLogsTableCreateCompanionBuilder,
+      $$CheckupLogsTableUpdateCompanionBuilder,
+      (CheckupLogRow, $$CheckupLogsTableReferences),
+      CheckupLogRow,
+      PrefetchHooks Function({bool catId})
+    >;
+typedef $$WaterLogsTableCreateCompanionBuilder = WaterLogsCompanion Function({
+  Value<int> id,
+  required int catId,
+  required DateTime loggedOn,
+  required double milliliters,
+});
+typedef $$WaterLogsTableUpdateCompanionBuilder = WaterLogsCompanion Function({
+  Value<int> id,
+  Value<int> catId,
+  Value<DateTime> loggedOn,
+  Value<double> milliliters,
+});
+
+final class $$WaterLogsTableReferences
+    extends BaseReferences<_$AppDatabase, $WaterLogsTable, WaterLogRow> {
+  $$WaterLogsTableReferences(super.$_db, super.$_table, super.$_typedResult);
+
+  static $CatsTable _catIdTable(_$AppDatabase db) =>
+      db.cats.createAlias('water_logs__cat_id__cats__id');
+
+  $$CatsTableProcessedTableManager get catId {
+    final $_column = $_itemColumn<int>('cat_id')!;
+
+    final manager = $$CatsTableTableManager(
+      $_db,
+      $_db.cats,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_catIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$WaterLogsTableFilterComposer
+    extends Composer<_$AppDatabase, $WaterLogsTable> {
+  $$WaterLogsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get loggedOn => $composableBuilder(
+    column: $table.loggedOn,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get milliliters => $composableBuilder(
+    column: $table.milliliters,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$CatsTableFilterComposer get catId {
+    final $$CatsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.catId,
+      referencedTable: $db.cats,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$CatsTableFilterComposer(
+            $db: $db,
+            $table: $db.cats,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$WaterLogsTableOrderingComposer
+    extends Composer<_$AppDatabase, $WaterLogsTable> {
+  $$WaterLogsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get loggedOn => $composableBuilder(
+    column: $table.loggedOn,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get milliliters => $composableBuilder(
+    column: $table.milliliters,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$CatsTableOrderingComposer get catId {
+    final $$CatsTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.catId,
+      referencedTable: $db.cats,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$CatsTableOrderingComposer(
+            $db: $db,
+            $table: $db.cats,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$WaterLogsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $WaterLogsTable> {
+  $$WaterLogsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get loggedOn =>
+      $composableBuilder(column: $table.loggedOn, builder: (column) => column);
+
+  GeneratedColumn<double> get milliliters => $composableBuilder(
+    column: $table.milliliters,
+    builder: (column) => column,
+  );
+
+  $$CatsTableAnnotationComposer get catId {
+    final $$CatsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.catId,
+      referencedTable: $db.cats,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$CatsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.cats,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$WaterLogsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $WaterLogsTable,
+          WaterLogRow,
+          $$WaterLogsTableFilterComposer,
+          $$WaterLogsTableOrderingComposer,
+          $$WaterLogsTableAnnotationComposer,
+          $$WaterLogsTableCreateCompanionBuilder,
+          $$WaterLogsTableUpdateCompanionBuilder,
+          (WaterLogRow, $$WaterLogsTableReferences),
+          WaterLogRow,
+          PrefetchHooks Function({bool catId})
+        > {
+  $$WaterLogsTableTableManager(_$AppDatabase db, $WaterLogsTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$WaterLogsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$WaterLogsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$WaterLogsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<int> catId = const Value.absent(),
+                Value<DateTime> loggedOn = const Value.absent(),
+                Value<double> milliliters = const Value.absent(),
+              }) => WaterLogsCompanion(
+                id: id,
+                catId: catId,
+                loggedOn: loggedOn,
+                milliliters: milliliters,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required int catId,
+                required DateTime loggedOn,
+                required double milliliters,
+              }) => WaterLogsCompanion.insert(
+                id: id,
+                catId: catId,
+                loggedOn: loggedOn,
+                milliliters: milliliters,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<$WaterLogsTable, WaterLogRow>(table),
+                  $$WaterLogsTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({catId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins:
+                  <
+                    T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic
+                    >
+                  >(state) {
+                    if (catId) {
+                      state = state.withJoin(
+                        currentTable: table,
+                        currentColumn: table.catId,
+                        referencedTable: $$WaterLogsTableReferences._catIdTable(
+                          db,
+                        ),
+                        referencedColumn: $$WaterLogsTableReferences
+                            ._catIdTable(db)
+                            .id,
+                      ) as T;
+                    }
+
+                    return state;
+                  },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$WaterLogsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $WaterLogsTable,
+      WaterLogRow,
+      $$WaterLogsTableFilterComposer,
+      $$WaterLogsTableOrderingComposer,
+      $$WaterLogsTableAnnotationComposer,
+      $$WaterLogsTableCreateCompanionBuilder,
+      $$WaterLogsTableUpdateCompanionBuilder,
+      (WaterLogRow, $$WaterLogsTableReferences),
+      WaterLogRow,
+      PrefetchHooks Function({bool catId})
+    >;
 typedef $$AppSettingsTableCreateCompanionBuilder =
     AppSettingsCompanion Function({
       required String key,
@@ -11436,6 +13888,12 @@ class $AppDatabaseManager {
       $$PantryItemsTableTableManager(_db, _db.pantryItems);
   $$FeedingRemindersTableTableManager get feedingReminders =>
       $$FeedingRemindersTableTableManager(_db, _db.feedingReminders);
+  $$CatConditionsTableTableManager get catConditions =>
+      $$CatConditionsTableTableManager(_db, _db.catConditions);
+  $$CheckupLogsTableTableManager get checkupLogs =>
+      $$CheckupLogsTableTableManager(_db, _db.checkupLogs);
+  $$WaterLogsTableTableManager get waterLogs =>
+      $$WaterLogsTableTableManager(_db, _db.waterLogs);
   $$AppSettingsTableTableManager get appSettings =>
       $$AppSettingsTableTableManager(_db, _db.appSettings);
 }

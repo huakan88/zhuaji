@@ -185,6 +185,31 @@ class DriftCareRepository implements CareRepository {
         ),
       );
     }
+    await upsertCondition(
+      ConditionDraft(
+        catId: orangeId,
+        diseaseId: 'ckd',
+        diagnosedOn: today.subtract(const Duration(days: 200)),
+        stageLabel: 'IRIS 2',
+        note: '示例：兽医告知的分期，可以改。',
+        nextRecheck: today.add(const Duration(days: 40)),
+      ),
+    );
+    await upsertCheckup(
+      CheckupDraft(
+        catId: orangeId,
+        itemId: 'cbc',
+        completedOn: today.subtract(const Duration(days: 40)),
+        result: '示例：兽医说血常规在参考范围内',
+        nextDue: today.add(const Duration(days: 140)),
+      ),
+    );
+    await addWater(catId: orangeId, loggedOn: today, milliliters: 180);
+    await addWater(
+      catId: orangeId,
+      loggedOn: today.subtract(const Duration(days: 1)),
+      milliliters: 160,
+    );
     await setSetting('activeCatId', '$orangeId');
     await setSetting('demoSeeded', '1');
   }
@@ -730,6 +755,122 @@ class DriftCareRepository implements CareRepository {
   @override
   Future<void> deletePantry(int id) {
     return (_db.delete(_db.pantryItems)..where((t) => t.id.equals(id))).go();
+  }
+
+  @override
+  Future<List<ConditionRecord>> conditions() async {
+    final rows = await (_db.select(_db.catConditions)
+          ..orderBy([(t) => OrderingTerm.desc(t.diagnosedOn)]))
+        .get();
+    return [
+      for (final row in rows)
+        ConditionRecord(
+          id: row.id,
+          catId: row.catId,
+          diseaseId: row.diseaseId,
+          diagnosedOn: row.diagnosedOn,
+          stageLabel: row.stageLabel,
+          note: row.note,
+          nextRecheck: row.nextRecheck,
+        ),
+    ];
+  }
+
+  @override
+  Future<int> upsertCondition(ConditionDraft draft) async {
+    final companion = CatConditionsCompanion(
+      catId: Value(draft.catId),
+      diseaseId: Value(draft.diseaseId),
+      diagnosedOn: Value(draft.diagnosedOn),
+      stageLabel: Value(draft.stageLabel.trim()),
+      note: Value(draft.note.trim()),
+      nextRecheck: Value(draft.nextRecheck),
+    );
+    if (draft.id == null) {
+      return _db.into(_db.catConditions).insert(companion);
+    }
+    await (_db.update(_db.catConditions)..where((t) => t.id.equals(draft.id!)))
+        .write(companion);
+    return draft.id!;
+  }
+
+  @override
+  Future<void> deleteCondition(int id) {
+    return (_db.delete(_db.catConditions)..where((t) => t.id.equals(id))).go();
+  }
+
+  @override
+  Future<List<CheckupRecord>> checkups() async {
+    final rows = await (_db.select(_db.checkupLogs)
+          ..orderBy([(t) => OrderingTerm.desc(t.completedOn)]))
+        .get();
+    return [
+      for (final row in rows)
+        CheckupRecord(
+          id: row.id,
+          catId: row.catId,
+          itemId: row.itemId,
+          completedOn: row.completedOn,
+          result: row.result,
+          nextDue: row.nextDue,
+        ),
+    ];
+  }
+
+  @override
+  Future<int> upsertCheckup(CheckupDraft draft) async {
+    final companion = CheckupLogsCompanion(
+      catId: Value(draft.catId),
+      itemId: Value(draft.itemId),
+      completedOn: Value(draft.completedOn),
+      result: Value(draft.result.trim()),
+      nextDue: Value(draft.nextDue),
+    );
+    if (draft.id == null) return _db.into(_db.checkupLogs).insert(companion);
+    await (_db.update(_db.checkupLogs)..where((t) => t.id.equals(draft.id!)))
+        .write(companion);
+    return draft.id!;
+  }
+
+  @override
+  Future<void> deleteCheckup(int id) {
+    return (_db.delete(_db.checkupLogs)..where((t) => t.id.equals(id))).go();
+  }
+
+  @override
+  Future<List<WaterRecord>> waters() async {
+    final rows = await (_db.select(_db.waterLogs)
+          ..orderBy([(t) => OrderingTerm.desc(t.loggedOn)]))
+        .get();
+    return [
+      for (final row in rows)
+        WaterRecord(
+          id: row.id,
+          catId: row.catId,
+          loggedOn: row.loggedOn,
+          milliliters: row.milliliters,
+        ),
+    ];
+  }
+
+  @override
+  Future<int> addWater({
+    required int catId,
+    required DateTime loggedOn,
+    required double milliliters,
+  }) {
+    return _db.into(_db.waterLogs).insert(
+      WaterLogsCompanion.insert(
+        catId: catId,
+        loggedOn: loggedOn,
+        milliliters: milliliters,
+      ),
+    );
+  }
+
+  @override
+  Future<void> deleteWater(int id) {
+    return (_db.delete(_db.waterLogs)..where((t) => t.id.equals(id))).go();
   }
 
   CatProfile _cat(CatRow row) => CatProfile(

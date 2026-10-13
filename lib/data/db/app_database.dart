@@ -155,6 +155,38 @@ class FeedingReminders extends Table {
   BoolColumn get enabled => boolean().withDefault(const Constant(true))();
 }
 
+@DataClassName('CatConditionRow')
+class CatConditions extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  IntColumn get catId =>
+      integer().references(Cats, #id, onDelete: KeyAction.cascade)();
+  TextColumn get diseaseId => text()();
+  DateTimeColumn get diagnosedOn => dateTime()();
+  TextColumn get stageLabel => text().withDefault(const Constant(''))();
+  TextColumn get note => text().withDefault(const Constant(''))();
+  DateTimeColumn get nextRecheck => dateTime().nullable()();
+}
+
+@DataClassName('CheckupLogRow')
+class CheckupLogs extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  IntColumn get catId =>
+      integer().references(Cats, #id, onDelete: KeyAction.cascade)();
+  TextColumn get itemId => text()();
+  DateTimeColumn get completedOn => dateTime().nullable()();
+  TextColumn get result => text().withDefault(const Constant(''))();
+  DateTimeColumn get nextDue => dateTime().nullable()();
+}
+
+@DataClassName('WaterLogRow')
+class WaterLogs extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  IntColumn get catId =>
+      integer().references(Cats, #id, onDelete: KeyAction.cascade)();
+  DateTimeColumn get loggedOn => dateTime()();
+  RealColumn get milliliters => real()();
+}
+
 @DataClassName('SettingRow')
 class AppSettings extends Table {
   TextColumn get key => text()();
@@ -178,6 +210,9 @@ class AppSettings extends Table {
     FoodProducts,
     PantryItems,
     FeedingReminders,
+    CatConditions,
+    CheckupLogs,
+    WaterLogs,
     AppSettings,
   ],
 )
@@ -190,7 +225,7 @@ class AppDatabase extends _$AppDatabase {
   factory AppDatabase.memory() => AppDatabase(NativeDatabase.memory());
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -198,6 +233,13 @@ class AppDatabase extends _$AppDatabase {
       await customStatement('PRAGMA foreign_keys = ON');
       await migrator.createAll();
       await seedSampleFoods(this);
+    },
+    onUpgrade: (migrator, from, to) async {
+      if (from < 2) {
+        await migrator.createTable(catConditions);
+        await migrator.createTable(checkupLogs);
+        await migrator.createTable(waterLogs);
+      }
     },
     beforeOpen: (details) async {
       await customStatement('PRAGMA foreign_keys = ON');

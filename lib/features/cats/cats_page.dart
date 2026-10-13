@@ -155,6 +155,8 @@ class CatsPage extends StatelessWidget {
               _setting(context, Icons.restaurant_outlined, '喂养', '热量估算和七日换粮', () => context.push('/feeding')),
               _setting(context, Icons.photo_outlined, '体态对比', '并排看较早和最近的照片', () => context.push('/photos')),
               _setting(context, Icons.pets_outlined, '当前档案', cat.name, () => context.push('/cat?id=${cat.id}')),
+              _setting(context, Icons.medical_services_outlined, '体检建议', '按年龄和品种', () => context.push('/checkups')),
+              _setting(context, Icons.healing_outlined, '疾病养护', '确诊后的居家护理', () => context.push('/diseases')),
               const SizedBox(height: 12),
               const DisclaimerBanner(),
             ],

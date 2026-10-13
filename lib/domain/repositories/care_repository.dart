@@ -79,4 +79,20 @@ abstract class CareRepository {
   Future<List<PantryEntry>> pantry();
   Future<int> upsertPantry(PantryDraft draft);
   Future<void> deletePantry(int id);
+
+  Future<List<ConditionRecord>> conditions();
+  Future<int> upsertCondition(ConditionDraft draft);
+  Future<void> deleteCondition(int id);
+
+  Future<List<CheckupRecord>> checkups();
+  Future<int> upsertCheckup(CheckupDraft draft);
+  Future<void> deleteCheckup(int id);
+
+  Future<List<WaterRecord>> waters();
+  Future<int> addWater({
+    required int catId,
+    required DateTime loggedOn,
+    required double milliliters,
+  });
+  Future<void> deleteWater(int id);
 }

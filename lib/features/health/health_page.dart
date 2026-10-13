@@ -7,6 +7,8 @@ import '../../core/theme/app_tokens.dart';
 import '../../core/widgets/common.dart';
 import '../../core/widgets/weight_chart.dart';
 import '../../domain/dates.dart';
+import '../../domain/health/disease_catalog.dart';
+import '../../domain/health/life_stage.dart';
 import '../../domain/models.dart';
 import '../../state/app_controller.dart';
 import '../records/record_sheets.dart';
@@ -45,6 +47,7 @@ class _HealthPageState extends State<HealthPage> {
                   Padding(
                     padding: const EdgeInsets.only(right: 22),
                     child: GestureDetector(
+                      key: Key('tab-${entry.$2}'),
                       onTap: () => setState(() => _tab = entry.$1),
                       child: Column(
                         children: [
@@ -159,9 +162,44 @@ class _HealthPageState extends State<HealthPage> {
   }
 
   List<Widget> _health(BuildContext context, AppController app) {
+    final cat = app.active!;
+    final stage = lifeStageFor(cat.birthday, app.now);
     final done = app.careRing.where((item) => item.done).length;
     final percent = app.careRing.isEmpty ? 0 : (done * 100 / app.careRing.length).round();
     return [
+      const Padding(
+        padding: EdgeInsets.only(bottom: 8),
+        child: Text(
+          '体检和疾病养护仅供参考，请遵医嘱。',
+          style: TextStyle(color: AppColors.olive, fontSize: 12, height: 1.4),
+        ),
+      ),
+      _linkCard(
+        title: '按年龄体检',
+        detail: '${ageLabel(cat.birthday, app.now)} · ${lifeStageLabel(stage)}',
+        onTap: () => context.push('/checkups'),
+      ),
+      for (final condition in app.catConditions)
+        _linkCard(
+          title: diseaseById(condition.diseaseId)?.name ?? '已标记的疾病',
+          detail:
+              '${condition.stageLabel.isEmpty ? '已确诊' : condition.stageLabel}'
+              '${condition.nextRecheck == null ? '' : ' · 复查 ${formatDate(condition.nextRecheck!)}'}',
+          onTap: () => context.push('/disease?id=${condition.diseaseId}'),
+        ),
+      _linkCard(
+        title: '疾病养护',
+        detail: '常见病的饮食、饮水、复查和警示',
+        onTap: () => context.push('/diseases'),
+      ),
+      Align(
+        alignment: Alignment.centerLeft,
+        child: OutlinedButton(
+          onPressed: () => showWaterSheet(context),
+          child: Text('记饮水 · 今日 ${app.todayWaterMl.round()} ml'),
+        ),
+      ),
+      const SizedBox(height: 16),
       SoftCard(
         child: Row(
           children: [
@@ -342,6 +380,26 @@ class _HealthPageState extends State<HealthPage> {
       case '疫苗日期':
         setState(() => _tab = 1);
     }
+  }
+
+  Widget _linkCard({
+    required String title,
+    required String detail,
+    required VoidCallback onTap,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: SoftCard(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+        child: ListTile(
+          contentPadding: EdgeInsets.zero,
+          title: Text(title, style: const TextStyle(fontWeight: FontWeight.w700)),
+          subtitle: Text(detail, style: const TextStyle(color: AppColors.muted)),
+          trailing: const Icon(Icons.chevron_right_rounded),
+          onTap: onTap,
+        ),
+      ),
+    );
   }
 
   Widget _record({

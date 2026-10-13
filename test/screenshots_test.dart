@@ -39,6 +39,25 @@ void main() {
     await _frames(tester);
     await _shot(tester, 'health');
 
+    await tester.tap(find.byKey(const Key('tab-健康')));
+    await _frames(tester);
+    await _shot(tester, 'health-care');
+    await _tapOnScreen(tester, '按年龄体检');
+    await _frames(tester);
+    await _shot(tester, 'checkups');
+    await tester.tap(find.byTooltip('返回'));
+    await _frames(tester);
+    await _tapOnScreen(tester, '慢性肾病');
+    await _frames(tester);
+    await _shot(tester, 'disease-ckd');
+    await tester.tap(find.byTooltip('返回'));
+    await _frames(tester);
+    await _tapOnScreen(tester, '疾病养护');
+    await _frames(tester);
+    await _shot(tester, 'diseases');
+    await tester.tap(find.byTooltip('返回'));
+    await _frames(tester);
+
     await tester.tap(find.text('互动'));
     await _frames(tester);
     await _shot(tester, 'health-notes');

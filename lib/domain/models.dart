@@ -507,3 +507,93 @@ class RecognitionSuggestion {
 abstract class CoatBreedRecognizer {
   Future<RecognitionSuggestion> recognize(String imagePath);
 }
+
+class ConditionRecord {
+  const ConditionRecord({
+    required this.id,
+    required this.catId,
+    required this.diseaseId,
+    required this.diagnosedOn,
+    required this.stageLabel,
+    required this.note,
+    this.nextRecheck,
+  });
+
+  final int id;
+  final int catId;
+  final String diseaseId;
+  final DateTime diagnosedOn;
+  final String stageLabel;
+  final String note;
+  final DateTime? nextRecheck;
+}
+
+class ConditionDraft {
+  const ConditionDraft({
+    this.id,
+    required this.catId,
+    required this.diseaseId,
+    required this.diagnosedOn,
+    this.stageLabel = '',
+    this.note = '',
+    this.nextRecheck,
+  });
+
+  final int? id;
+  final int catId;
+  final String diseaseId;
+  final DateTime diagnosedOn;
+  final String stageLabel;
+  final String note;
+  final DateTime? nextRecheck;
+}
+
+class CheckupRecord {
+  const CheckupRecord({
+    required this.id,
+    required this.catId,
+    required this.itemId,
+    required this.result,
+    this.completedOn,
+    this.nextDue,
+  });
+
+  final int id;
+  final int catId;
+  final String itemId;
+  final DateTime? completedOn;
+  final String result;
+  final DateTime? nextDue;
+}
+
+class CheckupDraft {
+  const CheckupDraft({
+    this.id,
+    required this.catId,
+    required this.itemId,
+    this.completedOn,
+    this.result = '',
+    this.nextDue,
+  });
+
+  final int? id;
+  final int catId;
+  final String itemId;
+  final DateTime? completedOn;
+  final String result;
+  final DateTime? nextDue;
+}
+
+class WaterRecord {
+  const WaterRecord({
+    required this.id,
+    required this.catId,
+    required this.loggedOn,
+    required this.milliliters,
+  });
+
+  final int id;
+  final int catId;
+  final DateTime loggedOn;
+  final double milliliters;
+}

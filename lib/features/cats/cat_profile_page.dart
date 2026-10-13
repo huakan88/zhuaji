@@ -6,6 +6,7 @@ import '../../core/theme/app_tokens.dart';
 import '../../core/widgets/common.dart';
 import '../../core/widgets/weight_chart.dart';
 import '../../domain/dates.dart';
+import '../../domain/health/disease_catalog.dart';
 import '../../domain/models.dart';
 import '../../state/app_controller.dart';
 
@@ -27,6 +28,9 @@ class CatProfilePage extends StatelessWidget {
       });
     }
     final ownPhotos = app.activeCatId == cat.id ? app.photos : const <CatPhoto>[];
+    final ownConditions = app.activeCatId == cat.id
+        ? app.catConditions
+        : const <ConditionRecord>[];
     final weights = app.weights.where((item) => item.catId == cat.id).toList();
     final vaccines = app.vaccines.where((item) => item.catId == cat.id).length;
     final deworms = app.deworms.where((item) => item.catId == cat.id).length;
@@ -203,6 +207,35 @@ class CatProfilePage extends StatelessWidget {
                       ),
                     ),
                   ],
+                ),
+                const SizedBox(height: 8),
+                OutlinedButton(
+                  onPressed: () async {
+                    await app.selectCat(cat.id);
+                    if (context.mounted) context.push('/checkups');
+                  },
+                  child: const Text('体检建议'),
+                ),
+                if (ownConditions.isEmpty)
+                  const Padding(
+                    padding: EdgeInsets.only(top: 8),
+                    child: Text('还没有标记确诊疾病', style: TextStyle(color: AppColors.muted)),
+                  )
+                else
+                  for (final condition in ownConditions)
+                    ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      title: Text(diseaseById(condition.diseaseId)?.name ?? '已标记的疾病'),
+                      subtitle: Text(condition.stageLabel.isEmpty ? '已确诊' : condition.stageLabel),
+                      trailing: const Icon(Icons.chevron_right_rounded),
+                      onTap: () => context.push('/disease?id=${condition.diseaseId}'),
+                    ),
+                TextButton(
+                  onPressed: () async {
+                    await app.selectCat(cat.id);
+                    if (context.mounted) context.push('/diseases');
+                  },
+                  child: const Text('疾病养护'),
                 ),
                 TextButton(
                   onPressed: () async {

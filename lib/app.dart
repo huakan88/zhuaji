@@ -9,6 +9,8 @@ import 'features/cats/cat_profile_page.dart';
 import 'features/cats/cats_page.dart';
 import 'features/cats/photo_page.dart';
 import 'features/feeding/feeding_page.dart';
+import 'features/health/checkups_page.dart';
+import 'features/health/disease_page.dart';
 import 'features/health/health_page.dart';
 import 'features/home/home_page.dart';
 import 'features/pantry/pantry_page.dart';
@@ -89,6 +91,14 @@ class _ZhuajiAppState extends State<ZhuajiApp> {
       GoRoute(path: '/photos', builder: (_, _) => const PhotoPage()),
       GoRoute(path: '/feeding', builder: (_, _) => const FeedingPage()),
       GoRoute(path: '/reminders', builder: (_, _) => const RemindersPage()),
+      GoRoute(path: '/checkups', builder: (_, _) => const CheckupsPage()),
+      GoRoute(path: '/diseases', builder: (_, _) => const DiseaseLibraryPage()),
+      GoRoute(
+        path: '/disease',
+        builder: (context, state) => DiseaseDetailPage(
+          diseaseId: state.uri.queryParameters['id'] ?? '',
+        ),
+      ),
     ],
   );
 

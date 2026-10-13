@@ -3,6 +3,8 @@ import 'package:flutter/foundation.dart';
 import '../core/format.dart';
 import '../domain/dates.dart';
 import '../domain/feeding/feeding_math.dart';
+import '../domain/health/checkup_catalog.dart';
+import '../domain/health/disease_catalog.dart';
 import '../domain/models.dart';
 import '../domain/reminders/reminder_planner.dart';
 import '../domain/repositories/care_repository.dart';
@@ -56,6 +58,9 @@ class AppController extends ChangeNotifier {
   List<FeedingReminder> feedingSlots = [];
   List<FoodProduct> products = [];
   List<PantryEntry> pantry = [];
+  List<ConditionRecord> conditions = [];
+  List<CheckupRecord> checkups = [];
+  List<WaterRecord> waters = [];
   String? permissionNote;
 
   DateTime get now => _clock();
@@ -79,6 +84,16 @@ class AppController extends ChangeNotifier {
       notes.where((item) => item.catId == activeCatId).toList();
   List<FeedingRecord> get catFeedings =>
       feedings.where((item) => item.catId == activeCatId).toList();
+  List<ConditionRecord> get catConditions =>
+      conditions.where((item) => item.catId == activeCatId).toList();
+  List<CheckupRecord> get catCheckups =>
+      checkups.where((item) => item.catId == activeCatId).toList();
+  List<WaterRecord> get catWaters =>
+      waters.where((item) => item.catId == activeCatId).toList();
+
+  double get todayWaterMl => catWaters
+      .where((item) => isSameDay(item.loggedOn, now))
+      .fold<double>(0, (sum, item) => sum + item.milliliters);
 
   WeightRecord? get latestWeight =>
       catWeights.isEmpty ? null : catWeights.last;
@@ -416,6 +431,129 @@ class AppController extends ChangeNotifier {
     await _refresh();
   }
 
+  ConditionRecord? conditionFor(String diseaseId) {
+    for (final item in catConditions) {
+      if (item.diseaseId == diseaseId) return item;
+    }
+    return null;
+  }
+
+  List<CheckupRecord> checkupsFor(String itemId) =>
+      catCheckups.where((item) => item.itemId == itemId).toList();
+
+  Future<String?> scheduleCheckup({
+    required String itemId,
+    required int intervalDays,
+  }) async {
+    final cat = active;
+    if (cat == null) return '先选择一只猫';
+    final pending = catCheckups.any(
+      (item) =>
+          item.itemId == itemId &&
+          item.nextDue != null &&
+          dateOnly(item.nextDue!).isAfter(dateOnly(now)),
+    );
+    if (pending) return '这项已经有未到的提醒';
+    await repo.upsertCheckup(
+      CheckupDraft(
+        catId: cat.id,
+        itemId: itemId,
+        nextDue: dateOnly(now).add(Duration(days: intervalDays)),
+      ),
+    );
+    await _refresh();
+    return null;
+  }
+
+  Future<void> completeCheckup({
+    required String itemId,
+    required String result,
+    required int intervalDays,
+  }) async {
+    final cat = active;
+    if (cat == null) return;
+    await repo.upsertCheckup(
+      CheckupDraft(
+        catId: cat.id,
+        itemId: itemId,
+        completedOn: dateOnly(now),
+        result: result.trim(),
+        nextDue: dateOnly(now).add(Duration(days: intervalDays)),
+      ),
+    );
+    await _refresh();
+  }
+
+  Future<void> removeCheckup(int id) async {
+    await repo.deleteCheckup(id);
+    await _refresh();
+  }
+
+  Future<void> markDisease({
+    required String diseaseId,
+    String stageLabel = '',
+  }) async {
+    final cat = active;
+    final info = diseaseById(diseaseId);
+    if (cat == null || info == null) return;
+    final existing = conditionFor(diseaseId);
+    await repo.upsertCondition(
+      ConditionDraft(
+        id: existing?.id,
+        catId: cat.id,
+        diseaseId: diseaseId,
+        diagnosedOn: existing?.diagnosedOn ?? dateOnly(now),
+        stageLabel: stageLabel,
+        note: existing?.note ?? '',
+        nextRecheck:
+            existing?.nextRecheck ??
+            dateOnly(now).add(Duration(days: info.recheckDays)),
+      ),
+    );
+    await _refresh();
+  }
+
+  Future<void> setRecheck(int id, DateTime date) async {
+    ConditionRecord? found;
+    for (final item in conditions) {
+      if (item.id == id) found = item;
+    }
+    if (found == null) return;
+    await repo.upsertCondition(
+      ConditionDraft(
+        id: found.id,
+        catId: found.catId,
+        diseaseId: found.diseaseId,
+        diagnosedOn: found.diagnosedOn,
+        stageLabel: found.stageLabel,
+        note: found.note,
+        nextRecheck: dateOnly(date),
+      ),
+    );
+    await _refresh();
+  }
+
+  Future<void> removeCondition(int id) async {
+    await repo.deleteCondition(id);
+    await _refresh();
+  }
+
+  Future<void> addWater(double milliliters) async {
+    final cat = active;
+    if (cat == null) return;
+    await repo.addWater(
+      catId: cat.id,
+      loggedOn: now,
+      milliliters: milliliters,
+    );
+    await _refresh();
+  }
+
+  Future<void> removeWater(int id) async {
+    await repo.deleteWater(id);
+    await _refresh();
+  }
+
   FoodProduct? productById(int id) {
     for (final product in products) {
       if (product.id == id) return product;
@@ -471,6 +609,9 @@ class AppController extends ChangeNotifier {
     feedingSlots = await repo.feedingReminders();
     products = await repo.products();
     pantry = await repo.pantry();
+    conditions = await repo.conditions();
+    checkups = await repo.checkups();
+    waters = await repo.waters();
     final epoch = _selectEpoch;
     final photoCatId = activeCatId;
     final nextPhotos = photoCatId == null
@@ -552,6 +693,26 @@ class AppController extends ChangeNotifier {
               toFood: plan.toFood,
               startDate: plan.startDate,
               days: plan.days,
+            ),
+      ],
+      followUps: [
+        for (final item in checkups)
+          if (item.nextDue != null)
+            FollowUpInput(
+              id: item.id,
+              catName: _name(item.catId),
+              label: checkupById(item.itemId)?.name ?? '体检',
+              dueDate: item.nextDue!,
+              recheck: false,
+            ),
+        for (final item in conditions)
+          if (item.nextRecheck != null)
+            FollowUpInput(
+              id: item.id,
+              catName: _name(item.catId),
+              label: diseaseById(item.diseaseId)?.name ?? '复查',
+              dueDate: item.nextRecheck!,
+              recheck: true,
             ),
       ],
     );

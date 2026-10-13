@@ -81,6 +81,24 @@ class FeedingInput {
   final bool enabled;
 }
 
+class FollowUpInput {
+  const FollowUpInput({
+    required this.id,
+    required this.catName,
+    required this.label,
+    required this.dueDate,
+    required this.recheck,
+  });
+
+  final int id;
+  final String catName;
+  final String label;
+  final DateTime dueDate;
+
+  /// True for a disease recheck, false for a checkup reminder.
+  final bool recheck;
+}
+
 class TransitionInput {
   const TransitionInput({
     required this.id,
@@ -115,10 +133,14 @@ class ReminderPlanner {
     List<OpenedInput> opened = const [],
     List<FeedingInput> feedings = const [],
     List<TransitionInput> transitions = const [],
+    List<FollowUpInput> followUps = const [],
   }) {
     final items = <PlannedNotification>[];
     for (final due in dues) {
       items.addAll(_due(due, now));
+    }
+    for (final follow in followUps) {
+      items.addAll(_followUp(follow, now));
     }
     for (final expiry in expiries) {
       items.addAll(_expiry(expiry, now));
@@ -151,6 +173,24 @@ class ReminderPlanner {
       bodyFor: (offset) => offset == 0
           ? '今天是「${due.label}」的计划日期。这只是提醒，不能代替兽医判断。'
           : '还有 7 天到「${due.label}」的计划日期。',
+      channel: ReminderChannel.health,
+    );
+  }
+
+  List<PlannedNotification> _followUp(FollowUpInput follow, DateTime now) {
+    final base = follow.recheck ? 80000000 : 70000000;
+    final kind = follow.recheck ? '复查' : '体检';
+    return _offsets(
+      day: follow.dueDate,
+      now: now,
+      offsets: const [7, 0],
+      idFor: (offset) => base + (offset == 7 ? 0 : 1000000) + follow.id,
+      titleFor: (offset) => offset == 0
+          ? '${follow.catName}的$kind日'
+          : '${follow.catName}的$kind将至',
+      bodyFor: (offset) => offset == 0
+          ? '今天是「${follow.label}」的计划日期。仅供参考，请遵医嘱。'
+          : '还有 7 天到「${follow.label}」。',
       channel: ReminderChannel.health,
     );
   }

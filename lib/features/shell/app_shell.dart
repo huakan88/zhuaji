@@ -135,6 +135,7 @@ class _AppShellState extends State<AppShell> {
           (Icons.local_hospital_outlined, '记就医', () => showVisitSheet(context)),
           (Icons.edit_note_outlined, '写笔记', () => showNoteSheet(context)),
           (Icons.swap_horiz_rounded, '开始换粮', () => context.push('/feeding')),
+          (Icons.water_drop_outlined, '记饮水', () => showWaterSheet(context)),
         ];
         final maxHeight = MediaQuery.sizeOf(sheetContext).height * 0.72;
         return ConstrainedBox(

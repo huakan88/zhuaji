@@ -424,6 +424,80 @@ Future<void> _sheet(
   );
 }
 
+Future<void> showWaterSheet(BuildContext context) async {
+  final app = AppScope.of<AppController>(context);
+  if (app.active == null) {
+    showMessage(context, '先选择一只猫');
+    return;
+  }
+  final amount = TextEditingController();
+  try {
+    await _sheet(
+      context,
+      title: '记录饮水',
+      child: TextField(
+        controller: amount,
+        keyboardType: const TextInputType.numberWithOptions(decimal: true),
+        decoration: const InputDecoration(
+          labelText: '大约喝了多少毫升',
+          hintText: '例如 180',
+        ),
+      ),
+      onSubmit: () async {
+        final value = double.tryParse(amount.text.trim());
+        if (value == null || value < 1 || value > 2000) {
+          return '饮水量请填 1 到 2000 毫升';
+        }
+        await app.addWater(value);
+        return null;
+      },
+    );
+  } finally {
+    amount.dispose();
+  }
+}
+
+Future<void> showCheckupResultSheet(
+  BuildContext context, {
+  required String itemId,
+  required String itemName,
+  required int intervalDays,
+}) async {
+  final app = AppScope.of<AppController>(context);
+  if (app.active == null) {
+    showMessage(context, '先选择一只猫');
+    return;
+  }
+  final result = TextEditingController();
+  try {
+    await _sheet(
+      context,
+      title: '记录$itemName',
+      child: TextField(
+        controller: result,
+        minLines: 2,
+        maxLines: 4,
+        decoration: const InputDecoration(
+          labelText: '兽医怎么说',
+          hintText: '写下结论或报告要点，不要只写“正常”',
+        ),
+      ),
+      onSubmit: () async {
+        final text = result.text.trim();
+        if (text.isEmpty) return '先写一点检查结果';
+        await app.completeCheckup(
+          itemId: itemId,
+          result: text,
+          intervalDays: intervalDays,
+        );
+        return null;
+      },
+    );
+  } finally {
+    result.dispose();
+  }
+}
+
 Widget _dateTile(String label, DateTime date, VoidCallback onTap) {
   return ListTile(
     contentPadding: EdgeInsets.zero,
