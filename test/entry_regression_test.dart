@@ -44,7 +44,9 @@ void main() {
 
     await tapText(tester, '今天');
     await tapText(tester, '室内成猫全价粮');
-    expect(find.text('室内成猫全价粮'), findsNothing);
+    expect(find.text('已吃完'), findsOneWidget);
+    expect(find.text('删除'), findsOneWidget);
+    await tapText(tester, '已吃完');
     expect(
       controller.pantry.any((item) => item.product.name == '室内成猫全价粮'),
       isFalse,

@@ -68,6 +68,11 @@ class _CheckupCard extends StatelessWidget {
           advice.item.name,
           style: zhuaji.copyWith(fontWeight: FontWeight.w700, fontSize: 16),
         ),
+        const SizedBox(height: 4),
+        Text(
+          advice.plan.frequency,
+          style: zhuaji.copyWith(color: AppColors.muted, height: 1.35),
+        ),
         if (nextDue != null) ...[
           const SizedBox(height: 4),
           Text(

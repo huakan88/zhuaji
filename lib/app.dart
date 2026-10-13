@@ -7,9 +7,14 @@ import 'core/widgets/common.dart';
 import 'features/cats/cat_form_page.dart';
 import 'features/cats/cats_page.dart';
 import 'features/health/checkups_page.dart';
+import 'features/health/deworms_page.dart';
 import 'features/health/disease_page.dart';
+import 'features/health/vaccines_page.dart';
+import 'features/health/visits_page.dart';
 import 'features/home/home_page.dart';
+import 'features/pantry/bag_page.dart';
 import 'features/pantry/confirm_page.dart';
+import 'features/pantry/pantry_page.dart';
 import 'features/pantry/scan_page.dart';
 import 'features/shell/app_shell.dart';
 import 'state/app_controller.dart';
@@ -49,11 +54,20 @@ class _ZhuajiAppState extends State<ZhuajiApp> {
             ConfirmPage(code: state.uri.queryParameters['code'] ?? ''),
       ),
       GoRoute(
+        path: '/bag',
+        builder: (context, state) =>
+            BagPage(pantryId: int.parse(state.uri.queryParameters['id']!)),
+      ),
+      GoRoute(
         path: '/cat-form',
         builder: (context, state) => CatFormPage(
           catId: int.tryParse(state.uri.queryParameters['id'] ?? ''),
         ),
       ),
+      GoRoute(path: '/vaccines', builder: (_, _) => const VaccinesPage()),
+      GoRoute(path: '/deworms', builder: (_, _) => const DewormsPage()),
+      GoRoute(path: '/visits', builder: (_, _) => const VisitsPage()),
+      GoRoute(path: '/pantry', builder: (_, _) => const PantryPage()),
       GoRoute(path: '/checkups', builder: (_, _) => const CheckupsPage()),
       GoRoute(path: '/diseases', builder: (_, _) => const DiseaseLibraryPage()),
       GoRoute(

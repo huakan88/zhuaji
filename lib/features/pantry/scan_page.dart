@@ -5,7 +5,6 @@ import 'package:go_router/go_router.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 
 import '../../core/theme/app_fonts.dart';
-import '../../core/widgets/common.dart';
 
 class ScanPage extends StatefulWidget {
   const ScanPage({super.key});
@@ -69,12 +68,23 @@ class _ScanPageState extends State<ScanPage> {
                           ),
                         ],
                       )
-                    : TextButton(
-                        onPressed: () => setState(() => _manualOpen = true),
-                        child: Text(
-                          '手输',
-                          style: zhuaji.copyWith(color: Colors.white),
-                        ),
+                    : Row(
+                        children: [
+                          TextButton(
+                            onPressed: () => setState(() => _manualOpen = true),
+                            child: Text(
+                              '手输',
+                              style: zhuaji.copyWith(color: Colors.white),
+                            ),
+                          ),
+                          TextButton(
+                            onPressed: () => _openConfirm(''),
+                            child: Text(
+                              '没扫到',
+                              style: zhuaji.copyWith(color: Colors.white),
+                            ),
+                          ),
+                        ],
                       ),
               ),
             ),
@@ -108,14 +118,20 @@ class _ScanPageState extends State<ScanPage> {
     final value = raw.trim();
     if (_handled) return;
     if (value.isEmpty) {
-      showMessage(context, '还没扫到');
+      await _openConfirm('');
       return;
     }
+    await _openConfirm(value);
+  }
+
+  Future<void> _openConfirm(String value) async {
+    if (_handled) return;
     _handled = true;
     try {
       await _camera?.stop();
     } catch (_) {}
     if (!mounted) return;
-    context.pushReplacement('/confirm?code=${Uri.encodeComponent(value)}');
+    final query = value.isEmpty ? '' : '?code=${Uri.encodeComponent(value)}';
+    context.pushReplacement('/confirm$query');
   }
 }

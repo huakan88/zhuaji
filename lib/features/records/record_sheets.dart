@@ -13,14 +13,15 @@ Future<DateTime?> pickDate(BuildContext context, DateTime initial) {
   return pickDateWheel(context, initial);
 }
 
-Future<void> showWeightSheet(BuildContext context) async {
+Future<bool> showWeightSheet(BuildContext context) async {
   final app = AppScope.of<AppController>(context);
-  if (app.active == null) return;
+  if (app.active == null) return false;
   final kg = ValueNotifier<double>(app.latestWeight?.weightKg ?? 4);
+  var saved = false;
   try {
     await _sheet(
       context,
-      title: '记录体重',
+      title: '记体重',
       child: ValueListenableBuilder<double>(
         valueListenable: kg,
         builder: (context, value, _) => Column(
@@ -61,12 +62,14 @@ Future<void> showWeightSheet(BuildContext context) async {
         final value = kg.value;
         if (value <= 0 || value > 20) return '请填写 0 到 20 kg 之间的体重';
         await app.addWeight(value);
+        saved = true;
         return null;
       },
     );
   } finally {
     kg.dispose();
   }
+  return saved;
 }
 
 Future<void> showVaccineSheet(
@@ -84,14 +87,14 @@ Future<void> showVaccineSheet(
   try {
     await _sheet(
       context,
-      title: existing == null ? '添加疫苗' : '编辑疫苗',
+      title: '记疫苗',
       child: StatefulBuilder(
         builder: (context, setState) => Column(
           children: [
             Align(
               alignment: Alignment.centerLeft,
               child: Text(
-                '下次日期已按接种日自动算好',
+                '下次已按接种日算好，不对就改',
                 style: zhuaji.copyWith(color: AppColors.muted, fontSize: 12),
               ),
             ),
@@ -172,7 +175,7 @@ Future<void> showDewormSheet(
   try {
     await _sheet(
       context,
-      title: existing == null ? '添加驱虫' : '编辑驱虫',
+      title: '记驱虫',
       child: StatefulBuilder(
         builder: (context, setState) => Column(
           children: [
@@ -257,7 +260,7 @@ Future<void> showVisitSheet(BuildContext context, {VetRecord? existing}) async {
   try {
     await _sheet(
       context,
-      title: existing == null ? '就医记录' : '编辑就医',
+      title: '记就医',
       child: StatefulBuilder(
         builder: (context, setState) => Column(
           children: [

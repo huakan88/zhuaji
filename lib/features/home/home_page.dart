@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../core/format.dart';
 import '../../core/theme/app_fonts.dart';
 import '../../core/theme/app_tokens.dart';
 import '../../domain/dates.dart';
 import '../../core/widgets/common.dart';
 import '../../domain/models.dart';
 import '../../state/app_controller.dart';
+import '../records/record_sheets.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -48,7 +48,15 @@ class HomePage extends StatelessWidget {
             ),
           ],
           const SizedBox(height: 28),
-          for (final todo in todos.take(3)) ...[
+          if (todos.isEmpty)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Text(
+                '今天没什么要办',
+                style: zhuaji.copyWith(color: AppColors.muted),
+              ),
+            ),
+          for (final todo in todos) ...[
             _TodoRow(todo: todo),
             const SizedBox(height: 8),
           ],
@@ -72,11 +80,15 @@ class HomePage extends StatelessWidget {
   List<_Todo> _todos(BuildContext context, AppController app, CatProfile? cat) {
     final items = <_Todo>[];
     final soon = dateOnly(app.now).add(const Duration(days: 30));
+    final today = dateOnly(app.now);
     final foods =
         [
           for (final entry in app.pantry)
-            if (_foodDue(entry, soon)) entry,
+            if (_foodDue(entry, soon) || _openedToday(entry, today)) entry,
         ]..sort((a, b) {
+          final aFresh = _openedToday(a, today);
+          final bFresh = _openedToday(b, today);
+          if (aFresh != bFresh) return aFresh ? -1 : 1;
           final left = a.item.expiryDate ?? _useBy(a) ?? app.now;
           final right = b.item.expiryDate ?? _useBy(b) ?? app.now;
           return left.compareTo(right);
@@ -87,9 +99,7 @@ class HomePage extends StatelessWidget {
           title: '到期粮',
           detail: entry.product.name,
           onTap: () async {
-            await app.removePantry(entry.item.id);
-            if (!context.mounted) return;
-            showMessage(context, '这袋记下了');
+            await context.push('/bag?id=${entry.item.id}');
           },
         ),
       );
@@ -108,9 +118,25 @@ class HomePage extends StatelessWidget {
             title: '疫苗',
             detail: shot.name,
             onTap: () async {
-              final next = await app.completeVaccine(shot);
-              if (!context.mounted) return;
-              showMessage(context, '下次 ${formatDate(next)}');
+              await context.push('/vaccines');
+            },
+          ),
+        );
+      }
+      final soonDeworm = dateOnly(app.now).add(const Duration(days: 30));
+      final worms = [
+        for (final item in app.catDeworms)
+          if (item.nextDue != null &&
+              !dateOnly(item.nextDue!).isAfter(soonDeworm))
+            item,
+      ]..sort((a, b) => a.nextDue!.compareTo(b.nextDue!));
+      for (final item in worms) {
+        items.add(
+          _Todo(
+            title: '驱虫',
+            detail: item.product,
+            onTap: () async {
+              await context.push('/deworms');
             },
           ),
         );
@@ -122,9 +148,9 @@ class HomePage extends StatelessWidget {
             title: '体重',
             detail: kg == null ? '去称一下' : '${kg.toStringAsFixed(2)} kg',
             onTap: () async {
+              final saved = await showWeightSheet(context);
+              if (!saved || !context.mounted) return;
               await app.ackWeightAlert(cat);
-              if (!context.mounted) return;
-              showMessage(context, '知道了');
             },
           ),
         );
@@ -139,6 +165,12 @@ class HomePage extends StatelessWidget {
     final useBy = _useBy(entry);
     if (useBy != null && !dateOnly(useBy).isAfter(soon)) return true;
     return false;
+  }
+
+  bool _openedToday(PantryEntry entry, DateTime today) {
+    final opened = entry.item.openedAt;
+    if (opened == null) return false;
+    return dateOnly(opened) == today;
   }
 
   DateTime? _useBy(PantryEntry entry) {
@@ -189,6 +221,7 @@ class _TodoRow extends StatelessWidget {
                   style: zhuaji.copyWith(color: AppColors.muted),
                 ),
               ),
+              const Icon(Icons.chevron_right, color: AppColors.muted, size: 20),
             ],
           ),
         ),
