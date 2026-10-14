@@ -46,3 +46,25 @@ app.*.map.json
 
 # Widget Preview related
 .widget_preview/
+
+# Secrets and machine-local config
+.env
+.env.*
+!.env.example
+*.pem
+*.p12
+*.key
+secrets/
+**/google-services.json
+**/GoogleService-Info.plist
+**/local.properties
+**/key.properties
+**/*.keystore
+**/*.jks
+
+# Build outputs and installable packages
+**/build/
+*.apk
+*.aab
+*.ipa
+*.dSYM.zip
