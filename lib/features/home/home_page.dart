@@ -24,6 +24,10 @@ class HomePage extends StatelessWidget {
         child: ListView(
           padding: const EdgeInsets.fromLTRB(20, 4, 20, 108),
           children: [
+            if (app.cats.length > 1) ...[
+              _CatSwitch(app: app, activeCount: todos.length),
+              const SizedBox(height: 12),
+            ],
             if (cat != null)
               HeroCard(
                 path: cat.avatarPath,
@@ -155,6 +159,92 @@ class HomePage extends StatelessWidget {
     final opened = entry.item.openedAt;
     if (opened == null || entry.openWindowDays <= 0) return null;
     return dateOnly(opened).add(Duration(days: entry.openWindowDays));
+  }
+}
+
+class _CatSwitch extends StatelessWidget {
+  const _CatSwitch({required this.app, required this.activeCount});
+
+  final AppController app;
+  final int activeCount;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 44,
+      child: ListView(
+        scrollDirection: Axis.horizontal,
+        children: [
+          for (final item in app.cats) ...[
+            _CatPill(
+              cat: item,
+              count: item.id == app.activeCatId
+                  ? activeCount
+                  : app.dueCountFor(item),
+              selected: item.id == app.activeCatId,
+              onTap: () => app.selectCat(item.id),
+            ),
+            const SizedBox(width: 8),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _CatPill extends StatelessWidget {
+  const _CatPill({
+    required this.cat,
+    required this.count,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final CatProfile cat;
+  final int count;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(4, 4, 14, 4),
+        decoration: BoxDecoration(
+          color: selected ? AppColors.tintCoral : AppColors.card,
+          borderRadius: BorderRadius.circular(999),
+          border: Border.all(
+            color: selected ? AppColors.coralDeep : AppColors.line,
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ClipOval(
+              child: SizedBox(
+                width: 34,
+                height: 34,
+                child: CatImage(path: cat.avatarPath),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Text(
+              cat.name,
+              style: zhuaji.copyWith(fontSize: 14, fontWeight: FontWeight.w700),
+            ),
+            const SizedBox(width: 6),
+            Text(
+              count == 0 ? '没事' : '$count 件',
+              style: zhuaji.copyWith(
+                fontSize: 12,
+                color: count == 0 ? AppColors.muted : AppColors.coralDeep,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }
 

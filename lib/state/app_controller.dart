@@ -464,6 +464,21 @@ class AppController extends ChangeNotifier {
     return !weightAcks.contains(weightAckKey(cat.id, change));
   }
 
+  /// Vaccines, deworming and weight alerts due within 30 days for one cat.
+  int dueCountFor(CatProfile cat) {
+    final soon = dateOnly(now).add(const Duration(days: 30));
+    bool due(DateTime? date) => date != null && !dateOnly(date).isAfter(soon);
+    var count = 0;
+    for (final item in vaccines) {
+      if (item.catId == cat.id && due(item.nextDue)) count++;
+    }
+    for (final item in deworms) {
+      if (item.catId == cat.id && due(item.nextDue)) count++;
+    }
+    if (weightAlertVisible(cat)) count++;
+    return count;
+  }
+
   Future<void> ackWeightAlert(CatProfile cat) async {
     final change = weightChangeOverMonth(
       weights.where((item) => item.catId == cat.id).toList(),
