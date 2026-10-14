@@ -128,4 +128,32 @@ void main() {
       expect(byId(wet, 42000006)?.when, DateTime(2026, 10, 14, 9));
     },
   );
+
+  test('restock reminds 7 days ahead, and a snooze only keeps that morning', () {
+    final items = planner.plan(
+      now: now,
+      stocks: [
+        StockInput(
+          id: 8,
+          productName: '室内成猫全价粮',
+          runOut: DateTime(2026, 10, 20),
+        ),
+      ],
+    );
+    expect(byId(items, 50000008)?.when, DateTime(2026, 10, 13, 9));
+    expect(byId(items, 51000008)?.body, contains('今天会吃完'));
+    final snoozed = planner.plan(
+      now: now,
+      stocks: [
+        StockInput(
+          id: 8,
+          productName: '室内成猫全价粮',
+          runOut: DateTime(2026, 10, 19),
+          snoozed: true,
+        ),
+      ],
+    );
+    expect(byId(snoozed, 50000008), isNull);
+    expect(byId(snoozed, 51000008)?.when, DateTime(2026, 10, 19, 9));
+  });
 }

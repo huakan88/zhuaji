@@ -1,6 +1,7 @@
 import '../dates.dart';
 import '../health/checkup_catalog.dart';
 import '../health/disease_catalog.dart';
+import '../health/lab_catalog.dart';
 import '../models.dart';
 
 enum CareKind { vaccine, deworm, visit, checkup, weight }
@@ -94,6 +95,8 @@ String vetCard({
   required List<WeightRecord> weights,
   required List<ConditionRecord> conditions,
   required DateTime now,
+  List<LabReport> labs = const [],
+  List<FoodProduct> foods = const [],
 }) {
   String day(DateTime date) =>
       '${date.year}-${_two(date.month)}-${_two(date.day)}';
@@ -128,8 +131,11 @@ String vetCard({
       if (item.catId == cat.id) item,
   ]..sort((a, b) => b.givenOn.compareTo(a.givenOn));
   for (final item in shots.take(3)) {
+    final batch = item.batch == null || item.batch!.trim().isEmpty
+        ? ''
+        : '，批号 ${item.batch!.trim()}';
     final next = item.nextDue == null ? '' : '，下次 ${day(item.nextDue!)}';
-    lines.add('疫苗 ${item.name}：${day(item.givenOn)}$next');
+    lines.add('疫苗 ${item.name}：${day(item.givenOn)}$batch$next');
   }
 
   final worms = [
@@ -157,6 +163,32 @@ String vetCard({
         ? ''
         : ' · ${last.clinic}';
     lines.add('上次就医：${day(last.visitedOn)} ${last.reason}$where');
+  }
+
+  final catLabs = [
+    for (final report in labs)
+      if (report.catId == cat.id) report,
+  ]..sort((a, b) => b.takenOn.compareTo(a.takenOn));
+  for (final report in catLabs.take(2)) {
+    final bits = <String>[];
+    for (final value in report.values) {
+      final reading = readLabValue(value);
+      if (reading == null || bits.length >= 3) continue;
+      bits.add('${value.code} ${reading.flagLabel}');
+    }
+    final summary = bits.isEmpty ? '已存档' : bits.join('，');
+    lines.add(
+      '化验 ${day(report.takenOn)} ${labKindLabel(report.kind)}：$summary',
+    );
+  }
+
+  final custom = [
+    for (final food in foods)
+      if (food.isCustom) food,
+  ];
+  for (final food in custom.take(3)) {
+    final spec = food.spec.trim().isEmpty ? '' : ' ${food.spec.trim()}';
+    lines.add('自定义猫粮：${food.brand} ${food.name}$spec');
   }
 
   lines.add('由爪记整理于 ${day(dateOnly(now))}，仅供参考，请遵医嘱。');

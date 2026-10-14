@@ -79,6 +79,57 @@ void main() {
     expect(card, isNot(contains('奶油')));
   });
 
+  test('vet card adds labs, custom food and a confirmed lot', () {
+    final orange = named('橘座');
+    final card = vetCard(
+      cat: orange,
+      vaccines: [
+        VaccineRecord(
+          id: 1,
+          catId: orange.id,
+          name: '猫三联',
+          givenOn: DateTime(2026, 3, 12),
+          notes: '',
+          batch: 'A12B-3391',
+        ),
+      ],
+      deworms: const [],
+      visits: const [],
+      weights: controller.weights,
+      conditions: const [],
+      now: controller.now,
+      labs: [
+        LabReport(
+          id: 2,
+          catId: orange.id,
+          kind: LabKind.cbc,
+          takenOn: DateTime(2026, 9, 1),
+          photos: const [],
+          values: const [LabValue(code: 'WBC', value: 18.2, unit: '10^9/L')],
+          createdAt: DateTime(2026, 9, 1),
+        ),
+      ],
+      foods: const [
+        FoodProduct(
+          id: 3,
+          brand: '山野',
+          name: '冻干双拼',
+          spec: '1.5kg',
+          foodForm: FoodForm.freezeDried,
+          storageMethod: '',
+          afterOpenDays: 30,
+          isSample: false,
+          isCustom: true,
+        ),
+      ],
+    );
+    expect(card, contains('体重 4.35 kg'));
+    expect(card, contains('批号 A12B-3391'));
+    expect(card, contains('化验 2026-09-01 血常规：WBC 偏高'));
+    expect(card, contains('自定义猫粮：山野 冻干双拼 1.5kg'));
+    expect(card, contains('请遵医嘱'));
+  });
+
   test('trend label reads weeks and signed change', () {
     final orange = named('橘座');
     final points = controller.weights

@@ -55,7 +55,7 @@ void main() {
     );
     await controller.init();
     final cat = controller.active!;
-    await controller.saveFood(
+    final customId = await controller.saveFood(
       const FoodDraft(
         brand: '山野',
         name: '冻干双拼',
@@ -67,6 +67,16 @@ void main() {
         isCustom: true,
       ),
       barcode: '6901111222233',
+    );
+    await controller.savePantry(
+      PantryDraft(
+        productId: customId,
+        dateSource: DateSource.manual,
+        openedAt: DateTime(2026, 9, 30),
+        expiryDate: DateTime(2027, 6, 1),
+        afterOpenDays: 0,
+        dailyGrams: 80,
+      ),
     );
     await controller.saveLab(
       LabDraft(
@@ -96,6 +106,15 @@ void main() {
     await _frames(tester);
     await _shot(tester, 'today');
 
+    await _tapOnScreen(tester, '未来 30 天');
+    await _frames(tester);
+    await _shot(tester, 'calendar');
+    await _tapOnScreen(tester, '18');
+    await _frames(tester);
+    await _shot(tester, 'calendar-day');
+    await tester.tap(find.byTooltip('返回'));
+    await _frames(tester);
+
     await _tapOnScreen(tester, '猫三联');
     await _frames(tester);
     await _frames(tester);
@@ -113,6 +132,20 @@ void main() {
     await _tapOnScreen(tester, '疫苗');
     await _frames(tester);
     await _shot(tester, 'vaccine');
+    await _tapOnScreen(tester, '拍贴纸');
+    await _frames(tester);
+    await _shot(tester, 'sticker');
+    unawaited(
+      GoRouter.of(tester.element(find.byType(Scaffold).last)).push(
+        '/sticker?demo=1',
+      ),
+    );
+    await _frames(tester);
+    await _shot(tester, 'sticker-confirm');
+    await tester.tap(find.byTooltip('返回'));
+    await _frames(tester);
+    await tester.tap(find.byTooltip('返回'));
+    await _frames(tester);
     await tester.tap(find.byTooltip('返回'));
     await _frames(tester);
 
@@ -194,6 +227,11 @@ void main() {
     await _tapOnScreen(tester, '粮仓');
     await _frames(tester);
     await _shot(tester, 'pantry');
+    await _tapOnScreen(tester, '冻干双拼');
+    await _frames(tester);
+    await _shot(tester, 'bag-stock');
+    await tester.tap(find.byTooltip('返回'));
+    await _frames(tester);
 
     await _tapOnScreen(tester, '图鉴');
     await _frames(tester);
@@ -293,7 +331,7 @@ Future<void> _shot(WidgetTester tester, String name) async {
     );
     final image = await boundary.toImage(pixelRatio: 2);
     final data = await image.toByteData(format: ui.ImageByteFormat.png);
-    final file = File('/opt/cursor/artifacts/screenshots/v270/$name.png');
+    final file = File('/opt/cursor/artifacts/screenshots/v280/$name.png');
     await file.parent.create(recursive: true);
     await file.writeAsBytes(data!.buffer.asUint8List());
   });

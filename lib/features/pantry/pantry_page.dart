@@ -6,6 +6,7 @@ import '../../core/theme/app_fonts.dart';
 import '../../core/theme/app_tokens.dart';
 import '../../core/widgets/common.dart';
 import '../../domain/dates.dart';
+import '../../domain/food/stock.dart';
 import '../../domain/models.dart';
 import '../../state/app_controller.dart';
 
@@ -110,7 +111,7 @@ class _BagRow extends StatelessWidget {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  entry.item.openedAt == null ? '没开封' : '已开封',
+                  _stockLine(entry, app.now),
                   style: zhuaji.copyWith(fontSize: 12, color: AppColors.muted),
                 ),
               ],
@@ -124,6 +125,17 @@ class _BagRow extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  String _stockLine(PantryEntry entry, DateTime now) {
+    final estimate = estimateStock(
+      spec: entry.product.spec,
+      dailyGrams: entry.item.dailyGrams,
+      openedAt: entry.item.openedAt,
+      today: now,
+    );
+    if (estimate.daysLeft != null) return stockHint(estimate);
+    return entry.item.openedAt == null ? '没开封' : '已开封';
   }
 
   String _when(PantryEntry entry, DateTime now) {

@@ -89,6 +89,22 @@ class OpenedInput {
   final int afterOpenDays;
 }
 
+class StockInput {
+  const StockInput({
+    required this.id,
+    required this.productName,
+    required this.runOut,
+    this.snoozed = false,
+  });
+
+  final int id;
+  final String productName;
+  final DateTime runOut;
+
+  /// The household already postponed this one, so only the new morning fires.
+  final bool snoozed;
+}
+
 class FollowUpInput {
   const FollowUpInput({
     required this.id,
@@ -120,6 +136,7 @@ class ReminderPlanner {
     List<ExpiryInput> expiries = const [],
     List<OpenedInput> opened = const [],
     List<FollowUpInput> followUps = const [],
+    List<StockInput> stocks = const [],
   }) {
     final items = <PlannedNotification>[];
     for (final due in dues) {
@@ -133,6 +150,9 @@ class ReminderPlanner {
     }
     for (final bag in opened) {
       items.addAll(_opened(bag, now));
+    }
+    for (final stock in stocks) {
+      items.addAll(_stock(stock, now));
     }
     items.sort((a, b) => a.when.compareTo(b.when));
     return items;
@@ -211,6 +231,21 @@ class ReminderPlanner {
       bodyFor: (offset) => offset == 0
           ? '「${bag.productName}」已到开封后建议喂完的日子。'
           : '「${bag.productName}」开封后还剩约 $offset 天建议喂完窗口。',
+      channel: ReminderChannel.food,
+    );
+  }
+
+  List<PlannedNotification> _stock(StockInput stock, DateTime now) {
+    final offsets = stock.snoozed ? const <int>[0] : const <int>[7, 0];
+    return _offsets(
+      day: stock.runOut,
+      now: now,
+      offsets: offsets,
+      idFor: (offset) => (offset == 7 ? 50000000 : 51000000) + stock.id,
+      titleFor: (_) => '猫粮该补货了',
+      bodyFor: (offset) => offset == 0
+          ? '「${stock.productName}」按现在的喂食量今天会吃完。'
+          : '「${stock.productName}」大约还能吃 7 天，可以准备补货。',
       channel: ReminderChannel.food,
     );
   }

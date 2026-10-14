@@ -15,10 +15,14 @@ import 'features/health/deworms_page.dart';
 import 'features/health/disease_page.dart';
 import 'features/health/health_page.dart';
 import 'features/health/scale_page.dart';
+import 'features/health/sticker_page.dart';
 import 'features/health/vaccines_page.dart';
 import 'features/health/visits_page.dart';
 import 'features/health/weight_page.dart';
+import 'domain/parsing/vaccine_sticker_parser.dart';
+import 'features/home/calendar_page.dart';
 import 'features/home/home_page.dart';
+import 'services/widget_bridge.dart';
 import 'features/pantry/bag_page.dart';
 import 'features/pantry/catalog_page.dart';
 import 'features/pantry/confirm_page.dart';
@@ -120,6 +124,23 @@ class _ZhuajiAppState extends State<ZhuajiApp> {
       ),
       GoRoute(path: '/privacy', builder: (_, _) => const PrivacyPage()),
       GoRoute(path: '/vaccines', builder: (_, _) => const VaccinesPage()),
+      GoRoute(path: '/calendar', builder: (_, _) => const CalendarPage()),
+      GoRoute(
+        path: '/sticker',
+        builder: (context, state) {
+          final demo = state.uri.queryParameters['demo'] == '1';
+          return StickerPage(
+            initial: demo
+                ? VaccineStickerRead(
+                    name: '猫三联',
+                    knownName: true,
+                    batch: 'A12B-3391',
+                    givenOn: DateTime(2026, 3, 12),
+                  )
+                : null,
+          );
+        },
+      ),
       GoRoute(path: '/deworms', builder: (_, _) => const DewormsPage()),
       GoRoute(path: '/visits', builder: (_, _) => const VisitsPage()),
       GoRoute(path: '/checkups', builder: (_, _) => const CheckupsPage()),
@@ -164,6 +185,13 @@ class _ZhuajiAppState extends State<ZhuajiApp> {
   void initState() {
     super.initState();
     _shortcuts();
+    WidgetBridge.listen((route) => _router.push(route));
+    _openWidgetRoute();
+  }
+
+  Future<void> _openWidgetRoute() async {
+    final route = await WidgetBridge.takeRoute();
+    if (route != null) _router.push(route);
   }
 
   Future<void> _shortcuts() async {
