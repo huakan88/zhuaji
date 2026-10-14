@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/format.dart';
 import '../../core/theme/app_fonts.dart';
+import '../../domain/models.dart';
 import '../../core/theme/app_tokens.dart';
 import '../../core/widgets/common.dart';
 import '../../state/app_controller.dart';
@@ -65,7 +67,7 @@ class CatsPage extends StatelessWidget {
                 ],
               ),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 20),
             if (cat == null)
               EmptyHint(
                 title: '还没猫',
@@ -74,48 +76,49 @@ class CatsPage extends StatelessWidget {
                 onAction: () => context.push('/cat-form'),
               )
             else ...[
-              Center(
-                child: DecoratedBox(
-                  decoration: const BoxDecoration(
-                    shape: BoxShape.circle,
-                    boxShadow: softShadow,
-                  ),
-                  child: CatAvatar(
-                    path: cat.avatarPath,
-                    size: 168,
-                    selected: true,
-                  ),
-                ),
+              HeroCard(
+                path: cat.avatarPath,
+                title: cat.name,
+                subtitle: _meta(cat, app.now),
+                height: 280,
+                onTitleTap: () => context.push('/cat-form?id=${cat.id}'),
               ),
               const SizedBox(height: 12),
-              Center(
-                child: GestureDetector(
-                  onTap: () => context.push('/cat-form?id=${cat.id}'),
-                  child: Text(
-                    cat.name,
-                    style: zhuaji.copyWith(
-                      fontSize: 28,
-                      fontWeight: FontWeight.w700,
+              QuietCard(
+                child: Row(
+                  children: [
+                    const IconWell(icon: Icons.monitor_weight_outlined),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            '体重',
+                            style: zhuaji.copyWith(
+                              fontSize: 12,
+                              color: AppColors.muted,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            '体重在健康里改',
+                            style: zhuaji.copyWith(
+                              fontSize: 12,
+                              color: AppColors.muted,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 8),
-              Center(
-                child: Text(
-                  kg == null ? '— kg' : '${kg.toStringAsFixed(2)} kg',
-                  style: zhuaji.copyWith(
-                    fontSize: 32,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.coralDeep,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 8),
-              Center(
-                child: Text(
-                  '体重在健康里改',
-                  style: zhuaji.copyWith(color: AppColors.muted, fontSize: 12),
+                    Text(
+                      kg == null ? '— kg' : '${kg.toStringAsFixed(2)} kg',
+                      style: zhuaji.copyWith(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ],
                 ),
               ),
               const SizedBox(height: 24),
@@ -134,5 +137,13 @@ class CatsPage extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  String _meta(CatProfile cat, DateTime now) {
+    final parts = <String>[
+      if (cat.breed != null && cat.breed!.isNotEmpty) cat.breed!,
+      ageLabel(cat.birthday, now),
+    ];
+    return parts.join(' · ');
   }
 }

@@ -59,13 +59,13 @@ class _DewormsPageState extends State<DewormsPage> {
               ChoiceChip(
                 label: const Text('体内'),
                 selected: _kind == DewormKind.internal,
-                selectedColor: AppColors.coral,
+                selectedColor: AppColors.tintCoral,
                 onSelected: (_) => setState(() => _kind = DewormKind.internal),
               ),
               ChoiceChip(
                 label: const Text('体外'),
                 selected: _kind == DewormKind.external,
-                selectedColor: AppColors.coral,
+                selectedColor: AppColors.tintCoral,
                 onSelected: (_) => setState(() => _kind = DewormKind.external),
               ),
             ],
@@ -78,7 +78,7 @@ class _DewormsPageState extends State<DewormsPage> {
                 ChoiceChip(
                   label: Text(label),
                   selected: _product == label,
-                  selectedColor: AppColors.coral,
+                  selectedColor: AppColors.tintCoral,
                   onSelected: (_) => setState(() => _product = label),
                 ),
             ],
