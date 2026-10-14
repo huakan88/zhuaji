@@ -26,7 +26,7 @@ class _CheckupsPageState extends State<CheckupsPage> {
     if (cat == null) {
       return Scaffold(
         backgroundColor: AppColors.background,
-        appBar: AppBar(title: const Text('体检')),
+        appBar: zhuajiBar('体检'),
         body: const Center(child: Text('先选择一只猫')),
       );
     }
@@ -45,7 +45,7 @@ class _CheckupsPageState extends State<CheckupsPage> {
     selected ??= plan.items.isEmpty ? null : plan.items.first;
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(title: const Text('体检')),
+      appBar: zhuajiBar('体检'),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
         children: [

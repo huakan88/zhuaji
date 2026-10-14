@@ -15,7 +15,7 @@ class PhotoStore {
     final dest = File(p.join(folder.path, name));
     final bytes = await File(sourcePath).readAsBytes();
     final cropped = centerCatPhoto(bytes);
-    await dest.writeAsBytes(cropped ?? bytes);
+    await dest.writeAsBytes(compressStoredPhoto(cropped ?? bytes));
     return dest.path;
   }
 }
@@ -69,6 +69,29 @@ Uint8List? centerCatPhoto(Uint8List bytes) {
       ? img.copyResize(cropped, width: 1080, height: 1080)
       : cropped;
   return img.encodeJpg(framed, quality: 85);
+}
+
+/// Longest edge stays within [maxEdge]. Undecodable bytes are returned as-is.
+Uint8List compressStoredPhoto(
+  Uint8List bytes, {
+  int maxEdge = 1280,
+  int quality = 80,
+}) {
+  final decoded = img.decodeImage(bytes);
+  if (decoded == null) return bytes;
+  final edge = math.max(decoded.width, decoded.height);
+  final sized = edge <= maxEdge
+      ? decoded
+      : img.copyResize(
+          decoded,
+          width: decoded.width >= decoded.height
+              ? maxEdge
+              : (decoded.width * maxEdge / decoded.height).round(),
+          height: decoded.height > decoded.width
+              ? maxEdge
+              : (decoded.height * maxEdge / decoded.width).round(),
+        );
+  return img.encodeJpg(sized, quality: quality);
 }
 
 bool _isSubject(img.Pixel pixel) {

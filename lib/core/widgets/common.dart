@@ -40,7 +40,7 @@ class SoftCard extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(radius),
-        border: Border.all(color: AppColors.line),
+        boxShadow: softShadow,
       ),
       child: Material(
         color: color,
@@ -114,6 +114,156 @@ class SectionHeader extends StatelessWidget {
   }
 }
 
+AppBar zhuajiBar(String title) {
+  return AppBar(
+    title: Text(title),
+    toolbarHeight: 72,
+    clipBehavior: Clip.antiAlias,
+    backgroundColor: Colors.transparent,
+    surfaceTintColor: Colors.transparent,
+    elevation: 0,
+    scrolledUnderElevation: 0,
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(bottom: Radius.circular(28)),
+    ),
+    flexibleSpace: const DecoratedBox(
+      decoration: BoxDecoration(
+        gradient: headerGradient,
+        borderRadius: BorderRadius.vertical(bottom: Radius.circular(28)),
+      ),
+    ),
+  );
+}
+
+class FadeIn extends StatefulWidget {
+  const FadeIn({required this.child, super.key});
+
+  final Widget child;
+
+  @override
+  State<FadeIn> createState() => _FadeInState();
+}
+
+class _FadeInState extends State<FadeIn> {
+  var _shown = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) setState(() => _shown = true);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedSlide(
+      offset: _shown ? Offset.zero : const Offset(0, 0.03),
+      duration: const Duration(milliseconds: 220),
+      curve: Curves.easeOutCubic,
+      child: AnimatedOpacity(
+        opacity: _shown ? 1 : 0,
+        duration: const Duration(milliseconds: 220),
+        curve: Curves.easeOutCubic,
+        child: widget.child,
+      ),
+    );
+  }
+}
+
+class Pressable extends StatefulWidget {
+  const Pressable({required this.child, required this.onTap, super.key});
+
+  final Widget child;
+  final VoidCallback onTap;
+
+  @override
+  State<Pressable> createState() => _PressableState();
+}
+
+class _PressableState extends State<Pressable> {
+  var _down = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTapDown: (_) => setState(() => _down = true),
+      onTapCancel: () => setState(() => _down = false),
+      onTapUp: (_) => setState(() => _down = false),
+      onTap: widget.onTap,
+      child: AnimatedScale(
+        scale: _down ? 0.96 : 1,
+        duration: const Duration(milliseconds: 120),
+        curve: Curves.easeOut,
+        child: widget.child,
+      ),
+    );
+  }
+}
+
+class _EmptyIllustration extends StatelessWidget {
+  const _EmptyIllustration();
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: 120,
+      height: 96,
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          Positioned(
+            left: 8,
+            top: 10,
+            child: Container(
+              width: 54,
+              height: 54,
+              decoration: const BoxDecoration(
+                color: AppColors.tintSage,
+                shape: BoxShape.circle,
+              ),
+            ),
+          ),
+          Positioned(
+            right: 6,
+            bottom: 6,
+            child: Container(
+              width: 36,
+              height: 36,
+              decoration: const BoxDecoration(
+                color: AppColors.tintCoral,
+                shape: BoxShape.circle,
+              ),
+            ),
+          ),
+          Container(
+            width: 76,
+            height: 76,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: AppColors.card,
+              boxShadow: softShadow,
+              border: Border.all(color: AppColors.line),
+            ),
+            clipBehavior: Clip.antiAlias,
+            child: const Stack(
+              alignment: Alignment.center,
+              children: [
+                Image(
+                  image: AssetImage('assets/cats/cat-icon.jpg'),
+                  width: 76,
+                  height: 76,
+                  fit: BoxFit.cover,
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class DisclaimerBanner extends StatelessWidget {
   const DisclaimerBanner({super.key});
 
@@ -153,15 +303,7 @@ class EmptyHint extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: Space.x6),
       child: Column(
         children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(Radii.xl),
-            child: Image.asset(
-              'assets/cats/cat-icon.jpg',
-              width: 72,
-              height: 72,
-              fit: BoxFit.cover,
-            ),
-          ),
+          const _EmptyIllustration(),
           const SizedBox(height: Space.x4),
           Text(
             title,

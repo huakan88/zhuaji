@@ -18,7 +18,20 @@ class AppColors {
   static const danger = Color(0xFFC45C4A);
   static const tintCoral = Color(0xFFFFE8DE);
   static const tintGreen = Color(0xFFF1F6E6);
+  static const tintSage = Color(0xFFE4EBE0);
+  static const tintBrown = Color(0xFFF3E4D6);
+  static const tintOlive = Color(0xFFE6EBD8);
+  static const tintRose = Color(0xFFF8E4DE);
+  static const headerStart = Color(0xFFFFF8F3);
+  static const headerMid = Color(0xFFF6D7C8);
+  static const headerEnd = Color(0xFFE4EDE0);
 }
+
+const headerGradient = LinearGradient(
+  begin: Alignment.topLeft,
+  end: Alignment.bottomRight,
+  colors: [AppColors.headerStart, AppColors.headerMid, AppColors.headerEnd],
+);
 
 class Space {
   const Space._();
@@ -41,7 +54,20 @@ class Radii {
   static const xl = 28.0;
 }
 
-const softShadow = <BoxShadow>[];
+const softShadow = <BoxShadow>[
+  BoxShadow(color: Color(0x1F8C6A52), blurRadius: 22, offset: Offset(0, 10)),
+  BoxShadow(color: Color(0x0F2C2A28), blurRadius: 4, offset: Offset(0, 1)),
+];
+
+const scanGlow = <BoxShadow>[
+  BoxShadow(
+    color: Color(0x80F6B39A),
+    blurRadius: 22,
+    spreadRadius: 2,
+    offset: Offset(0, 8),
+  ),
+  BoxShadow(color: Color(0x40E58B72), blurRadius: 32, spreadRadius: 8),
+];
 
 const ringPalette = [
   AppColors.coral,

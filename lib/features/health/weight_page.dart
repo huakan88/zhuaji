@@ -24,14 +24,14 @@ class _WeightPageState extends State<WeightPage> {
     if (cat == null) {
       return Scaffold(
         backgroundColor: AppColors.background,
-        appBar: AppBar(title: const Text('体重')),
+        appBar: zhuajiBar('体重'),
         body: const Center(child: Text('先选择一只猫')),
       );
     }
     final kg = _kg ??= app.latestWeight?.weightKg ?? 4;
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(title: const Text('体重')),
+      appBar: zhuajiBar('体重'),
       body: Padding(
         padding: const EdgeInsets.fromLTRB(20, 24, 20, 24),
         child: Column(

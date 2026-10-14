@@ -23,28 +23,30 @@ class PantryPage extends StatelessWidget {
       });
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(title: const Text('粮仓')),
-      body: ListView(
-        padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
-        children: [
-          Text(
-            '点一袋看日期，可以标已吃完或删掉。',
-            style: zhuaji.copyWith(color: AppColors.muted),
-          ),
-          const SizedBox(height: 12),
-          if (bags.isEmpty)
-            EmptyHint(
-              title: '还没有',
-              body: '扫一袋就会出现在这里',
-              action: '扫粮',
-              onAction: () => context.push('/scan'),
-            )
-          else
-            for (final entry in bags) ...[
-              _BagRow(entry: entry),
-              const SizedBox(height: 8),
-            ],
-        ],
+      appBar: zhuajiBar('粮仓'),
+      body: FadeIn(
+        child: ListView(
+          padding: const EdgeInsets.fromLTRB(20, 12, 20, 120),
+          children: [
+            Text(
+              '点一袋看日期，可以标已吃完或删掉。',
+              style: zhuaji.copyWith(color: AppColors.muted),
+            ),
+            const SizedBox(height: 12),
+            if (bags.isEmpty)
+              EmptyHint(
+                title: '还没有',
+                body: '扫一袋就会出现在这里',
+                action: '扫粮',
+                onAction: () => context.push('/scan'),
+              )
+            else
+              for (final entry in bags) ...[
+                _BagRow(entry: entry),
+                const SizedBox(height: 8),
+              ],
+          ],
+        ),
       ),
     );
   }
@@ -58,39 +60,59 @@ class _BagRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final app = AppScope.of<AppController>(context);
-    return Material(
-      color: AppColors.card,
-      borderRadius: BorderRadius.circular(16),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(16),
-        onTap: () => context.push('/bag?id=${entry.item.id}'),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-          child: Row(
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      entry.product.name,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: zhuaji.copyWith(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      _status(entry, app.now),
-                      style: zhuaji.copyWith(color: AppColors.muted),
-                    ),
-                  ],
+    final sooner = _sooner(entry);
+    final urgent =
+        sooner != null &&
+        !sooner.isAfter(dateOnly(app.now).add(const Duration(days: 14)));
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: AppColors.card,
+        borderRadius: BorderRadius.circular(18),
+        boxShadow: softShadow,
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(18),
+        child: InkWell(
+          onTap: () => context.push('/bag?id=${entry.item.id}'),
+          child: IntrinsicHeight(
+            child: Row(
+              children: [
+                Container(
+                  width: 6,
+                  color: urgent ? AppColors.coralDeep : AppColors.sage,
                 ),
-              ),
-              const Icon(Icons.chevron_right, color: AppColors.muted, size: 20),
-            ],
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(14, 14, 8, 14),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          entry.product.name,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: zhuaji.copyWith(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          _status(entry, app.now),
+                          style: zhuaji.copyWith(color: AppColors.muted),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const Icon(
+                  Icons.chevron_right,
+                  color: AppColors.muted,
+                  size: 20,
+                ),
+                const SizedBox(width: 8),
+              ],
+            ),
           ),
         ),
       ),

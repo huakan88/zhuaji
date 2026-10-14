@@ -189,6 +189,26 @@ class WaterLogs extends Table {
   RealColumn get milliliters => real()();
 }
 
+@DataClassName('SyncOutboxRow')
+class SyncOutbox extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  TextColumn get entity => text()();
+  TextColumn get recordKey => text()();
+  TextColumn get op => text()();
+  TextColumn get payload => text()();
+  DateTimeColumn get updatedAt => dateTime()();
+  TextColumn get deviceId => text()();
+}
+
+@DataClassName('SyncCursorRow')
+class SyncCursors extends Table {
+  TextColumn get scope => text()();
+  TextColumn get cursor => text().withDefault(const Constant(''))();
+
+  @override
+  Set<Column<Object>> get primaryKey => {scope};
+}
+
 @DataClassName('SettingRow')
 class AppSettings extends Table {
   TextColumn get key => text()();
@@ -215,6 +235,8 @@ class AppSettings extends Table {
     CatConditions,
     CheckupLogs,
     WaterLogs,
+    SyncOutbox,
+    SyncCursors,
     AppSettings,
   ],
 )
@@ -226,7 +248,7 @@ class AppDatabase extends _$AppDatabase {
   factory AppDatabase.memory() => AppDatabase(NativeDatabase.memory());
 
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 3;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -236,14 +258,38 @@ class AppDatabase extends _$AppDatabase {
       await seedSampleFoods(this);
     },
     onUpgrade: (migrator, from, to) async {
-      if (from < 2) {
-        await migrator.createTable(catConditions);
-        await migrator.createTable(checkupLogs);
-        await migrator.createTable(waterLogs);
+      for (final step in upgradesFrom(from, to)) {
+        switch (step) {
+          case 2:
+            await _createMissing(migrator, catConditions);
+            await _createMissing(migrator, checkupLogs);
+            await _createMissing(migrator, waterLogs);
+          case 3:
+            await _createMissing(migrator, syncOutbox);
+            await _createMissing(migrator, syncCursors);
+        }
       }
     },
     beforeOpen: (details) async {
       await customStatement('PRAGMA foreign_keys = ON');
     },
   );
+
+  Future<void> _createMissing(Migrator migrator, TableInfo table) async {
+    final rows = await customSelect(
+      "SELECT 1 AS ok FROM sqlite_master WHERE type = 'table' AND name = ?",
+      variables: [Variable.withString(table.actualTableName)],
+    ).get();
+    if (rows.isEmpty) await migrator.createTable(table);
+  }
+}
+
+/// Schema steps this build can apply. Skipping a missing step is how an
+/// already-upgraded file stays safe if the upgrade callback runs again.
+List<int> upgradesFrom(int from, int to) {
+  const steps = [2, 3];
+  return [
+    for (final step in steps)
+      if (step > from && step <= to) step,
+  ];
 }

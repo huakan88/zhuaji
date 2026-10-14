@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:drift/drift.dart';
 
 import '../../domain/models.dart';
@@ -8,6 +10,7 @@ class DriftCareRepository implements CareRepository {
   DriftCareRepository(this._db);
 
   final AppDatabase _db;
+  var _silent = false;
 
   @override
   Future<void> close() => _db.close();
@@ -270,17 +273,26 @@ class DriftCareRepository implements CareRepository {
         minute: 30,
         enabled: true,
       );
+      await _note('cats', id, 'upsert', {
+        'id': '$id',
+        'name': draft.name.trim(),
+      });
       return id;
     }
     await (_db.update(
       _db.cats,
     )..where((t) => t.id.equals(draft.id!))).write(companion);
+    await _note('cats', draft.id!, 'upsert', {
+      'id': '${draft.id}',
+      'name': draft.name.trim(),
+    });
     return draft.id!;
   }
 
   @override
-  Future<void> deleteCat(int id) {
-    return (_db.delete(_db.cats)..where((t) => t.id.equals(id))).go();
+  Future<void> deleteCat(int id) async {
+    await (_db.delete(_db.cats)..where((t) => t.id.equals(id))).go();
+    await _note('cats', id, 'delete', {'id': '$id'});
   }
 
   @override
@@ -378,17 +390,29 @@ class DriftCareRepository implements CareRepository {
       notes: Value(draft.notes.trim()),
     );
     if (draft.id == null) {
-      return _db.into(_db.vaccines).insert(companion);
+      final id = await _db.into(_db.vaccines).insert(companion);
+      await _note('vaccines', id, 'upsert', {
+        'id': '$id',
+        'catId': draft.catId,
+        'name': draft.name.trim(),
+      });
+      return id;
     }
     await (_db.update(
       _db.vaccines,
     )..where((t) => t.id.equals(draft.id!))).write(companion);
+    await _note('vaccines', draft.id!, 'upsert', {
+      'id': '${draft.id}',
+      'catId': draft.catId,
+      'name': draft.name.trim(),
+    });
     return draft.id!;
   }
 
   @override
-  Future<void> deleteVaccine(int id) {
-    return (_db.delete(_db.vaccines)..where((t) => t.id.equals(id))).go();
+  Future<void> deleteVaccine(int id) async {
+    await (_db.delete(_db.vaccines)..where((t) => t.id.equals(id))).go();
+    await _note('vaccines', id, 'delete', {'id': '$id'});
   }
 
   @override
@@ -421,16 +445,30 @@ class DriftCareRepository implements CareRepository {
       nextDue: Value(draft.nextDue),
       notes: Value(draft.notes.trim()),
     );
-    if (draft.id == null) return _db.into(_db.dewormings).insert(companion);
+    if (draft.id == null) {
+      final id = await _db.into(_db.dewormings).insert(companion);
+      await _note('deworms', id, 'upsert', {
+        'id': '$id',
+        'catId': draft.catId,
+        'product': draft.product.trim(),
+      });
+      return id;
+    }
     await (_db.update(
       _db.dewormings,
     )..where((t) => t.id.equals(draft.id!))).write(companion);
+    await _note('deworms', draft.id!, 'upsert', {
+      'id': '${draft.id}',
+      'catId': draft.catId,
+      'product': draft.product.trim(),
+    });
     return draft.id!;
   }
 
   @override
-  Future<void> deleteDeworm(int id) {
-    return (_db.delete(_db.dewormings)..where((t) => t.id.equals(id))).go();
+  Future<void> deleteDeworm(int id) async {
+    await (_db.delete(_db.dewormings)..where((t) => t.id.equals(id))).go();
+    await _note('deworms', id, 'delete', {'id': '$id'});
   }
 
   @override
@@ -465,16 +503,30 @@ class DriftCareRepository implements CareRepository {
       treatment: Value(_blank(draft.treatment)),
       notes: Value(draft.notes.trim()),
     );
-    if (draft.id == null) return _db.into(_db.vetVisits).insert(companion);
+    if (draft.id == null) {
+      final id = await _db.into(_db.vetVisits).insert(companion);
+      await _note('visits', id, 'upsert', {
+        'id': '$id',
+        'catId': draft.catId,
+        'reason': draft.reason.trim(),
+      });
+      return id;
+    }
     await (_db.update(
       _db.vetVisits,
     )..where((t) => t.id.equals(draft.id!))).write(companion);
+    await _note('visits', draft.id!, 'upsert', {
+      'id': '${draft.id}',
+      'catId': draft.catId,
+      'reason': draft.reason.trim(),
+    });
     return draft.id!;
   }
 
   @override
-  Future<void> deleteVisit(int id) {
-    return (_db.delete(_db.vetVisits)..where((t) => t.id.equals(id))).go();
+  Future<void> deleteVisit(int id) async {
+    await (_db.delete(_db.vetVisits)..where((t) => t.id.equals(id))).go();
+    await _note('visits', id, 'delete', {'id': '$id'});
   }
 
   @override
@@ -499,8 +551,8 @@ class DriftCareRepository implements CareRepository {
     required int catId,
     required DateTime loggedOn,
     required double weightKg,
-  }) {
-    return _db
+  }) async {
+    final id = await _db
         .into(_db.weightLogs)
         .insert(
           WeightLogsCompanion.insert(
@@ -509,11 +561,18 @@ class DriftCareRepository implements CareRepository {
             weightKg: weightKg,
           ),
         );
+    await _note('weights', id, 'upsert', {
+      'id': '$id',
+      'catId': catId,
+      'weightKg': weightKg,
+    });
+    return id;
   }
 
   @override
-  Future<void> deleteWeight(int id) {
-    return (_db.delete(_db.weightLogs)..where((t) => t.id.equals(id))).go();
+  Future<void> deleteWeight(int id) async {
+    await (_db.delete(_db.weightLogs)..where((t) => t.id.equals(id))).go();
+    await _note('weights', id, 'delete', {'id': '$id'});
   }
 
   @override
@@ -781,16 +840,28 @@ class DriftCareRepository implements CareRepository {
       openedAt: Value(draft.openedAt),
       afterOpenDays: Value(draft.afterOpenDays),
     );
-    if (draft.id == null) return _db.into(_db.pantryItems).insert(companion);
+    if (draft.id == null) {
+      final id = await _db.into(_db.pantryItems).insert(companion);
+      await _note('pantry', id, 'upsert', {
+        'id': '$id',
+        'productId': draft.productId,
+      });
+      return id;
+    }
     await (_db.update(
       _db.pantryItems,
     )..where((t) => t.id.equals(draft.id!))).write(companion);
+    await _note('pantry', draft.id!, 'upsert', {
+      'id': '${draft.id}',
+      'productId': draft.productId,
+    });
     return draft.id!;
   }
 
   @override
-  Future<void> deletePantry(int id) {
-    return (_db.delete(_db.pantryItems)..where((t) => t.id.equals(id))).go();
+  Future<void> deletePantry(int id) async {
+    await (_db.delete(_db.pantryItems)..where((t) => t.id.equals(id))).go();
+    await _note('pantry', id, 'delete', {'id': '$id'});
   }
 
   @override
@@ -947,6 +1018,58 @@ class DriftCareRepository implements CareRepository {
     afterOpenDays: row.afterOpenDays,
     isSample: row.isSample,
   );
+
+  Future<String> ensureDeviceId() async {
+    final existing = await setting('deviceId');
+    if (existing != null && existing.isNotEmpty) return existing;
+    final id = 'dev-${DateTime.now().microsecondsSinceEpoch}';
+    await setSetting('deviceId', id);
+    return id;
+  }
+
+  Future<List<SyncOutboxRow>> pendingSync() {
+    return (_db.select(
+      _db.syncOutbox,
+    )..orderBy([(t) => OrderingTerm.asc(t.id)])).get();
+  }
+
+  Future<void> ackSync(Iterable<int> ids) async {
+    final keys = ids.toList();
+    if (keys.isEmpty) return;
+    await (_db.delete(_db.syncOutbox)..where((t) => t.id.isIn(keys))).go();
+  }
+
+  /// Remote apply must not enqueue another copy of the same change.
+  Future<T> runSilent<T>(Future<T> Function() action) async {
+    final previous = _silent;
+    _silent = true;
+    try {
+      return await action();
+    } finally {
+      _silent = previous;
+    }
+  }
+
+  Future<void> _note(
+    String entity,
+    int id,
+    String op,
+    Map<String, Object?> payload,
+  ) async {
+    if (_silent) return;
+    await _db
+        .into(_db.syncOutbox)
+        .insert(
+          SyncOutboxCompanion.insert(
+            entity: entity,
+            recordKey: '$id',
+            op: op,
+            payload: jsonEncode(payload),
+            updatedAt: DateTime.now().toUtc(),
+            deviceId: await ensureDeviceId(),
+          ),
+        );
+  }
 }
 
 String? _blank(String? value) {

@@ -73,24 +73,36 @@ class NotificationService implements ReminderNotifier {
     final mode = exact
         ? AndroidScheduleMode.exactAllowWhileIdle
         : AndroidScheduleMode.inexactAllowWhileIdle;
-    final soonest = [...items]..sort((a, b) => a.when.compareTo(b.when));
-    for (final item in soonest.take(60)) {
-      try {
-        await _plugin.zonedSchedule(
-          id: item.id,
-          title: item.title,
-          body: item.body,
-          scheduledDate: tz.TZDateTime.from(item.when, tz.local),
-          notificationDetails: _details(item.channel),
-          androidScheduleMode: mode,
-          payload: item.channel.name,
-          matchDateTimeComponents: item.repeatsDaily
-              ? DateTimeComponents.time
-              : null,
-        );
-      } catch (error, stack) {
-        debugPrint('通知安排失败：$error\n$stack');
+    final soonest = schedulable(items, DateTime.now());
+    for (final item in soonest) {
+      final scheduled = await _schedule(item, mode);
+      if (!scheduled && mode != AndroidScheduleMode.inexactAllowWhileIdle) {
+        await _schedule(item, AndroidScheduleMode.inexactAllowWhileIdle);
       }
+    }
+  }
+
+  Future<bool> _schedule(
+    PlannedNotification item,
+    AndroidScheduleMode mode,
+  ) async {
+    try {
+      await _plugin.zonedSchedule(
+        id: item.id,
+        title: item.title,
+        body: item.body,
+        scheduledDate: tz.TZDateTime.from(item.when, tz.local),
+        notificationDetails: _details(item.channel),
+        androidScheduleMode: mode,
+        payload: item.channel.name,
+        matchDateTimeComponents: item.repeatsDaily
+            ? DateTimeComponents.time
+            : null,
+      );
+      return true;
+    } catch (error, stack) {
+      debugPrint('通知安排失败：$error\n$stack');
+      return false;
     }
   }
 

@@ -52,14 +52,22 @@ ThemeData buildAppTheme() {
       toolbarTextStyle: body,
     ),
     filledButtonTheme: FilledButtonThemeData(
-      style: FilledButton.styleFrom(
-        backgroundColor: AppColors.coral,
-        foregroundColor: AppColors.ink,
-        minimumSize: const Size(0, 48),
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-        shape: const StadiumBorder(),
-        textStyle: label,
-      ),
+      style:
+          FilledButton.styleFrom(
+            backgroundColor: AppColors.coral,
+            foregroundColor: AppColors.ink,
+            minimumSize: const Size(0, 48),
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+            shape: const StadiumBorder(),
+            textStyle: label,
+            elevation: 3,
+            shadowColor: const Color(0x66E58B72),
+            animationDuration: const Duration(milliseconds: 120),
+          ).copyWith(
+            elevation: WidgetStateProperty.resolveWith((states) {
+              return states.contains(WidgetState.pressed) ? 0 : 3;
+            }),
+          ),
     ),
     outlinedButtonTheme: OutlinedButtonThemeData(
       style: OutlinedButton.styleFrom(
@@ -154,11 +162,43 @@ ThemeData buildAppTheme() {
     ),
     pageTransitionsTheme: const PageTransitionsTheme(
       builders: {
-        TargetPlatform.android: FadeUpwardsPageTransitionsBuilder(),
-        TargetPlatform.iOS: FadeUpwardsPageTransitionsBuilder(),
+        TargetPlatform.android: SoftPageTransition(),
+        TargetPlatform.iOS: SoftPageTransition(),
+        TargetPlatform.linux: SoftPageTransition(),
+        TargetPlatform.macOS: SoftPageTransition(),
+        TargetPlatform.windows: SoftPageTransition(),
+        TargetPlatform.fuchsia: SoftPageTransition(),
       },
     ),
   );
+}
+
+class SoftPageTransition extends PageTransitionsBuilder {
+  const SoftPageTransition();
+
+  @override
+  Widget buildTransitions<T>(
+    PageRoute<T> route,
+    BuildContext context,
+    Animation<double> animation,
+    Animation<double> secondaryAnimation,
+    Widget child,
+  ) {
+    final curved = CurvedAnimation(
+      parent: animation,
+      curve: Curves.easeOutCubic,
+    );
+    return FadeTransition(
+      opacity: curved,
+      child: SlideTransition(
+        position: Tween<Offset>(
+          begin: const Offset(0, 0.04),
+          end: Offset.zero,
+        ).animate(curved),
+        child: child,
+      ),
+    );
+  }
 }
 
 TextTheme _faces(TextTheme theme) {

@@ -82,18 +82,22 @@ class _TabBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: AppColors.background,
+    return DecoratedBox(
+      decoration: const BoxDecoration(
+        color: AppColors.card,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        boxShadow: softShadow,
+      ),
       child: SafeArea(
         top: false,
         child: SizedBox(
-          height: 78,
+          height: 92,
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               _item(0, Icons.today_outlined, '今天'),
               _item(1, Icons.favorite_border, '健康'),
-              _scan(),
+              const _ScanSlot(),
               _item(3, Icons.inventory_2_outlined, '粮仓'),
               _item(4, Icons.pets_outlined, '猫咪'),
             ],
@@ -130,27 +134,65 @@ class _TabBar extends StatelessWidget {
       ),
     );
   }
+}
 
-  Widget _scan() {
+class _ScanSlot extends StatefulWidget {
+  const _ScanSlot();
+
+  @override
+  State<_ScanSlot> createState() => _ScanSlotState();
+}
+
+class _ScanSlotState extends State<_ScanSlot>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _glow = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 1400),
+  )..repeat(reverse: true);
+
+  @override
+  void dispose() {
+    _glow.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final bar = context.findAncestorWidgetOfExactType<_TabBar>()!;
     return Expanded(
       child: GestureDetector(
-        onTap: () => onSlot(2),
+        onTap: () => bar.onSlot(2),
         child: Padding(
-          padding: const EdgeInsets.only(bottom: 6),
+          padding: const EdgeInsets.only(bottom: 4),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
-              Container(
-                width: 52,
-                height: 52,
-                decoration: const BoxDecoration(
-                  color: AppColors.coralDeep,
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(
-                  Icons.qr_code_scanner,
-                  color: Colors.white,
-                  size: 28,
+              AnimatedBuilder(
+                animation: _glow,
+                builder: (context, child) {
+                  final t = Curves.easeInOut.transform(_glow.value);
+                  return Transform.translate(
+                    offset: Offset(0, -6 - 2 * t),
+                    child: Transform.scale(scale: 1 + 0.04 * t, child: child),
+                  );
+                },
+                child: Container(
+                  width: 60,
+                  height: 60,
+                  decoration: const BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [AppColors.coral, AppColors.coralDeep],
+                    ),
+                    boxShadow: scanGlow,
+                  ),
+                  child: const Icon(
+                    Icons.qr_code_scanner,
+                    color: Colors.white,
+                    size: 30,
+                  ),
                 ),
               ),
               const SizedBox(height: 2),

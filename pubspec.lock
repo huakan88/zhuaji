@@ -1034,6 +1034,13 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.2.4"
+  zhuaji_sync:
+    dependency: "direct main"
+    description:
+      path: "packages/zhuaji_sync"
+      relative: true
+    source: path
+    version: "2.3.0"
 sdks:
   dart: ">=3.13.5 <4.0.0"
   flutter: ">=3.47.0"

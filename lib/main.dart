@@ -6,8 +6,10 @@ import 'package:timezone/data/latest_all.dart' as tzdata;
 import 'package:timezone/timezone.dart' as tz;
 
 import 'app.dart';
+import 'core/config/app_config.dart';
 import 'data/db/app_database.dart';
 import 'data/repositories/drift_care_repository.dart';
+import 'services/cloud/cloud_bridge.dart';
 import 'services/coat_recognizer.dart';
 import 'services/notification_service.dart';
 import 'state/app_controller.dart';
@@ -24,8 +26,9 @@ Future<void> main() async {
   };
 
   final notifications = NotificationService();
+  final repo = DriftCareRepository(AppDatabase.defaults());
   final controller = AppController(
-    repo: DriftCareRepository(AppDatabase.defaults()),
+    repo: repo,
     notifications: notifications,
     recognizer: const ColorCoatRecognizer(),
   );
@@ -44,6 +47,10 @@ Future<void> main() async {
       debugPrint('通知初始化失败，记录仍会保存：$error\n$stack');
     }
     await controller.init();
+    await CloudBridge(
+      config: AppConfig.fromEnvironment(),
+      repo: repo,
+    ).syncQuietly();
   } catch (error, stack) {
     debugPrint('启动没有完成：$error\n$stack');
     controller.failStart('本地数据没有打开，可以点重试');

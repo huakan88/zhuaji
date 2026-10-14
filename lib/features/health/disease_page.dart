@@ -36,7 +36,7 @@ class _DiseaseLibraryPageState extends State<DiseaseLibraryPage> {
     final diet = _oneLine(disease.diet);
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(title: const Text('看病')),
+      appBar: zhuajiBar('看病'),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
         children: [
@@ -109,7 +109,7 @@ class DiseaseDetailPage extends StatelessWidget {
     final disease = diseaseById(diseaseId);
     if (disease == null) {
       return Scaffold(
-        appBar: AppBar(title: const Text('看病')),
+        appBar: zhuajiBar('看病'),
         body: const Center(child: Text('没有')),
       );
     }

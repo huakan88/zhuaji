@@ -19,7 +19,7 @@ class BagPage extends StatelessWidget {
     final entry = app.pantryById(pantryId);
     if (entry == null) {
       return Scaffold(
-        appBar: AppBar(title: const Text('这袋粮')),
+        appBar: zhuajiBar('这袋粮'),
         body: const Center(child: Text('这袋已经不在了')),
       );
     }
@@ -35,7 +35,7 @@ class BagPage extends StatelessWidget {
               : '${storage.split('。').first}。');
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(title: const Text('这袋粮')),
+      appBar: zhuajiBar('这袋粮'),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
         children: [

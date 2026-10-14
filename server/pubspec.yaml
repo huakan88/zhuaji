@@ -1,0 +1,18 @@
+name: zhuaji_api
+description: Local-first REST API for 爪记.
+publish_to: none
+version: 2.3.0
+
+environment:
+  sdk: ^3.13.5
+
+dependencies:
+  crypto: ^3.0.6
+  postgres: ^3.5.6
+  shelf: ^1.4.2
+  shelf_router: ^1.1.4
+  zhuaji_sync:
+    path: ../packages/zhuaji_sync
+
+dev_dependencies:
+  test: ^1.26.2

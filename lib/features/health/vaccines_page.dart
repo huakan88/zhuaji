@@ -30,7 +30,7 @@ class _VaccinesPageState extends State<VaccinesPage> {
     if (cat == null) {
       return Scaffold(
         backgroundColor: AppColors.background,
-        appBar: AppBar(title: const Text('疫苗')),
+        appBar: zhuajiBar('疫苗'),
         body: const Center(child: Text('先选择一只猫')),
       );
     }
@@ -44,7 +44,7 @@ class _VaccinesPageState extends State<VaccinesPage> {
       });
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(title: const Text('疫苗')),
+      appBar: zhuajiBar('疫苗'),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
         children: [

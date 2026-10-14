@@ -29,7 +29,7 @@ class _VisitsPageState extends State<VisitsPage> {
     if (cat == null) {
       return Scaffold(
         backgroundColor: AppColors.background,
-        appBar: AppBar(title: const Text('就医')),
+        appBar: zhuajiBar('就医'),
         body: const Center(child: Text('先选择一只猫')),
       );
     }
@@ -37,7 +37,7 @@ class _VisitsPageState extends State<VisitsPage> {
     final visits = app.catVisits;
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(title: const Text('就医')),
+      appBar: zhuajiBar('就医'),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
         children: [

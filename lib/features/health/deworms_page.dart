@@ -30,7 +30,7 @@ class _DewormsPageState extends State<DewormsPage> {
     if (cat == null) {
       return Scaffold(
         backgroundColor: AppColors.background,
-        appBar: AppBar(title: const Text('驱虫')),
+        appBar: zhuajiBar('驱虫'),
         body: const Center(child: Text('先选择一只猫')),
       );
     }
@@ -44,7 +44,7 @@ class _DewormsPageState extends State<DewormsPage> {
       });
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(title: const Text('驱虫')),
+      appBar: zhuajiBar('驱虫'),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
         children: [

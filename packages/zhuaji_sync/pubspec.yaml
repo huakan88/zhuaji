@@ -1,0 +1,10 @@
+name: zhuaji_sync
+description: Shared local-first sync records and conflict rule for 爪记.
+publish_to: none
+version: 2.3.0
+
+environment:
+  sdk: ^3.13.5
+
+dev_dependencies:
+  test: ^1.26.2

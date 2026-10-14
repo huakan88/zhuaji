@@ -19,23 +19,28 @@ class HomePage extends StatelessWidget {
     final todos = _todos(context, app, cat);
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(title: const Text('今天')),
-      body: ListView(
-        padding: const EdgeInsets.fromLTRB(20, 8, 20, 120),
-        children: [
-          if (cat != null)
-            Text(
-              cat.name,
-              style: zhuaji.copyWith(fontSize: 20, fontWeight: FontWeight.w700),
-            ),
-          const SizedBox(height: 12),
-          if (todos.isEmpty)
-            Text('今天没什么要办', style: zhuaji.copyWith(color: AppColors.muted)),
-          for (final todo in todos) ...[
-            _TodoRow(todo: todo),
-            const SizedBox(height: 8),
+      appBar: zhuajiBar('今天'),
+      body: FadeIn(
+        child: ListView(
+          padding: const EdgeInsets.fromLTRB(20, 12, 20, 120),
+          children: [
+            if (cat != null)
+              Text(
+                cat.name,
+                style: zhuaji.copyWith(
+                  fontSize: 22,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            const SizedBox(height: 12),
+            if (todos.isEmpty)
+              const EmptyHint(title: '今天没什么要办', body: '到期、疫苗和驱虫会出现在这里'),
+            for (final todo in todos) ...[
+              _TodoRow(todo: todo),
+              const SizedBox(height: 10),
+            ],
           ],
-        ],
+        ),
       ),
     );
   }
@@ -153,41 +158,87 @@ class _Todo {
   final Future<void> Function() onTap;
 }
 
-class _TodoRow extends StatelessWidget {
+class _TodoRow extends StatefulWidget {
   const _TodoRow({required this.todo});
 
   final _Todo todo;
 
   @override
+  State<_TodoRow> createState() => _TodoRowState();
+}
+
+class _TodoRowState extends State<_TodoRow> {
+  var _down = false;
+
+  Color get _bar => switch (widget.todo.title) {
+    '疫苗' => AppColors.sage,
+    '驱虫' => AppColors.olive,
+    '体重' => AppColors.brown,
+    _ => AppColors.coralDeep,
+  };
+
+  @override
   Widget build(BuildContext context) {
-    return Material(
-      color: AppColors.card,
-      borderRadius: BorderRadius.circular(16),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(16),
-        onTap: todo.onTap,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-          child: Row(
-            children: [
-              Text(
-                todo.title,
-                style: zhuaji.copyWith(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w700,
-                ),
+    return GestureDetector(
+      onTapDown: (_) => setState(() => _down = true),
+      onTapCancel: () => setState(() => _down = false),
+      onTapUp: (_) => setState(() => _down = false),
+      onTap: widget.todo.onTap,
+      child: AnimatedScale(
+        scale: _down ? 0.98 : 1,
+        duration: const Duration(milliseconds: 120),
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            color: AppColors.card,
+            borderRadius: BorderRadius.circular(18),
+            boxShadow: softShadow,
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(18),
+            child: IntrinsicHeight(
+              child: Row(
+                children: [
+                  Container(width: 6, color: _bar),
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 14,
+                      ),
+                      child: Row(
+                        children: [
+                          Text(
+                            widget.todo.title,
+                            style: zhuaji.copyWith(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              widget.todo.detail,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: zhuaji.copyWith(color: AppColors.muted),
+                            ),
+                          ),
+                          AnimatedScale(
+                            scale: _down ? 1.2 : 1,
+                            duration: const Duration(milliseconds: 140),
+                            child: const Icon(
+                              Icons.check,
+                              color: AppColors.coralDeep,
+                              size: 20,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  todo.detail,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: zhuaji.copyWith(color: AppColors.muted),
-                ),
-              ),
-              const Icon(Icons.check, color: AppColors.coralDeep, size: 20),
-            ],
+            ),
           ),
         ),
       ),

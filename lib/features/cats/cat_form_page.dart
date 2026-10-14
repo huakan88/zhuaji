@@ -48,7 +48,7 @@ class _CatFormPageState extends State<CatFormPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(title: Text(widget.catId == null ? '建档' : '改名')),
+      appBar: zhuajiBar(widget.catId == null ? '建档' : '改名'),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
         children: [

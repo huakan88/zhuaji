@@ -92,7 +92,7 @@ class _ConfirmPageState extends State<ConfirmPage> {
     final days = {7, 30, 42, _days}.toList()..sort();
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(title: const Text('确认')),
+      appBar: zhuajiBar('确认'),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
         children: [

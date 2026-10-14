@@ -2,7 +2,9 @@
 
 猫咪喂养与健康记录的本地原型。数据留在手机里，不需要账号和服务器。界面是简体中文。
 
-版本 2.2。底部五个入口：今天、健康、扫粮（中间大按钮）、粮仓、猫咪。除了建档时的猫名，其它都用点选或滚轮，不再弹出键盘。
+版本 2.3。底部五个入口：今天、健康、扫粮（中间大按钮）、粮仓、猫咪。除了建档时的猫名，其它都用点选或滚轮，不再弹出键盘。界面是奶油底、珊瑚和鼠尾草，顶栏是渐变。
+
+手机仍然先写本地数据库。配了云端令牌之后，才会把增量推到 `server/` 里的 API。怎么在本机把后端跑起来，见下面的「后端」。国内云和桥接说明在 `docs/国内服务器与桥接方案.md`。
 
 界面字体是随包附带的 Noto Sans SC 静态字重（Regular / Bold），并设为 `ThemeData.fontFamily` 和 `textTheme`。不要改回可变字体：Flutter 不会套用字重轴，默认 Thin 主字重会让中文变成方框。
 
@@ -85,6 +87,47 @@ iOS `Info.plist`：
 - `test/widget_test.dart`：免责声明和日期卡片
 - `test/cjk_font_test.dart`：中文笔画被画出来，而不是缺字方框
 - `test/screenshots_test.dart`：渲染今天、健康、扫粮、确认、粮仓、猫咪、疫苗
+- `test/local_sync_test.dart`：迁移步骤、出站队列、照片压缩、提醒裁剪、API 地址
+
+## 后端
+
+API 在 `server/`，用 Dart Shelf 写。没有 `DATABASE_URL` 时用内存库，方便本机看接口。有地址时连 PostgreSQL。
+
+只跑 API（内存库，端口 8080）：
+
+```bash
+cd server
+dart pub get
+AUTH_DEV=1 dart run bin/server.dart
+```
+
+`AUTH_DEV=1` 时，手机号验证码就是号码后四位，并写在响应的 `devCode` 里。这只给本地联调用，不要开在正式环境。`AUTH_DEV=0` 时验证码不会回在响应里，短信通道还没接。
+
+微信登录是 `POST /v1/auth/wechat`。默认返回 501。设 `WECHAT_MOCK=1` 才会发一个试用令牌。
+
+带 Postgres 和 Nginx（本机端口 8094）：
+
+```bash
+cd server
+docker compose up --build
+```
+
+接口在 `http://127.0.0.1:8094`。App 默认的 local 地址是模拟器看宿主机的 `http://10.0.2.2:8094`。真机或别的地址用：
+
+```bash
+flutter run --dart-define=API_ENV=local --dart-define=API_BASE_URL=http://127.0.0.1:8094
+```
+
+`API_ENV` 可以是 `local`、`staging`、`prod`。`API_BASE_URL` 有值时覆盖环境地址。
+
+冲突规则：比较 `updatedAt`（UTC），较新的留下。时间相同则 `deviceId` 字典序更大的留下。删除是 `deletedAt` 墓碑，旧的删除盖不过新的修改。手机先落本地，界面不等网络。
+
+后端测试：
+
+```bash
+cd packages/zhuaji_sync && dart test
+cd server && dart test
+```
 
 ## 局限
 
@@ -94,4 +137,4 @@ iOS `Info.plist`：
 - 不是每袋粮都印 GS1 日期码。普通商品条码不能反推日期。
 - 通知不是精确到秒的闹钟，部分国产系统还会限制后台提醒。
 - 本仓库在 Linux 上验证了 `flutter analyze`、`flutter test` 和 Android 构建。iOS 需要在 Mac 上编译。
-- 没有云同步、账号和真实兽医内容。
+- 云同步骨架已接上，默认没有令牌，界面仍只读写手机。短信、微信开放平台、OSS 和厂商推送都是接口，不是已经开通的账号。

@@ -217,3 +217,18 @@ class ReminderPlanner {
     return items;
   }
 }
+
+/// Drops one-shot reminders that are already due, keeps daily ones, and
+/// never asks the OS for more than [limit] notifications.
+List<PlannedNotification> schedulable(
+  List<PlannedNotification> items,
+  DateTime now, {
+  int limit = 60,
+}) {
+  final kept = [
+    for (final item in items)
+      if (item.repeatsDaily || item.when.isAfter(now)) item,
+  ]..sort((a, b) => a.when.compareTo(b.when));
+  if (kept.length <= limit) return kept;
+  return kept.sublist(0, limit);
+}

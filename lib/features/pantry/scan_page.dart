@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 
 import '../../core/theme/app_fonts.dart';
+import '../../core/theme/app_tokens.dart';
 
 class ScanPage extends StatefulWidget {
   const ScanPage({super.key});
@@ -30,6 +31,7 @@ class _ScanPageState extends State<ScanPage> {
       body: Stack(
         children: [
           Positioned.fill(child: _cameraPane()),
+          const IgnorePointer(child: _Viewfinder()),
           SafeArea(
             child: Align(
               alignment: Alignment.topLeft,
@@ -88,5 +90,26 @@ class _ScanPageState extends State<ScanPage> {
     if (!mounted) return;
     final query = value.isEmpty ? '' : '?code=${Uri.encodeComponent(value)}';
     context.pushReplacement('/confirm$query');
+  }
+}
+
+class _Viewfinder extends StatelessWidget {
+  const _Viewfinder();
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Container(
+        width: 220,
+        height: 220,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(28),
+          border: Border.all(color: AppColors.coral, width: 3),
+          boxShadow: const [
+            BoxShadow(color: Color(0x66F6B39A), blurRadius: 24),
+          ],
+        ),
+      ),
+    );
   }
 }

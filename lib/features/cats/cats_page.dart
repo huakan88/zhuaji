@@ -16,110 +16,122 @@ class CatsPage extends StatelessWidget {
     final kg = app.latestWeight?.weightKg;
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(title: const Text('猫咪')),
-      body: ListView(
-        padding: const EdgeInsets.fromLTRB(20, 8, 20, 120),
-        children: [
-          SizedBox(
-            height: 76,
-            child: ListView(
-              scrollDirection: Axis.horizontal,
-              children: [
-                for (final item in app.cats) ...[
+      appBar: zhuajiBar('猫咪'),
+      body: FadeIn(
+        child: ListView(
+          padding: const EdgeInsets.fromLTRB(20, 8, 20, 120),
+          children: [
+            SizedBox(
+              height: 76,
+              child: ListView(
+                scrollDirection: Axis.horizontal,
+                children: [
+                  for (final item in app.cats) ...[
+                    GestureDetector(
+                      onTap: () => app.selectCat(item.id),
+                      child: SizedBox(
+                        width: 64,
+                        child: Column(
+                          children: [
+                            CatAvatar(
+                              path: item.avatarPath,
+                              size: 48,
+                              selected: item.id == cat?.id,
+                            ),
+                            Text(
+                              item.name,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: zhuaji.copyWith(fontSize: 12),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                  ],
                   GestureDetector(
-                    onTap: () => app.selectCat(item.id),
+                    onTap: () => context.push('/cat-form'),
                     child: SizedBox(
                       width: 64,
                       child: Column(
                         children: [
-                          CatAvatar(
-                            path: item.avatarPath,
-                            size: 48,
-                            selected: item.id == cat?.id,
-                          ),
-                          Text(
-                            item.name,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: zhuaji.copyWith(fontSize: 12),
-                          ),
+                          const CatAvatar(path: null, size: 48),
+                          Text('添加', style: zhuaji.copyWith(fontSize: 12)),
                         ],
                       ),
                     ),
                   ),
-                  const SizedBox(width: 8),
                 ],
-                GestureDetector(
-                  onTap: () => context.push('/cat-form'),
-                  child: SizedBox(
-                    width: 64,
-                    child: Column(
-                      children: [
-                        const CatAvatar(path: null, size: 48),
-                        Text('添加', style: zhuaji.copyWith(fontSize: 12)),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 24),
-          if (cat == null)
-            EmptyHint(
-              title: '还没猫',
-              body: '拍一张，写个名字',
-              action: '建档',
-              onAction: () => context.push('/cat-form'),
-            )
-          else ...[
-            Center(
-              child: CatAvatar(path: cat.avatarPath, size: 168, selected: true),
-            ),
-            const SizedBox(height: 12),
-            Center(
-              child: GestureDetector(
-                onTap: () => context.push('/cat-form?id=${cat.id}'),
-                child: Text(
-                  cat.name,
-                  style: zhuaji.copyWith(
-                    fontSize: 28,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(height: 8),
-            Center(
-              child: Text(
-                kg == null ? '— kg' : '${kg.toStringAsFixed(2)} kg',
-                style: zhuaji.copyWith(
-                  fontSize: 32,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.coralDeep,
-                ),
-              ),
-            ),
-            const SizedBox(height: 8),
-            Center(
-              child: Text(
-                '体重在健康里改',
-                style: zhuaji.copyWith(color: AppColors.muted, fontSize: 12),
               ),
             ),
             const SizedBox(height: 24),
-            Center(
-              child: TextButton(
-                onPressed: () async {
-                  if (await confirmDelete(context, '删除${cat.name}？')) {
-                    await app.removeCat(cat.id);
-                  }
-                },
-                child: const Text('删除'),
+            if (cat == null)
+              EmptyHint(
+                title: '还没猫',
+                body: '拍一张，写个名字',
+                action: '建档',
+                onAction: () => context.push('/cat-form'),
+              )
+            else ...[
+              Center(
+                child: DecoratedBox(
+                  decoration: const BoxDecoration(
+                    shape: BoxShape.circle,
+                    boxShadow: softShadow,
+                  ),
+                  child: CatAvatar(
+                    path: cat.avatarPath,
+                    size: 168,
+                    selected: true,
+                  ),
+                ),
               ),
-            ),
+              const SizedBox(height: 12),
+              Center(
+                child: GestureDetector(
+                  onTap: () => context.push('/cat-form?id=${cat.id}'),
+                  child: Text(
+                    cat.name,
+                    style: zhuaji.copyWith(
+                      fontSize: 28,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 8),
+              Center(
+                child: Text(
+                  kg == null ? '— kg' : '${kg.toStringAsFixed(2)} kg',
+                  style: zhuaji.copyWith(
+                    fontSize: 32,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.coralDeep,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 8),
+              Center(
+                child: Text(
+                  '体重在健康里改',
+                  style: zhuaji.copyWith(color: AppColors.muted, fontSize: 12),
+                ),
+              ),
+              const SizedBox(height: 24),
+              Center(
+                child: TextButton(
+                  onPressed: () async {
+                    if (await confirmDelete(context, '删除${cat.name}？')) {
+                      await app.removeCat(cat.id);
+                    }
+                  },
+                  child: const Text('删除'),
+                ),
+              ),
+            ],
           ],
-        ],
+        ),
       ),
     );
   }

@@ -1,0 +1,41 @@
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: zhuaji
+      POSTGRES_PASSWORD: zhuaji
+      POSTGRES_DB: zhuaji
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./db/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U zhuaji"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  api:
+    build:
+      context: ..
+      dockerfile: server/Dockerfile
+    environment:
+      DATABASE_URL: postgres://zhuaji:zhuaji@db:5432/zhuaji
+      JWT_SECRET: dev-secret-change-me
+      AUTH_DEV: "1"
+      WECHAT_MOCK: "0"
+      PORT: "8080"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  nginx:
+    image: nginx:1.27
+    ports:
+      - "8094:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - api
+
+volumes:
+  pgdata:
