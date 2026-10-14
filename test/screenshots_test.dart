@@ -1,17 +1,40 @@
+import 'dart:async';
 import 'dart:io';
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
 import 'package:maokangji/app.dart';
 import 'package:maokangji/data/db/app_database.dart';
 import 'package:maokangji/data/repositories/drift_care_repository.dart';
 import 'package:maokangji/services/coat_recognizer.dart';
+import 'package:maokangji/domain/scale/scale_parser.dart';
 import 'package:maokangji/services/notification_service.dart';
+import 'package:maokangji/services/scale_service.dart';
 import 'package:maokangji/state/app_controller.dart';
 
 import 'cjk_font.dart';
+
+class _ShotScale implements ScaleSource {
+  var status = ScaleStatus.ready;
+  StreamController<ScaleReading>? _out;
+
+  @override
+  Future<ScaleStatus> prepare() async => status;
+
+  @override
+  Stream<ScaleReading> readings() =>
+      (_out = StreamController<ScaleReading>()).stream;
+
+  @override
+  Future<void> stop() async => _out?.close();
+
+  void send(double kg, {bool stable = true}) => _out!.add(
+    ScaleReading(kg: kg, stable: stable, protocol: ScaleProtocol.miScale2),
+  );
+}
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -30,9 +53,22 @@ void main() {
       clock: () => DateTime(2026, 10, 12, 10),
     );
     await controller.init();
-    await tester.pumpWidget(ZhuajiApp(controller: controller));
+    final scale = _ShotScale();
+    await tester.pumpWidget(
+      ZhuajiApp(controller: controller, scaleSource: () => scale),
+    );
     await _frames(tester);
     await _shot(tester, 'today');
+
+    await _tapOnScreen(tester, '猫三联');
+    await _frames(tester);
+    await _frames(tester);
+    await _shot(tester, 'today-undo');
+    tester.widget<SnackBarAction>(find.byType(SnackBarAction)).onPressed();
+    await _frames(tester);
+    ScaffoldMessenger.of(tester.element(find.byType(Scaffold).last))
+        .clearSnackBars();
+    await _frames(tester);
 
     await _tapOnScreen(tester, '健康');
     await _frames(tester);
@@ -44,10 +80,57 @@ void main() {
     await tester.tap(find.byTooltip('返回'));
     await _frames(tester);
 
+    await _tapOnScreen(tester, '驱虫');
+    await _frames(tester);
+    await _shot(tester, 'deworm');
+    await tester.tap(find.byTooltip('返回'));
+    await _frames(tester);
+
+    await _tapOnScreen(tester, '就医');
+    await _frames(tester);
+    await _shot(tester, 'visit');
+    await tester.tap(find.byTooltip('返回'));
+    await _frames(tester);
+
     await _tapOnScreen(tester, '体重');
     await _frames(tester);
     await _shot(tester, 'weight');
+
+    await _tapOnScreen(tester, '用蓝牙秤（抱猫称）');
+    await _frames(tester);
+    scale.send(61.2, stable: false);
+    await _frames(tester);
+    await _shot(tester, 'scale-owner');
+    scale.send(62.40);
+    await _frames(tester);
+    scale.send(65.9, stable: false);
+    await _frames(tester);
+    await _shot(tester, 'scale-together');
+    scale.send(66.75);
+    await _frames(tester);
+    await _shot(tester, 'scale-result');
+    await _tapOnScreen(tester, '用这个');
+    await _frames(tester);
+    await _shot(tester, 'weight-from-scale');
+
+    ScaffoldMessenger.of(tester.element(find.byType(Scaffold).last))
+        .clearSnackBars();
+    await _frames(tester);
+    scale.status = ScaleStatus.off;
+    await _tapOnScreen(tester, '用蓝牙秤（抱猫称）');
+    await _frames(tester);
+    await _shot(tester, 'scale-failed');
+    await _tapOnScreen(tester, '隐私政策');
+    await _frames(tester);
+    await _shot(tester, 'privacy');
     await tester.tap(find.byTooltip('返回'));
+    await _frames(tester);
+    await _tapOnScreen(tester, '手动输入');
+    await _frames(tester);
+    await tester.tap(find.byTooltip('返回'));
+    await _frames(tester);
+    ScaffoldMessenger.of(tester.element(find.byType(Scaffold).last))
+        .clearSnackBars();
     await _frames(tester);
 
     await _tapOnScreen(tester, '扫粮');
@@ -56,6 +139,19 @@ void main() {
     await _tapOnScreen(tester, '选品牌');
     await _frames(tester);
     await _shot(tester, 'scan-result');
+    await tester.tap(find.byTooltip('返回'));
+    await _frames(tester);
+
+    const code = '6909999000031';
+    final router = GoRouter.of(tester.element(find.byType(Scaffold).last));
+    unawaited(router.push('/confirm?code=$code'));
+    await _frames(tester);
+    await _shot(tester, 'barcode-new');
+    await _tapOnScreen(tester, '记下');
+    await _frames(tester);
+    unawaited(router.push('/confirm?code=$code'));
+    await _frames(tester);
+    await _shot(tester, 'barcode-known');
     await tester.tap(find.byTooltip('返回'));
     await _frames(tester);
 
@@ -76,6 +172,9 @@ void main() {
     );
     await _frames(tester);
     await _shot(tester, 'cat-story');
+
+    await tester.pumpWidget(const SizedBox());
+    await _frames(tester);
   });
 }
 
@@ -134,7 +233,7 @@ Future<void> _shot(WidgetTester tester, String name) async {
     );
     final image = await boundary.toImage(pixelRatio: 2);
     final data = await image.toByteData(format: ui.ImageByteFormat.png);
-    final file = File('/opt/cursor/artifacts/screenshots/v250/$name.png');
+    final file = File('/opt/cursor/artifacts/screenshots/v260/$name.png');
     await file.parent.create(recursive: true);
     await file.writeAsBytes(data!.buffer.asUint8List());
   });

@@ -28,6 +28,7 @@ class _ConfirmPageState extends State<ConfirmPage> {
   String _storage = '阴凉干燥，封好袋口。';
   String? _batch;
   var _fromCode = false;
+  var _rechoose = false;
   var _ready = false;
   var _busy = false;
 
@@ -87,8 +88,8 @@ class _ConfirmPageState extends State<ConfirmPage> {
       for (final item in app.products)
         if (_product != null && item.brand == _product!.brand) item,
     ];
-    final matched =
-        widget.code.isNotEmpty && app.findBarcode(widget.code) != null;
+    final known = widget.code.isEmpty ? null : app.findBarcode(widget.code);
+    final matched = known != null && !_rechoose;
     final days = {7, 30, 42, _days}.toList()..sort();
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -102,9 +103,45 @@ class _ConfirmPageState extends State<ConfirmPage> {
           ),
           const SizedBox(height: 4),
           Text(
-            _fromCode ? '日期已填上，核对后记下' : '点品牌，日期用滚轮改',
+            _fromCode
+                ? '日期已填上，核对后记下'
+                : matched
+                ? '日期用滚轮改'
+                : '点品牌，日期用滚轮改',
             style: zhuaji.copyWith(fontSize: 13, color: AppColors.muted),
           ),
+          if (matched)
+            Row(
+              children: [
+                const Icon(
+                  Icons.check_circle_outline,
+                  size: 16,
+                  color: AppColors.coralDeep,
+                ),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Text(
+                    '认得这个码',
+                    style: zhuaji.copyWith(
+                      fontSize: 13,
+                      color: AppColors.coralDeep,
+                    ),
+                  ),
+                ),
+                TextButton(
+                  onPressed: () => setState(() => _rechoose = true),
+                  child: const Text('不是这个'),
+                ),
+              ],
+            )
+          else if (widget.code.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(top: 4),
+              child: Text(
+                '选好品牌记下后，下次扫这个码直接认出',
+                style: zhuaji.copyWith(fontSize: 13, color: AppColors.muted),
+              ),
+            ),
           if (!matched && brands.isNotEmpty) ...[
             const SizedBox(height: 20),
             const SectionLabel('品牌'),
@@ -247,6 +284,10 @@ class _ConfirmPageState extends State<ConfirmPage> {
     final app = AppScope.of<AppController>(context);
     setState(() => _busy = true);
     try {
+      final code = widget.code.trim();
+      if (code.isNotEmpty && app.findBarcode(code)?.id != product.id) {
+        await app.rememberBarcode(code, product.id);
+      }
       await app.savePantry(
         PantryDraft(
           productId: product.id,

@@ -10,6 +10,7 @@ class PlannedNotification {
     required this.body,
     required this.channel,
     this.repeatsDaily = false,
+    this.doneKey,
   });
 
   final int id;
@@ -18,6 +19,32 @@ class PlannedNotification {
   final String body;
   final ReminderChannel channel;
   final bool repeatsDaily;
+
+  /// Set when the notification can offer 「已完成」; see [DoneKey].
+  final String? doneKey;
+}
+
+/// What a 「已完成」 tap on a notification should mark done.
+class DoneKey {
+  const DoneKey({required this.vaccine, required this.recordId});
+
+  final bool vaccine;
+  final int recordId;
+
+  String get value => '${vaccine ? 'vaccine' : 'deworm'}:$recordId';
+
+  static DoneKey? parse(String? raw) {
+    if (raw == null) return null;
+    final parts = raw.split(':');
+    if (parts.length != 2) return null;
+    final id = int.tryParse(parts[1]);
+    if (id == null) return null;
+    return switch (parts[0]) {
+      'vaccine' => DoneKey(vaccine: true, recordId: id),
+      'deworm' => DoneKey(vaccine: false, recordId: id),
+      _ => null,
+    };
+  }
 }
 
 class DueInput {
@@ -125,6 +152,7 @@ class ReminderPlanner {
           ? '今天是「${due.label}」的计划日期。这只是提醒，不能代替兽医判断。'
           : '还有 7 天到「${due.label}」的计划日期。',
       channel: ReminderChannel.health,
+      doneKey: DoneKey(vaccine: due.vaccine, recordId: due.id).value,
     );
   }
 
@@ -195,6 +223,7 @@ class ReminderPlanner {
     required String Function(int offset) titleFor,
     required String Function(int offset) bodyFor,
     required ReminderChannel channel,
+    String? doneKey,
   }) {
     final items = <PlannedNotification>[];
     for (final offset in offsets) {
@@ -211,6 +240,7 @@ class ReminderPlanner {
           title: titleFor(offset),
           body: bodyFor(offset),
           channel: channel,
+          doneKey: doneKey,
         ),
       );
     }

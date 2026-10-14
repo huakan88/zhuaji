@@ -48,6 +48,72 @@ Future<DateTime?> pickDateWheel(BuildContext context, DateTime initial) {
   );
 }
 
+/// 今天 / 昨天 / 前天 in one tap; anything older goes to the wheels.
+class DateChips extends StatelessWidget {
+  const DateChips({
+    required this.label,
+    required this.date,
+    required this.today,
+    required this.onChanged,
+    super.key,
+  });
+
+  static const quick = ['今天', '昨天', '前天'];
+
+  final String label;
+  final DateTime date;
+  final DateTime today;
+  final ValueChanged<DateTime> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final base = DateTime(today.year, today.month, today.day);
+    final picked = DateTime(date.year, date.month, date.day);
+    final back = base.difference(picked).inDays;
+    final isQuick = back >= 0 && back < quick.length;
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Row(
+        children: [
+          SizedBox(
+            width: 48,
+            child: Text(
+              label,
+              style: zhuaji.copyWith(fontWeight: FontWeight.w700),
+            ),
+          ),
+          Expanded(
+            child: Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                for (var i = 0; i < quick.length; i++)
+                  ChoiceChip(
+                    label: Text(quick[i]),
+                    selected: isQuick && back == i,
+                    selectedColor: AppColors.tintCoral,
+                    onSelected: (_) =>
+                        onChanged(base.subtract(Duration(days: i))),
+                  ),
+                ChoiceChip(
+                  label: Text(isQuick ? '更早' : formatDate(picked)),
+                  selected: !isQuick,
+                  selectedColor: AppColors.tintCoral,
+                  onSelected: (_) async {
+                    final value = await pickDateWheel(context, picked);
+                    if (value == null) return;
+                    onChanged(DateTime(value.year, value.month, value.day));
+                  },
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class DateLine extends StatelessWidget {
   const DateLine({
     required this.label,

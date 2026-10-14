@@ -617,6 +617,27 @@ Future<bool> confirmDelete(BuildContext context, String title) async {
   return result ?? false;
 }
 
+void showUndo(
+  BuildContext context,
+  String text,
+  Future<void> Function() onUndo,
+) {
+  final messenger = ScaffoldMessenger.of(context);
+  messenger.clearSnackBars();
+  messenger.showSnackBar(
+    SnackBar(
+      content: Text(text),
+      behavior: SnackBarBehavior.floating,
+      duration: const Duration(seconds: 5),
+      action: SnackBarAction(
+        label: '撤销',
+        textColor: AppColors.tintCoral,
+        onPressed: () => onUndo(),
+      ),
+    ),
+  );
+}
+
 void showMessage(BuildContext context, String text) {
   final messenger = ScaffoldMessenger.of(context);
   messenger.clearSnackBars();

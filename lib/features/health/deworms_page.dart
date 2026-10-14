@@ -18,8 +18,8 @@ class DewormsPage extends StatefulWidget {
 
 class _DewormsPageState extends State<DewormsPage> {
   static const _products = ['大宠爱', '博来恩', '海乐妙'];
-  var _kind = DewormKind.internal;
-  var _product = '大宠爱';
+  DewormKind? _kind;
+  String? _product;
   DateTime? _given;
   var _busy = false;
 
@@ -34,6 +34,10 @@ class _DewormsPageState extends State<DewormsPage> {
         body: const Center(child: Text('先选择一只猫')),
       );
     }
+    final last = app.lastDeworm;
+    final kind = _kind ??= last?.kind ?? DewormKind.internal;
+    final product = _product ??= last?.product ?? _products.first;
+    final choices = [..._products, if (!_products.contains(product)) product];
     final given = _given ??= dateOnly(app.now);
     final next = given.add(const Duration(days: 90));
     final items = [...app.catDeworms]
@@ -58,13 +62,13 @@ class _DewormsPageState extends State<DewormsPage> {
             children: [
               ChoiceChip(
                 label: const Text('体内'),
-                selected: _kind == DewormKind.internal,
+                selected: kind == DewormKind.internal,
                 selectedColor: AppColors.tintCoral,
                 onSelected: (_) => setState(() => _kind = DewormKind.internal),
               ),
               ChoiceChip(
                 label: const Text('体外'),
-                selected: _kind == DewormKind.external,
+                selected: kind == DewormKind.external,
                 selectedColor: AppColors.tintCoral,
                 onSelected: (_) => setState(() => _kind = DewormKind.external),
               ),
@@ -74,23 +78,20 @@ class _DewormsPageState extends State<DewormsPage> {
           Wrap(
             spacing: 8,
             children: [
-              for (final label in _products)
+              for (final label in choices)
                 ChoiceChip(
                   label: Text(label),
-                  selected: _product == label,
+                  selected: product == label,
                   selectedColor: AppColors.tintCoral,
                   onSelected: (_) => setState(() => _product = label),
                 ),
             ],
           ),
-          DateLine(
+          DateChips(
             label: '使用',
             date: given,
-            onTap: () async {
-              final picked = await pickDate(context, given);
-              if (picked == null) return;
-              setState(() => _given = dateOnly(picked));
-            },
+            today: app.now,
+            onChanged: (value) => setState(() => _given = value),
           ),
           Text(
             '下次 ${formatDate(next)}',
@@ -109,8 +110,8 @@ class _DewormsPageState extends State<DewormsPage> {
                     await app.saveDeworm(
                       DewormDraft(
                         catId: cat.id,
-                        kind: _kind,
-                        product: _product,
+                        kind: kind,
+                        product: product,
                         givenOn: given,
                         nextDue: next,
                       ),
@@ -167,7 +168,11 @@ class _Record extends StatelessWidget {
           onPressed: () async {
             final next = await app.completeDeworm(item);
             if (!context.mounted) return;
-            showMessage(context, '下次 ${formatDate(next)}');
+            showUndo(
+              context,
+              '下次 ${formatDate(next)}',
+              () => app.restoreDeworm(item),
+            );
           },
           child: const Text('完成'),
         ),
