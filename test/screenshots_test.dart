@@ -44,6 +44,12 @@ void main() {
     await tester.tap(find.byTooltip('返回'));
     await _frames(tester);
 
+    await _tapOnScreen(tester, '体重');
+    await _frames(tester);
+    await _shot(tester, 'weight');
+    await tester.tap(find.byTooltip('返回'));
+    await _frames(tester);
+
     await _tapOnScreen(tester, '扫粮');
     await _frames(tester);
     await _shot(tester, 'scan');
@@ -60,6 +66,16 @@ void main() {
     await _tapOnScreen(tester, '猫咪');
     await _frames(tester);
     await _shot(tester, 'cat');
+
+    final story = find.text('最近').evaluate().where((e) => !_hidden(e));
+    await tester.ensureVisible(find.byWidget(story.first.widget));
+    await tester.drag(
+      find.byWidget(story.first.widget),
+      const Offset(0, -260),
+      warnIfMissed: false,
+    );
+    await _frames(tester);
+    await _shot(tester, 'cat-story');
   });
 }
 
@@ -118,7 +134,7 @@ Future<void> _shot(WidgetTester tester, String name) async {
     );
     final image = await boundary.toImage(pixelRatio: 2);
     final data = await image.toByteData(format: ui.ImageByteFormat.png);
-    final file = File('/opt/cursor/artifacts/screenshots/v240/$name.png');
+    final file = File('/opt/cursor/artifacts/screenshots/v250/$name.png');
     await file.parent.create(recursive: true);
     await file.writeAsBytes(data!.buffer.asUint8List());
   });

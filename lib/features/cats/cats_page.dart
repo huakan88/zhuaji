@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/format.dart';
 import '../../core/theme/app_fonts.dart';
-import '../../domain/models.dart';
 import '../../core/theme/app_tokens.dart';
 import '../../core/widgets/common.dart';
+import '../../core/widgets/weight_trend.dart';
+import '../../domain/care/care_story.dart';
+import '../../domain/models.dart';
 import '../../state/app_controller.dart';
 
 class CatsPage extends StatelessWidget {
@@ -16,6 +19,17 @@ class CatsPage extends StatelessWidget {
     final app = AppScope.of<AppController>(context);
     final cat = app.active;
     final kg = app.latestWeight?.weightKg;
+    final events = cat == null
+        ? const <CareEvent>[]
+        : recentCare(
+            catId: cat.id,
+            vaccines: app.vaccines,
+            deworms: app.deworms,
+            visits: app.visits,
+            checkups: app.checkups,
+            weights: app.weights,
+            now: app.now,
+          );
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: zhuajiBar('猫咪'),
@@ -121,7 +135,40 @@ class CatsPage extends StatelessWidget {
                   ],
                 ),
               ),
+              if (app.catWeights.length > 1) ...[
+                const SizedBox(height: 8),
+                QuietCard(child: WeightTrend(weights: app.catWeights)),
+              ],
               const SizedBox(height: 24),
+              const SectionLabel('最近'),
+              const SizedBox(height: 8),
+              _RecentCare(events: events),
+              const SizedBox(height: 16),
+              OutlinedButton.icon(
+                onPressed: () async {
+                  await Clipboard.setData(
+                    ClipboardData(
+                      text: vetCard(
+                        cat: cat,
+                        vaccines: app.vaccines,
+                        deworms: app.deworms,
+                        visits: app.visits,
+                        weights: app.weights,
+                        conditions: app.conditions,
+                        now: app.now,
+                      ),
+                    ),
+                  );
+                  if (!context.mounted) return;
+                  showMessage(context, '已复制，可以发给医生');
+                },
+                style: OutlinedButton.styleFrom(
+                  minimumSize: const Size.fromHeight(48),
+                ),
+                icon: const Icon(Icons.content_copy_outlined, size: 18),
+                label: const Text('复制健康卡'),
+              ),
+              const SizedBox(height: 8),
               Center(
                 child: TextButton(
                   onPressed: () async {
@@ -145,5 +192,63 @@ class CatsPage extends StatelessWidget {
       ageLabel(cat.birthday, now),
     ];
     return parts.join(' · ');
+  }
+}
+
+class _RecentCare extends StatelessWidget {
+  const _RecentCare({required this.events});
+
+  final List<CareEvent> events;
+
+  IconData _icon(CareKind kind) => switch (kind) {
+    CareKind.vaccine => Icons.vaccines_outlined,
+    CareKind.deworm => Icons.bug_report_outlined,
+    CareKind.visit => Icons.local_hospital_outlined,
+    CareKind.checkup => Icons.fact_check_outlined,
+    CareKind.weight => Icons.monitor_weight_outlined,
+  };
+
+  @override
+  Widget build(BuildContext context) {
+    if (events.isEmpty) {
+      return Text(
+        '记过的疫苗、驱虫和就医会出现在这里',
+        style: zhuaji.copyWith(fontSize: 13, color: AppColors.muted),
+      );
+    }
+    return QuietCard(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      child: Column(
+        children: [
+          for (var i = 0; i < events.length; i++) ...[
+            if (i > 0) const Divider(height: 1, color: AppColors.line),
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              child: Row(
+                children: [
+                  Icon(_icon(events[i].kind), size: 20, color: AppColors.ink),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      '${events[i].title} · ${events[i].detail}',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: zhuaji.copyWith(fontSize: 15),
+                    ),
+                  ),
+                  Text(
+                    formatMonthDay(events[i].on),
+                    style: zhuaji.copyWith(
+                      fontSize: 12,
+                      color: AppColors.muted,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
   }
 }

@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../core/theme/app_fonts.dart';
 import '../../core/theme/app_tokens.dart';
 import '../../core/widgets/common.dart';
+import '../../core/widgets/weight_trend.dart';
 import '../../state/app_controller.dart';
 
 class WeightPage extends StatefulWidget {
@@ -69,6 +70,8 @@ class _WeightPageState extends State<WeightPage> {
                 ),
               ],
             ),
+            const SizedBox(height: 32),
+            QuietCard(child: WeightTrend(weights: app.catWeights)),
           ],
         ),
       ),
