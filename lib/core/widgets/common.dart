@@ -40,7 +40,7 @@ class SoftCard extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(radius),
-        boxShadow: softShadow,
+        border: Border.all(color: AppColors.line),
       ),
       child: Material(
         color: color,
@@ -117,58 +117,175 @@ class SectionHeader extends StatelessWidget {
 AppBar zhuajiBar(String title) {
   return AppBar(
     title: Text(title),
-    toolbarHeight: 72,
-    clipBehavior: Clip.antiAlias,
-    backgroundColor: Colors.transparent,
+    toolbarHeight: 56,
+    backgroundColor: AppColors.background,
     surfaceTintColor: Colors.transparent,
     elevation: 0,
     scrolledUnderElevation: 0,
-    shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(bottom: Radius.circular(28)),
-    ),
-    flexibleSpace: const DecoratedBox(
-      decoration: BoxDecoration(
-        gradient: headerGradient,
-        borderRadius: BorderRadius.vertical(bottom: Radius.circular(28)),
-      ),
-    ),
   );
 }
 
-class FadeIn extends StatefulWidget {
+class QuietCard extends StatelessWidget {
+  const QuietCard({
+    required this.child,
+    this.padding = const EdgeInsets.all(16),
+    this.onTap,
+    super.key,
+  });
+
+  final Widget child;
+  final EdgeInsets padding;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final card = DecoratedBox(
+      decoration: BoxDecoration(
+        color: AppColors.card,
+        borderRadius: BorderRadius.circular(Radii.l),
+        border: Border.all(color: AppColors.line),
+      ),
+      child: Padding(padding: padding, child: child),
+    );
+    if (onTap == null) return card;
+    return GestureDetector(onTap: onTap, child: card);
+  }
+}
+
+class PhotoFrame extends StatelessWidget {
+  const PhotoFrame({required this.path, this.height = 248, super.key});
+
+  final String? path;
+  final double height;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: height,
+      width: double.infinity,
+      clipBehavior: Clip.antiAlias,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(Radii.xl),
+        border: Border.all(color: AppColors.line),
+      ),
+      child: CatImage(path: path),
+    );
+  }
+}
+
+class HeroCard extends StatelessWidget {
+  const HeroCard({
+    required this.path,
+    required this.title,
+    required this.subtitle,
+    this.height = 252,
+    this.onTitleTap,
+    super.key,
+  });
+
+  final String? path;
+  final String title;
+  final String subtitle;
+  final double height;
+  final VoidCallback? onTitleTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      clipBehavior: Clip.antiAlias,
+      decoration: BoxDecoration(
+        color: AppColors.card,
+        borderRadius: BorderRadius.circular(Radii.xl),
+        border: Border.all(color: AppColors.line),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            height: height,
+            width: double.infinity,
+            child: CatImage(path: path),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                GestureDetector(
+                  onTap: onTitleTap,
+                  child: Text(
+                    title,
+                    style: zhuaji.copyWith(
+                      fontSize: 22,
+                      fontWeight: FontWeight.w700,
+                      height: 1.2,
+                    ),
+                  ),
+                ),
+                if (subtitle.isNotEmpty) ...[
+                  const SizedBox(height: 4),
+                  Text(
+                    subtitle,
+                    style: zhuaji.copyWith(
+                      fontSize: 13,
+                      color: AppColors.muted,
+                      height: 1.35,
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class SectionLabel extends StatelessWidget {
+  const SectionLabel(this.text, {super.key});
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      text,
+      style: zhuaji.copyWith(
+        fontSize: 12,
+        color: AppColors.muted,
+        height: 1.35,
+      ),
+    );
+  }
+}
+
+class IconWell extends StatelessWidget {
+  const IconWell({required this.icon, super.key});
+
+  final IconData icon;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 40,
+      height: 40,
+      decoration: BoxDecoration(
+        color: AppColors.cream,
+        borderRadius: BorderRadius.circular(Radii.s),
+      ),
+      child: Icon(icon, size: 22, color: AppColors.ink),
+    );
+  }
+}
+
+class FadeIn extends StatelessWidget {
   const FadeIn({required this.child, super.key});
 
   final Widget child;
 
   @override
-  State<FadeIn> createState() => _FadeInState();
-}
-
-class _FadeInState extends State<FadeIn> {
-  var _shown = false;
-
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) setState(() => _shown = true);
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedSlide(
-      offset: _shown ? Offset.zero : const Offset(0, 0.03),
-      duration: const Duration(milliseconds: 220),
-      curve: Curves.easeOutCubic,
-      child: AnimatedOpacity(
-        opacity: _shown ? 1 : 0,
-        duration: const Duration(milliseconds: 220),
-        curve: Curves.easeOutCubic,
-        child: widget.child,
-      ),
-    );
-  }
+  Widget build(BuildContext context) => child;
 }
 
 class Pressable extends StatefulWidget {
@@ -206,59 +323,13 @@ class _EmptyIllustration extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      width: 120,
-      height: 96,
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          Positioned(
-            left: 8,
-            top: 10,
-            child: Container(
-              width: 54,
-              height: 54,
-              decoration: const BoxDecoration(
-                color: AppColors.tintSage,
-                shape: BoxShape.circle,
-              ),
-            ),
-          ),
-          Positioned(
-            right: 6,
-            bottom: 6,
-            child: Container(
-              width: 36,
-              height: 36,
-              decoration: const BoxDecoration(
-                color: AppColors.tintCoral,
-                shape: BoxShape.circle,
-              ),
-            ),
-          ),
-          Container(
-            width: 76,
-            height: 76,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: AppColors.card,
-              boxShadow: softShadow,
-              border: Border.all(color: AppColors.line),
-            ),
-            clipBehavior: Clip.antiAlias,
-            child: const Stack(
-              alignment: Alignment.center,
-              children: [
-                Image(
-                  image: AssetImage('assets/cats/cat-icon.jpg'),
-                  width: 76,
-                  height: 76,
-                  fit: BoxFit.cover,
-                ),
-              ],
-            ),
-          ),
-        ],
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(Radii.xl),
+      child: const Image(
+        image: AssetImage('assets/cats/cat-icon.jpg'),
+        width: 96,
+        height: 96,
+        fit: BoxFit.cover,
       ),
     );
   }

@@ -97,15 +97,17 @@ class _ConfirmPageState extends State<ConfirmPage> {
         padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
         children: [
           Text(
-            _fromCode ? '日期已填上，核对后记下' : '点品牌，日期用滚轮改',
-            style: zhuaji.copyWith(color: AppColors.muted),
-          ),
-          const SizedBox(height: 8),
-          Text(
             _product?.name ?? '先选品牌',
             style: zhuaji.copyWith(fontSize: 22, fontWeight: FontWeight.w700),
           ),
+          const SizedBox(height: 4),
+          Text(
+            _fromCode ? '日期已填上，核对后记下' : '点品牌，日期用滚轮改',
+            style: zhuaji.copyWith(fontSize: 13, color: AppColors.muted),
+          ),
           if (!matched && brands.isNotEmpty) ...[
+            const SizedBox(height: 20),
+            const SectionLabel('品牌'),
             const SizedBox(height: 8),
             SizedBox(
               height: 48,
@@ -118,7 +120,7 @@ class _ConfirmPageState extends State<ConfirmPage> {
                       child: ChoiceChip(
                         label: Text(_shortBrand(brand)),
                         selected: brand == _product?.brand,
-                        selectedColor: AppColors.coral,
+                        selectedColor: AppColors.tintCoral,
                         onSelected: (_) {
                           FoodProduct? first;
                           for (final item in app.products) {
@@ -154,29 +156,45 @@ class _ConfirmPageState extends State<ConfirmPage> {
                 ),
               ),
           ],
-          const SizedBox(height: 8),
+          const SizedBox(height: 16),
           Text(
             _storage,
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
-            style: zhuaji.copyWith(height: 1.35),
+            style: zhuaji.copyWith(
+              fontSize: 13,
+              height: 1.35,
+              color: AppColors.muted,
+            ),
           ),
-          DateLine(
-            label: '生产',
-            date: _production!,
-            onTap: () => _pick(_production!, (value) => _production = value),
+          const SizedBox(height: 20),
+          const SectionLabel('日期'),
+          const SizedBox(height: 8),
+          QuietCard(
+            child: Column(
+              children: [
+                DateLine(
+                  label: '生产',
+                  date: _production!,
+                  onTap: () =>
+                      _pick(_production!, (value) => _production = value),
+                ),
+                DateLine(
+                  label: '到期',
+                  date: _expiry!,
+                  onTap: () => _pick(_expiry!, (value) => _expiry = value),
+                ),
+                DateLine(
+                  label: '开封',
+                  date: _opened!,
+                  onTap: () => _pick(_opened!, (value) => _opened = value),
+                ),
+              ],
+            ),
           ),
-          DateLine(
-            label: '到期',
-            date: _expiry!,
-            onTap: () => _pick(_expiry!, (value) => _expiry = value),
-          ),
-          DateLine(
-            label: '开封',
-            date: _opened!,
-            onTap: () => _pick(_opened!, (value) => _opened = value),
-          ),
-          const SizedBox(height: 4),
+          const SizedBox(height: 20),
+          const SectionLabel('开封后'),
+          const SizedBox(height: 8),
           Wrap(
             spacing: 8,
             children: [
@@ -184,7 +202,7 @@ class _ConfirmPageState extends State<ConfirmPage> {
                 ChoiceChip(
                   label: Text('$day天'),
                   selected: _days == day,
-                  selectedColor: AppColors.coral,
+                  selectedColor: AppColors.tintCoral,
                   onSelected: (_) => setState(() => _days = day),
                 ),
             ],

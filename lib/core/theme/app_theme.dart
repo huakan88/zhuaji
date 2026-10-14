@@ -31,7 +31,7 @@ ThemeData buildAppTheme() {
   );
   final body = zhuajiOf(text.bodyMedium);
   final title = zhuajiOf(text.titleLarge)
-      .copyWith(fontWeight: FontWeight.w700, fontSize: 20);
+      .copyWith(fontWeight: FontWeight.w700, fontSize: 22);
   final label = zhuaji.copyWith(fontWeight: FontWeight.w700, fontSize: 15);
   return ThemeData(
     useMaterial3: true,
@@ -52,22 +52,15 @@ ThemeData buildAppTheme() {
       toolbarTextStyle: body,
     ),
     filledButtonTheme: FilledButtonThemeData(
-      style:
-          FilledButton.styleFrom(
-            backgroundColor: AppColors.coral,
-            foregroundColor: AppColors.ink,
-            minimumSize: const Size(0, 48),
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-            shape: const StadiumBorder(),
-            textStyle: label,
-            elevation: 3,
-            shadowColor: const Color(0x66E58B72),
-            animationDuration: const Duration(milliseconds: 120),
-          ).copyWith(
-            elevation: WidgetStateProperty.resolveWith((states) {
-              return states.contains(WidgetState.pressed) ? 0 : 3;
-            }),
-          ),
+      style: FilledButton.styleFrom(
+        backgroundColor: AppColors.coral,
+        foregroundColor: Colors.white,
+        minimumSize: const Size(0, 48),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+        shape: const StadiumBorder(),
+        textStyle: label.copyWith(color: Colors.white),
+        elevation: 0,
+      ),
     ),
     outlinedButtonTheme: OutlinedButtonThemeData(
       style: OutlinedButton.styleFrom(
@@ -113,15 +106,20 @@ ThemeData buildAppTheme() {
       subtitleTextStyle: body.copyWith(color: AppColors.muted),
     ),
     chipTheme: ChipThemeData(
-      backgroundColor: AppColors.cream,
-      selectedColor: AppColors.coral,
+      backgroundColor: AppColors.card,
+      selectedColor: AppColors.tintCoral,
       disabledColor: AppColors.cream,
       labelStyle: zhuaji.copyWith(fontSize: 13, color: AppColors.ink),
       secondaryLabelStyle: zhuaji.copyWith(fontSize: 13, color: AppColors.ink),
       showCheckmark: false,
-      side: BorderSide.none,
+      side: WidgetStateBorderSide.resolveWith((states) {
+        final selected = states.contains(WidgetState.selected);
+        return BorderSide(
+          color: selected ? AppColors.coralDeep : AppColors.line,
+        );
+      }),
       shape: const StadiumBorder(),
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
     ),
     dialogTheme: DialogThemeData(
       backgroundColor: AppColors.card,

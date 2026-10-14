@@ -5,7 +5,6 @@ import 'package:go_router/go_router.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 
 import '../../core/theme/app_fonts.dart';
-import '../../core/theme/app_tokens.dart';
 
 class ScanPage extends StatefulWidget {
   const ScanPage({super.key});
@@ -104,10 +103,7 @@ class _Viewfinder extends StatelessWidget {
         height: 220,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(28),
-          border: Border.all(color: AppColors.coral, width: 3),
-          boxShadow: const [
-            BoxShadow(color: Color(0x66F6B39A), blurRadius: 24),
-          ],
+          border: Border.all(color: Colors.white, width: 1.5),
         ),
       ),
     );

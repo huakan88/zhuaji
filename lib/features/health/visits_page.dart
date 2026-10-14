@@ -54,7 +54,7 @@ class _VisitsPageState extends State<VisitsPage> {
                 ChoiceChip(
                   label: Text(label),
                   selected: _reason == label,
-                  selectedColor: AppColors.coral,
+                  selectedColor: AppColors.tintCoral,
                   onSelected: (_) => setState(() => _reason = label),
                 ),
             ],

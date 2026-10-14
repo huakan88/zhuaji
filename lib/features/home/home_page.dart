@@ -22,22 +22,22 @@ class HomePage extends StatelessWidget {
       appBar: zhuajiBar('今天'),
       body: FadeIn(
         child: ListView(
-          padding: const EdgeInsets.fromLTRB(20, 12, 20, 120),
+          padding: const EdgeInsets.fromLTRB(20, 4, 20, 108),
           children: [
             if (cat != null)
-              Text(
-                cat.name,
-                style: zhuaji.copyWith(
-                  fontSize: 22,
-                  fontWeight: FontWeight.w700,
-                ),
+              HeroCard(
+                path: cat.avatarPath,
+                title: cat.name,
+                subtitle: _meta(cat, app.now),
               ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 24),
+            SectionLabel(todos.isEmpty ? '今天要办' : '今天要办  ${todos.length}'),
+            const SizedBox(height: 8),
             if (todos.isEmpty)
               const EmptyHint(title: '今天没什么要办', body: '到期、疫苗和驱虫会出现在这里'),
             for (final todo in todos) ...[
               _TodoRow(todo: todo),
-              const SizedBox(height: 10),
+              const SizedBox(height: 8),
             ],
           ],
         ),
@@ -129,6 +129,14 @@ class HomePage extends StatelessWidget {
     return items;
   }
 
+  String _meta(CatProfile cat, DateTime now) {
+    final parts = <String>[
+      if (cat.breed != null && cat.breed!.isNotEmpty) cat.breed!,
+      ageLabel(cat.birthday, now),
+    ];
+    return parts.join(' · ');
+  }
+
   bool _foodDue(PantryEntry entry, DateTime soon) {
     final expiry = entry.item.expiryDate;
     if (expiry != null && !dateOnly(expiry).isAfter(soon)) return true;
@@ -168,78 +176,62 @@ class _TodoRow extends StatefulWidget {
 }
 
 class _TodoRowState extends State<_TodoRow> {
-  var _down = false;
-
-  Color get _bar => switch (widget.todo.title) {
-    '疫苗' => AppColors.sage,
-    '驱虫' => AppColors.olive,
-    '体重' => AppColors.brown,
-    _ => AppColors.coralDeep,
+  IconData get _icon => switch (widget.todo.title) {
+    '疫苗' => Icons.vaccines_outlined,
+    '驱虫' => Icons.bug_report_outlined,
+    '体重' => Icons.monitor_weight_outlined,
+    _ => Icons.inventory_2_outlined,
   };
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTapDown: (_) => setState(() => _down = true),
-      onTapCancel: () => setState(() => _down = false),
-      onTapUp: (_) => setState(() => _down = false),
       onTap: widget.todo.onTap,
-      child: AnimatedScale(
-        scale: _down ? 0.98 : 1,
-        duration: const Duration(milliseconds: 120),
-        child: DecoratedBox(
-          decoration: BoxDecoration(
-            color: AppColors.card,
-            borderRadius: BorderRadius.circular(18),
-            boxShadow: softShadow,
-          ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(18),
-            child: IntrinsicHeight(
-              child: Row(
+      child: QuietCard(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        child: Row(
+          children: [
+            IconWell(icon: _icon),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Container(width: 6, color: _bar),
-                  Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 14,
-                        vertical: 14,
-                      ),
-                      child: Row(
-                        children: [
-                          Text(
-                            widget.todo.title,
-                            style: zhuaji.copyWith(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Text(
-                              widget.todo.detail,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: zhuaji.copyWith(color: AppColors.muted),
-                            ),
-                          ),
-                          AnimatedScale(
-                            scale: _down ? 1.2 : 1,
-                            duration: const Duration(milliseconds: 140),
-                            child: const Icon(
-                              Icons.check,
-                              color: AppColors.coralDeep,
-                              size: 20,
-                            ),
-                          ),
-                        ],
-                      ),
+                  Text(
+                    widget.todo.title,
+                    style: zhuaji.copyWith(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    widget.todo.detail,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: zhuaji.copyWith(
+                      fontSize: 12,
+                      color: AppColors.muted,
                     ),
                   ),
                 ],
               ),
             ),
-          ),
+            Container(
+              width: 28,
+              height: 28,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(color: AppColors.coral),
+              ),
+              child: const Icon(
+                Icons.check,
+                color: AppColors.coralDeep,
+                size: 16,
+              ),
+            ),
+          ],
         ),
       ),
     );

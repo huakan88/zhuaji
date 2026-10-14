@@ -3,35 +3,26 @@ import 'package:flutter/material.dart';
 class AppColors {
   const AppColors._();
 
-  static const background = Color(0xFFF6F1EA);
-  static const ink = Color(0xFF2C2A28);
-  static const muted = Color(0xFF8A8178);
-  static const coral = Color(0xFFF6B39A);
-  static const coralDeep = Color(0xFFE58B72);
-  static const green = Color(0xFFD5E6B5);
-  static const sage = Color(0xFF8E9B86);
-  static const olive = Color(0xFF5E6B52);
+  static const background = Color(0xFFF7F5F2);
+  static const ink = Color(0xFF1F1E1C);
+  static const muted = Color(0xFF8A8682);
+  static const coral = Color(0xFFE7A090);
+  static const coralDeep = Color(0xFFD48978);
+  static const green = Color(0xFFD7E4D2);
+  static const sage = Color(0xFFA9B8A4);
+  static const olive = Color(0xFF6D7B68);
   static const brown = Color(0xFF8C6A52);
-  static const cream = Color(0xFFF3EBE1);
-  static const line = Color(0xFFE7DFD4);
+  static const cream = Color(0xFFF3EEE8);
+  static const line = Color(0xFFE7E2DC);
   static const card = Color(0xFFFFFFFF);
   static const danger = Color(0xFFC45C4A);
-  static const tintCoral = Color(0xFFFFE8DE);
-  static const tintGreen = Color(0xFFF1F6E6);
-  static const tintSage = Color(0xFFE4EBE0);
-  static const tintBrown = Color(0xFFF3E4D6);
-  static const tintOlive = Color(0xFFE6EBD8);
-  static const tintRose = Color(0xFFF8E4DE);
-  static const headerStart = Color(0xFFFFF8F3);
-  static const headerMid = Color(0xFFF6D7C8);
-  static const headerEnd = Color(0xFFE4EDE0);
+  static const tintCoral = Color(0xFFF8EBE6);
+  static const tintGreen = Color(0xFFF1F5EF);
+  static const tintSage = Color(0xFFEEF2EC);
+  static const tintBrown = Color(0xFFF6F0EA);
+  static const tintOlive = Color(0xFFF3F5EF);
+  static const tintRose = Color(0xFFF8EEEA);
 }
-
-const headerGradient = LinearGradient(
-  begin: Alignment.topLeft,
-  end: Alignment.bottomRight,
-  colors: [AppColors.headerStart, AppColors.headerMid, AppColors.headerEnd],
-);
 
 class Space {
   const Space._();
@@ -48,30 +39,19 @@ class Space {
 class Radii {
   const Radii._();
 
-  static const s = 12.0;
+  static const s = 14.0;
   static const m = 16.0;
   static const l = 20.0;
-  static const xl = 28.0;
+  static const xl = 24.0;
 }
 
 const softShadow = <BoxShadow>[
-  BoxShadow(color: Color(0x1F8C6A52), blurRadius: 22, offset: Offset(0, 10)),
-  BoxShadow(color: Color(0x0F2C2A28), blurRadius: 4, offset: Offset(0, 1)),
-];
-
-const scanGlow = <BoxShadow>[
-  BoxShadow(
-    color: Color(0x80F6B39A),
-    blurRadius: 22,
-    spreadRadius: 2,
-    offset: Offset(0, 8),
-  ),
-  BoxShadow(color: Color(0x40E58B72), blurRadius: 32, spreadRadius: 8),
+  BoxShadow(color: Color(0x0F1F1E1C), blurRadius: 12, offset: Offset(0, 4)),
 ];
 
 const ringPalette = [
   AppColors.coral,
-  AppColors.green,
   AppColors.sage,
+  AppColors.tintCoral,
   AppColors.brown,
 ];
