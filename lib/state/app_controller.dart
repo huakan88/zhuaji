@@ -204,6 +204,27 @@ class AppController extends ChangeNotifier {
     return next;
   }
 
+  /// Handles 「已完成」 on a due notification. Returns what to tell the user,
+  /// or null when the record is gone (deleted since the reminder was set).
+  Future<String?> completeFromNotification(String? raw) async {
+    final key = DoneKey.parse(raw);
+    if (key == null) return null;
+    if (key.vaccine) {
+      for (final item in vaccines) {
+        if (item.id != key.recordId) continue;
+        final next = await completeVaccine(item);
+        return '${_name(item.catId)}的${item.name}记下了，下次 ${formatDate(next)}';
+      }
+    } else {
+      for (final item in deworms) {
+        if (item.id != key.recordId) continue;
+        final next = await completeDeworm(item);
+        return '${_name(item.catId)}的${item.product}记下了，下次 ${formatDate(next)}';
+      }
+    }
+    return null;
+  }
+
   /// Puts a record back exactly as it was before a one-tap "done".
   Future<void> restoreVaccine(VaccineRecord record) => saveVaccine(
     VaccineDraft(

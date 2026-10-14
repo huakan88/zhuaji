@@ -36,9 +36,7 @@ void main() {
     await frames(tester);
   }
 
-  testWidgets('one tap on today records, and 撤销 puts it back', (
-    tester,
-  ) async {
+  testWidgets('one tap on today records, and 撤销 puts it back', (tester) async {
     await boot(tester, controller);
     final before = controller.catVaccines.single;
 
@@ -88,9 +86,7 @@ void main() {
     expect(controller.pantryAcked(bag), isFalse);
   });
 
-  testWidgets('date chips pick 今天 / 昨天 / 前天 without the wheel', (
-    tester,
-  ) async {
+  testWidgets('date chips pick 今天 / 昨天 / 前天 without the wheel', (tester) async {
     await boot(tester, controller, location: '/vaccines');
     expect(find.text('今天'), findsOneWidget);
     expect(find.text('昨天'), findsOneWidget);
@@ -119,9 +115,7 @@ void main() {
     expect(chip.selected, isTrue);
     await tapText(tester, '前天');
     await tapText(tester, '记下');
-    final saved = controller.catDeworms.reduce(
-      (a, b) => a.id > b.id ? a : b,
-    );
+    final saved = controller.catDeworms.reduce((a, b) => a.id > b.id ? a : b);
     expect(saved.product, last.product);
     expect(saved.kind, last.kind);
     expect(saved.givenOn, DateTime(2026, 10, 10));

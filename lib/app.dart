@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:go_router/go_router.dart';
+import 'package:quick_actions/quick_actions.dart';
 
 import 'core/theme/app_theme.dart';
 import 'core/widgets/common.dart';
@@ -20,6 +21,23 @@ import 'features/pantry/pantry_page.dart';
 import 'features/pantry/scan_page.dart';
 import 'features/shell/app_shell.dart';
 import 'state/app_controller.dart';
+
+/// Lets work that happens outside a page (notification taps) show a message.
+final zhuajiMessenger = GlobalKey<ScaffoldMessengerState>();
+
+/// Long-press launcher shortcuts and the page each one opens.
+const appShortcuts = [
+  (type: 'weight', title: '称体重', icon: 'ic_shortcut_weight', route: '/weight'),
+  (type: 'deworm', title: '记驱虫', icon: 'ic_shortcut_deworm', route: '/deworms'),
+  (type: 'scan', title: '扫粮', icon: 'ic_shortcut_scan', route: '/scan'),
+];
+
+String? shortcutRoute(String type) {
+  for (final item in appShortcuts) {
+    if (item.type == type) return item.route;
+  }
+  return null;
+}
 
 class ZhuajiApp extends StatefulWidget {
   const ZhuajiApp({
@@ -96,11 +114,38 @@ class _ZhuajiAppState extends State<ZhuajiApp> {
   );
 
   @override
+  void initState() {
+    super.initState();
+    _shortcuts();
+  }
+
+  Future<void> _shortcuts() async {
+    const actions = QuickActions();
+    try {
+      await actions.initialize((type) {
+        final route = shortcutRoute(type);
+        if (route != null) _router.push(route);
+      });
+      await actions.setShortcutItems([
+        for (final item in appShortcuts)
+          ShortcutItem(
+            type: item.type,
+            localizedTitle: item.title,
+            icon: item.icon,
+          ),
+      ]);
+    } catch (error) {
+      debugPrint('长按快捷方式没有装上：$error');
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     return AppScope(
       controller: widget.controller,
       child: MaterialApp.router(
         title: '爪记',
+        scaffoldMessengerKey: zhuajiMessenger,
         debugShowCheckedModeBanner: false,
         theme: buildAppTheme(),
         locale: const Locale('zh', 'CN'),

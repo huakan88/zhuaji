@@ -1,6 +1,6 @@
 import 'dart:ui';
 
-import 'package:flutter/widgets.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_timezone/flutter_timezone.dart';
 import 'package:timezone/data/latest_all.dart' as tzdata;
 import 'package:timezone/timezone.dart' as tz;
@@ -47,6 +47,15 @@ Future<void> main() async {
       debugPrint('通知初始化失败，记录仍会保存：$error\n$stack');
     }
     await controller.init();
+    notifications.onDone = (key) async {
+      final text = await controller.completeFromNotification(key);
+      zhuajiMessenger.currentState?.showSnackBar(
+        SnackBar(
+          content: Text(text ?? '这条提醒的记录已经不在了'),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    };
     await CloudBridge(
       config: AppConfig.fromEnvironment(),
       repo: repo,
