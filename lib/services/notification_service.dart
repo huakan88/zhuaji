@@ -7,6 +7,9 @@ import '../domain/reminders/reminder_planner.dart';
 /// Action id of the 「已完成」 button on due reminders.
 const doneActionId = 'done';
 
+/// iOS notification category that shows the same 「已完成」 button.
+const doneCategoryId = 'zhuaji_done';
+
 abstract class ReminderNotifier {
   Future<void> init();
 
@@ -65,13 +68,27 @@ class NotificationService implements ReminderNotifier {
   @override
   Future<void> init() async {
     const android = AndroidInitializationSettings('ic_stat_paw');
-    const ios = DarwinInitializationSettings(
+    final ios = DarwinInitializationSettings(
       requestAlertPermission: false,
       requestBadgePermission: false,
       requestSoundPermission: false,
+      notificationCategories: <DarwinNotificationCategory>[
+        DarwinNotificationCategory(
+          doneCategoryId,
+          actions: <DarwinNotificationAction>[
+            DarwinNotificationAction.plain(
+              doneActionId,
+              '已完成',
+              options: <DarwinNotificationActionOption>{
+                DarwinNotificationActionOption.foreground,
+              },
+            ),
+          ],
+        ),
+      ],
     );
     await _plugin.initialize(
-      settings: const InitializationSettings(android: android, iOS: ios),
+      settings: InitializationSettings(android: android, iOS: ios),
       onDidReceiveNotificationResponse: _respond,
     );
     _ready = true;
@@ -172,7 +189,9 @@ class NotificationService implements ReminderNotifier {
               ]
             : null,
       ),
-      iOS: const DarwinNotificationDetails(),
+      iOS: DarwinNotificationDetails(
+        categoryIdentifier: done ? doneCategoryId : null,
+      ),
     );
   }
 }
