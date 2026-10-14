@@ -71,6 +71,32 @@ class AppController extends ChangeNotifier {
 
   WeightRecord? get latestWeight => catWeights.isEmpty ? null : catWeights.last;
 
+  /// The most recent dose for this cat, so the form starts on "same as last".
+  DewormRecord? get lastDeworm {
+    DewormRecord? best;
+    for (final item in catDeworms) {
+      if (best == null || item.givenOn.isAfter(best.givenOn)) best = item;
+    }
+    return best;
+  }
+
+  /// Clinics already visited (any cat), most recent first.
+  List<String> get knownClinics {
+    final sorted = [...visits]
+      ..sort((a, b) {
+        final mine = (b.catId == activeCatId ? 1 : 0).compareTo(
+          a.catId == activeCatId ? 1 : 0,
+        );
+        return mine != 0 ? mine : b.visitedOn.compareTo(a.visitedOn);
+      });
+    final names = <String>[];
+    for (final visit in sorted) {
+      final name = (visit.clinic ?? '').trim();
+      if (name.isNotEmpty && !names.contains(name)) names.add(name);
+    }
+    return names;
+  }
+
   VaccineRecord? get nextVaccine => _soonestDue(catVaccines);
   DewormRecord? get nextInternal => _soonestDeworm(DewormKind.internal);
   DewormRecord? get nextExternal => _soonestDeworm(DewormKind.external);
@@ -177,6 +203,31 @@ class AppController extends ChangeNotifier {
     await _refresh();
     return next;
   }
+
+  /// Puts a record back exactly as it was before a one-tap "done".
+  Future<void> restoreVaccine(VaccineRecord record) => saveVaccine(
+    VaccineDraft(
+      id: record.id,
+      catId: record.catId,
+      name: record.name,
+      givenOn: record.givenOn,
+      nextDue: record.nextDue,
+      clinic: record.clinic,
+      notes: record.notes,
+    ),
+  );
+
+  Future<void> restoreDeworm(DewormRecord record) => saveDeworm(
+    DewormDraft(
+      id: record.id,
+      catId: record.catId,
+      kind: record.kind,
+      product: record.product,
+      givenOn: record.givenOn,
+      nextDue: record.nextDue,
+      notes: record.notes,
+    ),
+  );
 
   Future<void> saveDeworm(DewormDraft draft) async {
     await repo.upsertDeworm(draft);
@@ -449,6 +500,12 @@ class AppController extends ChangeNotifier {
 
   Future<void> ackPantry(PantryEntry entry) async {
     pantryAcks.add(pantryAckKey(entry));
+    await repo.setSetting('pantryAcks', pantryAcks.join(','));
+    notifyListeners();
+  }
+
+  Future<void> unackPantry(PantryEntry entry) async {
+    pantryAcks.remove(pantryAckKey(entry));
     await repo.setSetting('pantryAcks', pantryAcks.join(','));
     notifyListeners();
   }
