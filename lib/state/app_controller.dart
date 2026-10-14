@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/foundation.dart';
 
 import '../core/format.dart';
@@ -6,6 +8,7 @@ import '../domain/dates.dart';
 import '../domain/health/checkup_catalog.dart';
 import '../domain/health/disease_catalog.dart';
 import '../domain/models.dart';
+import '../domain/parsing/gs1_parser.dart';
 import '../domain/reminders/reminder_planner.dart';
 import '../domain/repositories/care_repository.dart';
 import '../services/notification_service.dart';
@@ -39,6 +42,9 @@ class AppController extends ChangeNotifier {
   List<WaterRecord> waters = [];
   Set<String> weightAcks = {};
   Set<String> pantryAcks = {};
+
+  /// Barcodes the catalog did not know, mapped to the product the user chose.
+  Map<String, int> barcodeMemory = {};
   String? permissionNote;
 
   DateTime get now => _clock();
@@ -462,10 +468,26 @@ class AppController extends ChangeNotifier {
 
   FoodProduct? findBarcode(String barcode) {
     final code = barcode.trim();
+    final key = barcodeKey(code);
+    if (key.isEmpty) return null;
+    final remembered = barcodeMemory[key];
+    final chosen = remembered == null ? null : productById(remembered);
+    if (chosen != null) return chosen;
     for (final product in products) {
-      if (product.barcode == code) return product;
+      final own = product.barcode;
+      if (own == null || own.isEmpty) continue;
+      if (own == code || barcodeKey(own) == key) return product;
     }
     return null;
+  }
+
+  /// Next scan of [barcode] goes straight to [productId].
+  Future<void> rememberBarcode(String barcode, int productId) async {
+    final key = barcodeKey(barcode);
+    if (key.isEmpty) return;
+    barcodeMemory[key] = productId;
+    await repo.setSetting('barcodeMemory', jsonEncode(barcodeMemory));
+    notifyListeners();
   }
 
   PantryEntry? pantryById(int id) {
@@ -511,6 +533,21 @@ class AppController extends ChangeNotifier {
     weightAcks = raw.split(',').where((item) => item.isNotEmpty).toSet();
     final pantryRaw = await repo.setting('pantryAcks') ?? '';
     pantryAcks = pantryRaw.split(',').where((item) => item.isNotEmpty).toSet();
+    barcodeMemory = _decodeMemory(await repo.setting('barcodeMemory'));
+  }
+
+  Map<String, int> _decodeMemory(String? raw) {
+    if (raw == null || raw.isEmpty) return {};
+    try {
+      final decoded = jsonDecode(raw);
+      if (decoded is! Map) return {};
+      return {
+        for (final entry in decoded.entries)
+          if (entry.value is int) '${entry.key}': entry.value as int,
+      };
+    } catch (_) {
+      return {};
+    }
   }
 
   String pantryAckKey(PantryEntry entry) =>
@@ -656,4 +693,18 @@ class AppController extends ChangeNotifier {
           ..sort((a, b) => a.nextDue!.compareTo(b.nextDue!));
     return dated.isEmpty ? null : dated.first;
   }
+}
+
+/// One key per product code: a GS1 string and the plain EAN-13 printed under
+/// it both reduce to the same digits, so either scan finds the memory.
+String barcodeKey(String raw) {
+  final code = raw.trim();
+  if (code.isEmpty) return '';
+  final gtin = code.length > 14 ? const Gs1Parser().parse(code).gtin : null;
+  final digits = (gtin ?? code).replaceAll(RegExp(r'\s'), '');
+  if (RegExp(r'^\d+$').hasMatch(digits)) {
+    final trimmed = digits.replaceFirst(RegExp(r'^0+'), '');
+    return trimmed.isEmpty ? '0' : trimmed;
+  }
+  return digits;
 }
