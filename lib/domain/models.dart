@@ -2,7 +2,7 @@ enum CatSex { male, female, unknown }
 
 enum CareGoal { maintain, loss }
 
-enum FoodForm { dry, wet, freezeDried, treat }
+enum FoodForm { dry, wet, can, freezeDried, treat }
 
 enum DewormKind { internal, external }
 
@@ -23,6 +23,7 @@ CatSex parseSex(String raw) => switch (raw) {
 
 FoodForm parseFoodForm(String raw) => switch (raw) {
   'wet' => FoodForm.wet,
+  'can' => FoodForm.can,
   'freeze' => FoodForm.freezeDried,
   'treat' => FoodForm.treat,
   _ => FoodForm.dry,
@@ -31,6 +32,7 @@ FoodForm parseFoodForm(String raw) => switch (raw) {
 String foodFormKey(FoodForm form) => switch (form) {
   FoodForm.dry => 'dry',
   FoodForm.wet => 'wet',
+  FoodForm.can => 'can',
   FoodForm.freezeDried => 'freeze',
   FoodForm.treat => 'treat',
 };
