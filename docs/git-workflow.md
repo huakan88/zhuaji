@@ -1,6 +1,12 @@
 # Git 工作流
 
-爪记用 Origin 上的这个仓库长期开发。`main` 是可发布线，`develop` 是日常集成线。
+爪记的私有 Origin 仓库是 [huakan88/zhuaji](https://cursor.com/codebase/huakan88/zhuaji)。
+
+```bash
+git clone https://origin.cursor.com/git/huakan88/zhuaji.git
+```
+
+`main` 是可发布线，`develop` 是日常集成线。
 
 ## 分支
 

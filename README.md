@@ -1,6 +1,6 @@
 # 爪记
 
-克隆：`git clone` 当前 Origin 远程，进入目录后执行 `flutter pub get`。
+克隆：`git clone https://origin.cursor.com/git/huakan88/zhuaji.git`，进入目录后执行 `flutter pub get`。仓库页面是 [huakan88/zhuaji](https://cursor.com/codebase/huakan88/zhuaji)。
 分支：日常集成在 `develop`，功能用 `feature/*`，修复用 `fix/*`，`main` 只接受合并。
 发版：先改 `pubspec.yaml` 的版本号，用 `release/x.y.z` 合并进 `main`，再打附注标签 `vX.Y.Z`。详见 [Git 工作流](docs/git-workflow.md)。
 
