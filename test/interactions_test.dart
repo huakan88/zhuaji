@@ -100,7 +100,7 @@ void main() {
     expect(bag.item.expiryDate, isNotNull);
 
     await tapText(tester, '室内成猫干粮');
-    expect(find.text('还在粮仓'), findsWidgets);
+    expect(find.textContaining('还在粮仓'), findsWidgets);
     expect(_homeText('室内成猫干粮'), findsNothing);
     expect(
       controller.pantry.any((item) => item.product.name == '室内成猫干粮'),
@@ -178,11 +178,14 @@ void main() {
 
     await tapText(tester, '就医');
     expect(find.text('年度体检'), findsWidgets);
-    expect(find.textContaining('示例宠物医院'), findsOneWidget);
+    expect(find.textContaining('示例宠物医院'), findsWidgets);
     expect(find.byType(TextField), findsNothing);
     await tapText(tester, '呕吐');
     await tapText(tester, '记下');
-    expect(controller.catVisits.map((item) => item.reason), contains('呕吐'));
+    final vomit = controller.catVisits.singleWhere(
+      (item) => item.reason == '呕吐',
+    );
+    expect(vomit.clinic, '示例宠物医院');
     await back(tester);
 
     await tapText(tester, '粮仓');

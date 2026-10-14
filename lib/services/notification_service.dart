@@ -4,8 +4,15 @@ import 'package:timezone/timezone.dart' as tz;
 
 import '../domain/reminders/reminder_planner.dart';
 
+/// Action id of the 「已完成」 button on due reminders.
+const doneActionId = 'done';
+
 abstract class ReminderNotifier {
   Future<void> init();
+
+  /// Called with [PlannedNotification.doneKey] when 「已完成」 is tapped.
+  /// Taps that arrive before a handler is set are kept and replayed.
+  set onDone(Future<void> Function(String doneKey)? handler);
   Future<void> requestPermissions({bool askExactAlarm = true});
   Future<void> replaceAll(List<PlannedNotification> items);
 }
@@ -13,6 +20,9 @@ abstract class ReminderNotifier {
 class NoopNotificationService implements ReminderNotifier {
   @override
   Future<void> init() async {}
+
+  @override
+  set onDone(Future<void> Function(String doneKey)? handler) {}
 
   @override
   Future<void> requestPermissions({bool askExactAlarm = true}) async {}
@@ -27,6 +37,30 @@ class NotificationService implements ReminderNotifier {
 
   final FlutterLocalNotificationsPlugin _plugin;
   var _ready = false;
+  Future<void> Function(String doneKey)? _onDone;
+  final _pending = <String>[];
+
+  @override
+  set onDone(Future<void> Function(String doneKey)? handler) {
+    _onDone = handler;
+    if (handler == null) return;
+    final waiting = [..._pending];
+    _pending.clear();
+    for (final key in waiting) {
+      handler(key);
+    }
+  }
+
+  void _respond(NotificationResponse response) {
+    final key = response.payload;
+    if (response.actionId != doneActionId || key == null) return;
+    final handler = _onDone;
+    if (handler == null) {
+      _pending.add(key);
+    } else {
+      handler(key);
+    }
+  }
 
   @override
   Future<void> init() async {
@@ -38,8 +72,18 @@ class NotificationService implements ReminderNotifier {
     );
     await _plugin.initialize(
       settings: const InitializationSettings(android: android, iOS: ios),
+      onDidReceiveNotificationResponse: _respond,
     );
     _ready = true;
+    try {
+      final launch = await _plugin.getNotificationAppLaunchDetails();
+      final response = launch?.notificationResponse;
+      if (launch?.didNotificationLaunchApp == true && response != null) {
+        _respond(response);
+      }
+    } catch (error, stack) {
+      debugPrint('读取通知启动信息失败：$error\n$stack');
+    }
   }
 
   AndroidFlutterLocalNotificationsPlugin? get _android => _plugin
@@ -92,9 +136,9 @@ class NotificationService implements ReminderNotifier {
         title: item.title,
         body: item.body,
         scheduledDate: tz.TZDateTime.from(item.when, tz.local),
-        notificationDetails: _details(item.channel),
+        notificationDetails: _details(item.channel, done: item.doneKey != null),
         androidScheduleMode: mode,
-        payload: item.channel.name,
+        payload: item.doneKey ?? item.channel.name,
         matchDateTimeComponents: item.repeatsDaily
             ? DateTimeComponents.time
             : null,
@@ -106,7 +150,7 @@ class NotificationService implements ReminderNotifier {
     }
   }
 
-  NotificationDetails _details(ReminderChannel channel) {
+  NotificationDetails _details(ReminderChannel channel, {bool done = false}) {
     final (id, name) = switch (channel) {
       ReminderChannel.health => ('zhuaji_health', '健康提醒'),
       ReminderChannel.food => ('zhuaji_food', '粮仓提醒'),
@@ -118,6 +162,15 @@ class NotificationService implements ReminderNotifier {
         channelDescription: '爪记的$name',
         importance: Importance.defaultImportance,
         priority: Priority.defaultPriority,
+        actions: done
+            ? const [
+                AndroidNotificationAction(
+                  doneActionId,
+                  '已完成',
+                  showsUserInterface: true,
+                ),
+              ]
+            : null,
       ),
       iOS: const DarwinNotificationDetails(),
     );

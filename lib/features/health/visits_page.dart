@@ -20,6 +20,7 @@ class _VisitsPageState extends State<VisitsPage> {
   static const _reasons = ['体检', '疫苗', '不吃饭', '呕吐'];
   var _reason = '体检';
   DateTime? _date;
+  String? _clinic;
   var _busy = false;
 
   @override
@@ -35,6 +36,8 @@ class _VisitsPageState extends State<VisitsPage> {
     }
     final date = _date ??= dateOnly(app.now);
     final visits = app.catVisits;
+    final clinics = app.knownClinics;
+    final clinic = _clinic ??= clinics.isEmpty ? '' : clinics.first;
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: zhuajiBar('就医'),
@@ -59,14 +62,28 @@ class _VisitsPageState extends State<VisitsPage> {
                 ),
             ],
           ),
-          DateLine(
+          if (clinics.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                for (final name in clinics)
+                  ChoiceChip(
+                    label: Text(name),
+                    selected: clinic == name,
+                    selectedColor: AppColors.tintCoral,
+                    onSelected: (on) =>
+                        setState(() => _clinic = on ? name : ''),
+                  ),
+              ],
+            ),
+          ],
+          DateChips(
             label: '就诊',
             date: date,
-            onTap: () async {
-              final picked = await pickDate(context, date);
-              if (picked == null) return;
-              setState(() => _date = dateOnly(picked));
-            },
+            today: app.now,
+            onChanged: (value) => setState(() => _date = value),
           ),
         ],
       ),
@@ -79,7 +96,12 @@ class _VisitsPageState extends State<VisitsPage> {
                 : () async {
                     setState(() => _busy = true);
                     await app.saveVisit(
-                      VetDraft(catId: cat.id, visitedOn: date, reason: _reason),
+                      VetDraft(
+                        catId: cat.id,
+                        visitedOn: date,
+                        reason: _reason,
+                        clinic: clinic.isEmpty ? null : clinic,
+                      ),
                     );
                     if (!mounted) return;
                     setState(() => _busy = false);

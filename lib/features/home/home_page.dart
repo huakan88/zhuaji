@@ -75,7 +75,7 @@ class HomePage extends StatelessWidget {
           onTap: () async {
             await app.ackPantry(entry);
             if (!context.mounted) return;
-            showMessage(context, '还在粮仓');
+            showUndo(context, '知道了，还在粮仓', () => app.unackPantry(entry));
           },
         ),
       );
@@ -94,7 +94,11 @@ class HomePage extends StatelessWidget {
             onTap: () async {
               final next = await app.completeVaccine(shot);
               if (!context.mounted) return;
-              showMessage(context, '下次 ${formatDate(next)}');
+              showUndo(
+                context,
+                '${shot.name}记下了，下次 ${formatDate(next)}',
+                () => app.restoreVaccine(shot),
+              );
             },
           ),
         );
@@ -112,7 +116,11 @@ class HomePage extends StatelessWidget {
             onTap: () async {
               final next = await app.completeDeworm(item);
               if (!context.mounted) return;
-              showMessage(context, '下次 ${formatDate(next)}');
+              showUndo(
+                context,
+                '${item.product}记下了，下次 ${formatDate(next)}',
+                () => app.restoreDeworm(item),
+              );
             },
           ),
         );

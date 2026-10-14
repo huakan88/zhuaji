@@ -33,7 +33,7 @@ class _WeightPageState extends State<WeightPage> {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: zhuajiBar('体重'),
-      body: Padding(
+      body: SingleChildScrollView(
         padding: const EdgeInsets.fromLTRB(20, 24, 20, 24),
         child: Column(
           children: [
@@ -70,7 +70,21 @@ class _WeightPageState extends State<WeightPage> {
                 ),
               ],
             ),
-            const SizedBox(height: 32),
+            const SizedBox(height: 12),
+            OutlinedButton.icon(
+              onPressed: () async {
+                final measured = await context.push<double>('/scale');
+                if (measured == null || !context.mounted) return;
+                setState(() => _kg = measured.clamp(0.5, 12).toDouble());
+                showMessage(context, '秤上算出来的，核对后保存');
+              },
+              style: OutlinedButton.styleFrom(
+                minimumSize: const Size.fromHeight(48),
+              ),
+              icon: const Icon(Icons.bluetooth, size: 18),
+              label: const Text('用蓝牙秤（抱猫称）'),
+            ),
+            const SizedBox(height: 24),
             QuietCard(child: WeightTrend(weights: app.catWeights)),
           ],
         ),
@@ -86,7 +100,11 @@ class _WeightPageState extends State<WeightPage> {
                     await app.addWeight(kg);
                     await app.ackWeightAlert(cat);
                     if (!context.mounted) return;
-                    context.pop();
+                    if (context.canPop()) {
+                      context.pop();
+                    } else {
+                      context.go('/health');
+                    }
                   },
             style: FilledButton.styleFrom(
               minimumSize: const Size.fromHeight(56),

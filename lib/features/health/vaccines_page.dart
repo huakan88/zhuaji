@@ -71,14 +71,11 @@ class _VaccinesPageState extends State<VaccinesPage> {
                       ),
                   ],
                 ),
-                DateLine(
+                DateChips(
                   label: '接种',
                   date: given,
-                  onTap: () async {
-                    final picked = await pickDate(context, given);
-                    if (picked == null) return;
-                    setState(() => _given = dateOnly(picked));
-                  },
+                  today: app.now,
+                  onChanged: (value) => setState(() => _given = value),
                 ),
                 Text(
                   '下次 ${formatDate(next)}',
@@ -166,7 +163,11 @@ class _Record extends StatelessWidget {
               onPressed: () async {
                 final next = await app.completeVaccine(shot);
                 if (!context.mounted) return;
-                showMessage(context, '下次 ${formatDate(next)}');
+                showUndo(
+                  context,
+                  '下次 ${formatDate(next)}',
+                  () => app.restoreVaccine(shot),
+                );
               },
               child: const Text('完成'),
             ),

@@ -10,6 +10,8 @@
 	<string>爪记</string>
 	<key>NSCameraUsageDescription</key>
 	<string>爪记需要使用相机扫描猫粮条码、拍摄包装日期，以及为猫咪拍摄头像和体态照片。</string>
+	<key>NSBluetoothAlwaysUsageDescription</key>
+	<string>爪记用蓝牙读取体重秤上的数字，用来记录猫咪体重。不会用来定位。</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>爪记需要从相册选择猫咪照片或包装日期照片。</string>
 	<key>CFBundleExecutable</key>
