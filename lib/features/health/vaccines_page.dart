@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../core/format.dart';
 import '../../core/theme/app_fonts.dart';
@@ -52,6 +53,12 @@ class _VaccinesPageState extends State<VaccinesPage> {
             Text('还没记', style: zhuaji.copyWith(color: AppColors.muted))
           else
             for (final shot in shots.take(3)) _Record(shot: shot),
+          const SizedBox(height: 8),
+          OutlinedButton.icon(
+            onPressed: () => context.push('/sticker'),
+            icon: const Icon(Icons.photo_camera_outlined, size: 18),
+            label: const Text('拍贴纸'),
+          ),
           const SizedBox(height: 16),
           const SectionLabel('记一针'),
           const SizedBox(height: 8),

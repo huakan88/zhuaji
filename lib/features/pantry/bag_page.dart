@@ -6,6 +6,7 @@ import '../../core/theme/app_fonts.dart';
 import '../../core/theme/app_tokens.dart';
 import '../../core/widgets/common.dart';
 import '../../domain/dates.dart';
+import '../../domain/food/stock.dart';
 import '../../state/app_controller.dart';
 
 class BagPage extends StatelessWidget {
@@ -27,6 +28,12 @@ class BagPage extends StatelessWidget {
     final useBy = opened == null || entry.openWindowDays <= 0
         ? null
         : dateOnly(opened).add(Duration(days: entry.openWindowDays));
+    final estimate = estimateStock(
+      spec: entry.product.spec,
+      dailyGrams: entry.item.dailyGrams,
+      openedAt: opened,
+      today: dateOnly(app.now),
+    );
     final storage = entry.product.storageMethod.trim();
     final sentence = storage.isEmpty
         ? '阴凉干燥，封好袋口。'
@@ -63,6 +70,26 @@ class BagPage extends StatelessWidget {
           ),
           _line('开封', opened == null ? '没开' : formatDate(opened)),
           _line('还能吃', useBy == null ? '看包装' : '到 ${formatDate(useBy)}'),
+          _line('余量', stockHint(estimate)),
+          const SizedBox(height: 8),
+          Text(
+            '每天喂多少',
+            style: zhuaji.copyWith(fontWeight: FontWeight.w700),
+          ),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              for (final grams in dailyGramChoices)
+                ChoiceChip(
+                  label: Text('$grams 克'),
+                  selected: entry.item.dailyGrams == grams.toDouble(),
+                  selectedColor: AppColors.tintCoral,
+                  onSelected: (_) => app.setDailyGrams(entry, grams.toDouble()),
+                ),
+            ],
+          ),
           const SizedBox(height: 8),
           Text(sentence, style: zhuaji.copyWith(height: 1.4)),
           const SizedBox(height: 28),

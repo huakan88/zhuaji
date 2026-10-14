@@ -374,6 +374,7 @@ class DriftCareRepository implements CareRepository {
             nextDue: row.nextDue,
             clinic: row.clinic,
             notes: row.notes,
+            batch: row.batch,
           ),
         )
         .toList();
@@ -388,6 +389,7 @@ class DriftCareRepository implements CareRepository {
       nextDue: Value(draft.nextDue),
       clinic: Value(_blank(draft.clinic)),
       notes: Value(draft.notes.trim()),
+      batch: Value(_blank(draft.batch)),
     );
     if (draft.id == null) {
       final id = await _db.into(_db.vaccines).insert(companion);
@@ -831,6 +833,7 @@ class DriftCareRepository implements CareRepository {
           dateSource: parseDateSource(item.dateSource),
           openedAt: item.openedAt,
           afterOpenDays: item.afterOpenDays,
+          dailyGrams: item.dailyGrams,
         ),
         product: _product(product),
       );
@@ -847,6 +850,7 @@ class DriftCareRepository implements CareRepository {
       dateSource: Value(draft.dateSource.name),
       openedAt: Value(draft.openedAt),
       afterOpenDays: Value(draft.afterOpenDays),
+      dailyGrams: Value(draft.dailyGrams),
     );
     if (draft.id == null) {
       final id = await _db.into(_db.pantryItems).insert(companion);

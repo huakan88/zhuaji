@@ -34,6 +34,38 @@ class HomePage extends StatelessWidget {
                 title: cat.name,
                 subtitle: _meta(cat, app.now),
               ),
+            const SizedBox(height: 16),
+            QuietCard(
+              onTap: () => context.push('/calendar'),
+              child: Row(
+                children: [
+                  const IconWell(icon: Icons.calendar_today_outlined),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          '未来 30 天',
+                          style: zhuaji.copyWith(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          '疫苗、驱虫、体检、粮和复诊',
+                          style: zhuaji.copyWith(
+                            fontSize: 12,
+                            color: AppColors.muted,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
             const SizedBox(height: 24),
             SectionLabel(todos.isEmpty ? '今天要办' : '今天要办  ${todos.length}'),
             const SizedBox(height: 8),

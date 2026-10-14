@@ -39,6 +39,7 @@ void main() {
     expect(_homeText('到期粮'), findsOneWidget);
     expect(_homeText('疫苗'), findsOneWidget);
     expect(_homeText('驱虫'), findsNWidgets(2));
+    await revealText(tester, '体重');
     expect(_homeText('体重'), findsOneWidget);
 
     await tapText(tester, '猫三联');
