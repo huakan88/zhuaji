@@ -142,6 +142,25 @@ class _ConfirmPageState extends State<ConfirmPage> {
                 style: zhuaji.copyWith(fontSize: 13, color: AppColors.muted),
               ),
             ),
+          const SizedBox(height: 8),
+          OutlinedButton(
+            onPressed: () async {
+              final code = widget.code.trim();
+              final query = code.isEmpty
+                  ? ''
+                  : '?code=${Uri.encodeComponent(code)}';
+              final id = await context.push<int>('/food$query');
+              if (id == null || !context.mounted) return;
+              final chosen = AppScope.of<AppController>(
+                context,
+              ).productById(id);
+              setState(() {
+                _rechoose = false;
+                _apply(chosen);
+              });
+            },
+            child: const Text('自己添加'),
+          ),
           if (!matched && brands.isNotEmpty) ...[
             const SizedBox(height: 20),
             const SectionLabel('品牌'),

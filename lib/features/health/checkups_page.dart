@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../core/format.dart';
 import '../../core/theme/app_fonts.dart';
 import '../../core/theme/app_tokens.dart';
 import '../../core/widgets/common.dart';
 import '../../domain/health/checkup_catalog.dart';
+import '../../domain/health/lab_catalog.dart';
 import '../../domain/health/life_stage.dart';
 import '../../state/app_controller.dart';
 
@@ -73,6 +75,16 @@ class _CheckupsPageState extends State<CheckupsPage> {
               selected.plan.frequency,
               style: zhuaji.copyWith(color: AppColors.muted, height: 1.35),
             ),
+            if (suggestedLabKind(selected.item.id) != null) ...[
+              const SizedBox(height: 8),
+              Text(
+                '做完后去存化验单',
+                style: zhuaji.copyWith(
+                  fontSize: 13,
+                  color: AppColors.coralDeep,
+                ),
+              ),
+            ],
           ],
         ],
       ),
@@ -95,6 +107,12 @@ class _CheckupsPageState extends State<CheckupsPage> {
                     setState(() => _busy = false);
                     if (!context.mounted) return;
                     showMessage(context, '记下了');
+                    final kind = suggestedLabKind(advice.item.id);
+                    if (kind != null) {
+                      context.push(
+                        '/lab?kind=${kind.name}&checkup=${advice.item.id}',
+                      );
+                    }
                   },
             style: FilledButton.styleFrom(
               minimumSize: const Size.fromHeight(56),

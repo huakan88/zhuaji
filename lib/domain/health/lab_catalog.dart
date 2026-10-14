@@ -449,6 +449,16 @@ const labCatalog = <LabAnalyte>[
   ),
 ];
 
+/// Checkup item to open after 「完成」, so the lab sheet has a place to go.
+LabKind? suggestedLabKind(String checkupItemId) => switch (checkupItemId) {
+  'cbc' => LabKind.cbc,
+  'chem' || 'sdma' || 't4' => LabKind.chem,
+  'ua' => LabKind.urine,
+  'hcm' || 'pkd' => LabKind.imaging,
+  'exam' || 'bp' || 'dental' => LabKind.other,
+  _ => null,
+};
+
 LabAnalyte? analyteByCode(String code) {
   for (final item in labCatalog) {
     if (item.code == code) return item;

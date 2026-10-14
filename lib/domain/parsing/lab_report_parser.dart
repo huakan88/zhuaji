@@ -43,7 +43,7 @@ class LabReportParser {
     final unit = _unit(row, hit.analyte, range);
     final stripped = _hideUnitTokens(row);
     final blocked = <_Span>[
-      if (range != null) range,
+      ?range,
       if (unit != null && unit.end > unit.start) unit,
     ];
     final number = _resultNumber(stripped, hit.end, blocked);
