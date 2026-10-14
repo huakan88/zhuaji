@@ -4,6 +4,7 @@
 -keep class io.flutter.view.** { *; }
 -keep class io.flutter.embedding.** { *; }
 -keep class com.dexterous.** { *; }
+-keep class com.maokangji.maokangji.TodayWidgetProvider { *; }
 -keep class com.google.mlkit.** { *; }
 -keep class com.google.android.gms.** { *; }
 -dontwarn com.google.mlkit.**

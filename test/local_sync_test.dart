@@ -13,9 +13,10 @@ import 'package:zhuaji_sync/zhuaji_sync.dart';
 
 void main() {
   test('schema upgrades are ordered and idempotent in the plan', () {
-    expect(upgradesFrom(1, 4), [2, 3, 4]);
-    expect(upgradesFrom(3, 4), [4]);
-    expect(upgradesFrom(4, 4), isEmpty);
+    expect(upgradesFrom(1, 5), [2, 3, 4, 5]);
+    expect(upgradesFrom(3, 5), [4, 5]);
+    expect(upgradesFrom(4, 5), [5]);
+    expect(upgradesFrom(5, 5), isEmpty);
   });
 
   test('a saved vaccine is queued for sync and can be pushed', () async {

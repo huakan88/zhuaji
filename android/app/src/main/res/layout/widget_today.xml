@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/widget_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/widget_bg"
+    android:orientation="vertical"
+    android:padding="12dp">
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="爪记"
+        android:textColor="#8A8682"
+        android:textSize="11sp" />
+
+    <TextView
+        android:id="@+id/widget_today"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:ellipsize="end"
+        android:maxLines="4"
+        android:text="今天没什么要办"
+        android:textColor="#1F1E1C"
+        android:textSize="14sp" />
+
+    <TextView
+        android:id="@+id/widget_next"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="6dp"
+        android:ellipsize="end"
+        android:maxLines="2"
+        android:text="下一个：还没有"
+        android:textColor="#8A8682"
+        android:textSize="12sp" />
+</LinearLayout>

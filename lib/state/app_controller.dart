@@ -1,17 +1,22 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 
 import '../core/format.dart';
+import '../domain/care/agenda.dart';
 import '../domain/care/easy_log.dart';
 import '../domain/dates.dart';
+import '../domain/food/stock.dart' as stock;
 import '../domain/health/checkup_catalog.dart';
 import '../domain/health/disease_catalog.dart';
+import '../domain/health/life_stage.dart';
 import '../domain/models.dart';
 import '../domain/parsing/gs1_parser.dart';
 import '../domain/reminders/reminder_planner.dart';
 import '../domain/repositories/care_repository.dart';
 import '../services/notification_service.dart';
+import '../services/widget_bridge.dart';
 
 class AppController extends ChangeNotifier {
   AppController({
@@ -43,6 +48,12 @@ class AppController extends ChangeNotifier {
   List<LabReport> labs = [];
   Set<String> weightAcks = {};
   Set<String> pantryAcks = {};
+
+  /// Pantry id to the morning a restock reminder was postponed to.
+  Map<int, DateTime> stockSnooze = {};
+
+  /// When false, the Android widget stays blank of names and todos.
+  bool widgetEnabled = true;
 
   /// Barcodes the catalog did not know, mapped to the product the user chose.
   Map<String, int> barcodeMemory = {};
@@ -133,6 +144,7 @@ class AppController extends ChangeNotifier {
       await repo.seedDemoIfNeeded(now);
       await _read();
       await _reschedule();
+      await _publishWidget();
     } catch (error) {
       this.error = '本地数据没有打开：$error';
     } finally {
@@ -210,6 +222,7 @@ class AppController extends ChangeNotifier {
         nextDue: next,
         clinic: record.clinic,
         notes: record.notes,
+        batch: record.batch,
       ),
     );
     await _refresh();
@@ -247,6 +260,7 @@ class AppController extends ChangeNotifier {
       nextDue: record.nextDue,
       clinic: record.clinic,
       notes: record.notes,
+      batch: record.batch,
     ),
   );
 
@@ -336,6 +350,7 @@ class AppController extends ChangeNotifier {
         dateSource: entry.item.dateSource,
         openedAt: now,
         afterOpenDays: entry.openWindowDays,
+        dailyGrams: entry.item.dailyGrams,
       ),
     );
     await _refresh();
@@ -618,6 +633,7 @@ class AppController extends ChangeNotifier {
   Future<void> _refresh() async {
     await _read();
     await _reschedule();
+    await _publishWidget();
     notifyListeners();
   }
 
@@ -645,6 +661,8 @@ class AppController extends ChangeNotifier {
     weightAcks = raw.split(',').where((item) => item.isNotEmpty).toSet();
     final pantryRaw = await repo.setting('pantryAcks') ?? '';
     pantryAcks = pantryRaw.split(',').where((item) => item.isNotEmpty).toSet();
+    stockSnooze = _decodeSnooze(await repo.setting('stockSnooze'));
+    widgetEnabled = (await repo.setting('widgetEnabled') ?? '1') != '0';
     barcodeMemory = _decodeMemory(await repo.setting('barcodeMemory'));
     ownerWeightKg = double.tryParse(await repo.setting('ownerWeightKg') ?? '');
   }
@@ -663,8 +681,7 @@ class AppController extends ChangeNotifier {
     }
   }
 
-  String pantryAckKey(PantryEntry entry) =>
-      '${entry.item.id}|${entry.item.expiryDate?.millisecondsSinceEpoch ?? 0}|${entry.item.openedAt?.millisecondsSinceEpoch ?? 0}';
+  String pantryAckKey(PantryEntry entry) => stock.pantryAckKey(entry);
 
   bool pantryAcked(PantryEntry entry) =>
       pantryAcks.contains(pantryAckKey(entry));
@@ -679,6 +696,277 @@ class AppController extends ChangeNotifier {
     pantryAcks.remove(pantryAckKey(entry));
     await repo.setSetting('pantryAcks', pantryAcks.join(','));
     notifyListeners();
+  }
+
+  List<AgendaItem> agenda() => buildAgenda(
+    now: now,
+    cats: cats,
+    vaccines: vaccines,
+    deworms: deworms,
+    checkups: checkups,
+    conditions: conditions,
+    pantry: pantry,
+    ackedPantryKeys: pantryAcks,
+    stockSnooze: stockSnooze,
+  );
+
+  Future<void> setWidgetEnabled(bool value) async {
+    widgetEnabled = value;
+    await repo.setSetting('widgetEnabled', value ? '1' : '0');
+    await _publishWidget();
+    notifyListeners();
+  }
+
+  Future<void> setDailyGrams(PantryEntry entry, double grams) async {
+    stockSnooze.remove(entry.item.id);
+    await _storeSnooze();
+    await savePantry(_pantryDraft(entry, dailyGrams: grams));
+  }
+
+  Future<void> postponeAgenda(AgendaItem item) async {
+    switch (item.kind) {
+      case AgendaKind.vaccine:
+        final record = _vaccine(item.recordId);
+        final due = record?.nextDue;
+        if (record == null || due == null) return;
+        await saveVaccine(
+          VaccineDraft(
+            id: record.id,
+            catId: record.catId,
+            name: record.name,
+            givenOn: record.givenOn,
+            nextDue: dateOnly(due).add(const Duration(days: 7)),
+            clinic: record.clinic,
+            notes: record.notes,
+            batch: record.batch,
+          ),
+        );
+      case AgendaKind.deworm:
+        final record = _deworm(item.recordId);
+        final due = record?.nextDue;
+        if (record == null || due == null) return;
+        await saveDeworm(
+          DewormDraft(
+            id: record.id,
+            catId: record.catId,
+            kind: record.kind,
+            product: record.product,
+            givenOn: record.givenOn,
+            nextDue: dateOnly(due).add(const Duration(days: 7)),
+            notes: record.notes,
+          ),
+        );
+      case AgendaKind.checkup:
+        final record = _checkup(item.recordId);
+        final due = record?.nextDue;
+        if (record == null || due == null) return;
+        await repo.upsertCheckup(
+          CheckupDraft(
+            id: record.id,
+            catId: record.catId,
+            itemId: record.itemId,
+            completedOn: record.completedOn,
+            result: record.result,
+            nextDue: dateOnly(due).add(const Duration(days: 7)),
+          ),
+        );
+        await _refresh();
+      case AgendaKind.recheck:
+        final record = _condition(item.recordId);
+        final due = record?.nextRecheck;
+        if (record == null || due == null) return;
+        await setRecheck(record.id, dateOnly(due).add(const Duration(days: 7)));
+      case AgendaKind.expiry:
+        final entry = pantryById(item.recordId);
+        final due = entry?.item.expiryDate;
+        if (entry == null || due == null) return;
+        await savePantry(
+          _pantryDraft(
+            entry,
+            expiryDate: dateOnly(due).add(const Duration(days: 7)),
+          ),
+        );
+      case AgendaKind.opened:
+        final entry = pantryById(item.recordId);
+        if (entry == null) return;
+        await savePantry(
+          _pantryDraft(entry, afterOpenDays: entry.openWindowDays + 7),
+        );
+      case AgendaKind.restock:
+        stockSnooze[item.recordId] = dateOnly(now).add(const Duration(days: 7));
+        await _storeSnooze();
+        await _refresh();
+    }
+  }
+
+  Future<String> completeAgenda(AgendaItem item) async {
+    switch (item.kind) {
+      case AgendaKind.vaccine:
+        final record = _vaccine(item.recordId);
+        if (record == null) return '这条已经不在了';
+        final next = await completeVaccine(record);
+        return '${record.name}记下了，下次 ${formatDate(next)}';
+      case AgendaKind.deworm:
+        final record = _deworm(item.recordId);
+        if (record == null) return '这条已经不在了';
+        final next = await completeDeworm(record);
+        return '${record.product}记下了，下次 ${formatDate(next)}';
+      case AgendaKind.checkup:
+        final record = _checkup(item.recordId);
+        if (record == null) return '这条已经不在了';
+        final days = _checkupInterval(record);
+        await repo.upsertCheckup(
+          CheckupDraft(
+            catId: record.catId,
+            itemId: record.itemId,
+            completedOn: dateOnly(now),
+            result: record.result,
+            nextDue: dateOnly(now).add(Duration(days: days)),
+          ),
+        );
+        await _refresh();
+        return '体检记下了';
+      case AgendaKind.recheck:
+        final record = _condition(item.recordId);
+        if (record == null) return '这条已经不在了';
+        await repo.upsertCondition(
+          ConditionDraft(
+            id: record.id,
+            catId: record.catId,
+            diseaseId: record.diseaseId,
+            diagnosedOn: record.diagnosedOn,
+            stageLabel: record.stageLabel,
+            note: record.note,
+          ),
+        );
+        await _refresh();
+        return '这次复诊记下了';
+      case AgendaKind.expiry:
+      case AgendaKind.opened:
+        final entry = pantryById(item.recordId);
+        if (entry == null) return '这袋已经不在了';
+        await ackPantry(entry);
+        return '知道了，还在粮仓';
+      case AgendaKind.restock:
+        final entry = pantryById(item.recordId);
+        if (entry == null) return '这袋已经不在了';
+        stockSnooze.remove(entry.item.id);
+        await _storeSnooze();
+        await savePantry(_pantryDraft(entry, openedAt: dateOnly(now)));
+        return '按新开的一袋重新算';
+    }
+  }
+
+  PantryDraft _pantryDraft(
+    PantryEntry entry, {
+    DateTime? expiryDate,
+    DateTime? openedAt,
+    int? afterOpenDays,
+    double? dailyGrams,
+  }) {
+    return PantryDraft(
+      id: entry.item.id,
+      productId: entry.product.id,
+      productionDate: entry.item.productionDate,
+      expiryDate: expiryDate ?? entry.item.expiryDate,
+      batch: entry.item.batch,
+      dateSource: entry.item.dateSource,
+      openedAt: openedAt ?? entry.item.openedAt,
+      afterOpenDays: afterOpenDays ?? entry.item.afterOpenDays,
+      dailyGrams: dailyGrams ?? entry.item.dailyGrams,
+    );
+  }
+
+  int _checkupInterval(CheckupRecord record) {
+    final item = checkupById(record.itemId);
+    final stage = lifeStageFor(catById(record.catId)?.birthday, now);
+    return item?.byStage[stage]?.intervalDays ?? 365;
+  }
+
+  VaccineRecord? _vaccine(int id) {
+    for (final item in vaccines) {
+      if (item.id == id) return item;
+    }
+    return null;
+  }
+
+  DewormRecord? _deworm(int id) {
+    for (final item in deworms) {
+      if (item.id == id) return item;
+    }
+    return null;
+  }
+
+  CheckupRecord? _checkup(int id) {
+    for (final item in checkups) {
+      if (item.id == id) return item;
+    }
+    return null;
+  }
+
+  ConditionRecord? _condition(int id) {
+    for (final item in conditions) {
+      if (item.id == id) return item;
+    }
+    return null;
+  }
+
+  Future<void> _storeSnooze() async {
+    await repo.setSetting(
+      'stockSnooze',
+      jsonEncode({
+        for (final entry in stockSnooze.entries)
+          '${entry.key}': dateOnly(entry.value).toIso8601String(),
+      }),
+    );
+  }
+
+  Map<int, DateTime> _decodeSnooze(String? raw) {
+    if (raw == null || raw.isEmpty) return {};
+    try {
+      final decoded = jsonDecode(raw);
+      if (decoded is! Map) return {};
+      final parsed = <int, DateTime>{};
+      for (final entry in decoded.entries) {
+        final id = int.tryParse('${entry.key}');
+        final day = DateTime.tryParse('${entry.value}');
+        if (id != null && day != null) parsed[id] = dateOnly(day);
+      }
+      return parsed;
+    } catch (_) {
+      return {};
+    }
+  }
+
+  Future<void> _publishWidget() async {
+    if (Platform.environment['FLUTTER_TEST'] == 'true') return;
+    final copy = widgetEnabled
+        ? homeWidgetCopy(now: now, items: agenda())
+        : const HomeWidgetCopy(
+            todayLines: ['小组件已关闭'],
+            nextLine: '打开爪记查看',
+            route: '/calendar',
+          );
+    await WidgetBridge.publish(copy.toJson());
+  }
+
+  StockInput? _stockInput(PantryEntry entry) {
+    final estimate = stock.estimateStock(
+      spec: entry.product.spec,
+      dailyGrams: entry.item.dailyGrams,
+      openedAt: entry.item.openedAt,
+      today: dateOnly(now),
+    );
+    final runOut = estimate.runOutOn;
+    if (!estimate.low || runOut == null) return null;
+    final held = stockSnooze[entry.item.id];
+    final snoozed = held != null && dateOnly(held).isAfter(dateOnly(now));
+    return StockInput(
+      id: entry.item.id,
+      productName: entry.product.displayName,
+      runOut: snoozed ? held : runOut,
+      snoozed: snoozed,
+    );
   }
 
   String weightAckKey(int catId, WeightChange change) =>
@@ -786,6 +1074,9 @@ class AppController extends ChangeNotifier {
               dueDate: item.nextRecheck!,
               recheck: true,
             ),
+      ],
+      stocks: [
+        for (final entry in pantry) ?_stockInput(entry),
       ],
     );
   }

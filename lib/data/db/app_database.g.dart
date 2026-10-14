@@ -1348,6 +1348,15 @@ class $VaccinesTable extends Vaccines
     requiredDuringInsert: false,
     defaultValue: const Constant(''),
   );
+  static const VerificationMeta _batchMeta = const VerificationMeta('batch');
+  @override
+  late final GeneratedColumn<String> batch = GeneratedColumn<String>(
+    'batch',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -1357,6 +1366,7 @@ class $VaccinesTable extends Vaccines
     nextDue,
     clinic,
     notes,
+    batch,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -1415,6 +1425,12 @@ class $VaccinesTable extends Vaccines
         notes.isAcceptableOrUnknown(data['notes']!, _notesMeta),
       );
     }
+    if (data.containsKey('batch')) {
+      context.handle(
+        _batchMeta,
+        batch.isAcceptableOrUnknown(data['batch']!, _batchMeta),
+      );
+    }
     return context;
   }
 
@@ -1452,6 +1468,10 @@ class $VaccinesTable extends Vaccines
         DriftSqlType.string,
         data['${effectivePrefix}notes'],
       )!,
+      batch: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}batch'],
+      ),
     );
   }
 
@@ -1469,6 +1489,7 @@ class VaccineRow extends DataClass implements Insertable<VaccineRow> {
   final DateTime? nextDue;
   final String? clinic;
   final String notes;
+  final String? batch;
   const VaccineRow({
     required this.id,
     required this.catId,
@@ -1477,6 +1498,7 @@ class VaccineRow extends DataClass implements Insertable<VaccineRow> {
     this.nextDue,
     this.clinic,
     required this.notes,
+    this.batch,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -1492,6 +1514,9 @@ class VaccineRow extends DataClass implements Insertable<VaccineRow> {
       map['clinic'] = Variable<String>(clinic);
     }
     map['notes'] = Variable<String>(notes);
+    if (!nullToAbsent || batch != null) {
+      map['batch'] = Variable<String>(batch);
+    }
     return map;
   }
 
@@ -1508,6 +1533,9 @@ class VaccineRow extends DataClass implements Insertable<VaccineRow> {
           ? const Value.absent()
           : Value(clinic),
       notes: Value(notes),
+      batch: batch == null && nullToAbsent
+          ? const Value.absent()
+          : Value(batch),
     );
   }
 
@@ -1524,6 +1552,7 @@ class VaccineRow extends DataClass implements Insertable<VaccineRow> {
       nextDue: serializer.fromJson<DateTime?>(json['nextDue']),
       clinic: serializer.fromJson<String?>(json['clinic']),
       notes: serializer.fromJson<String>(json['notes']),
+      batch: serializer.fromJson<String?>(json['batch']),
     );
   }
   @override
@@ -1537,6 +1566,7 @@ class VaccineRow extends DataClass implements Insertable<VaccineRow> {
       'nextDue': serializer.toJson<DateTime?>(nextDue),
       'clinic': serializer.toJson<String?>(clinic),
       'notes': serializer.toJson<String>(notes),
+      'batch': serializer.toJson<String?>(batch),
     };
   }
 
@@ -1548,6 +1578,7 @@ class VaccineRow extends DataClass implements Insertable<VaccineRow> {
     Value<DateTime?> nextDue = const Value.absent(),
     Value<String?> clinic = const Value.absent(),
     String? notes,
+    Value<String?> batch = const Value.absent(),
   }) => VaccineRow(
     id: id ?? this.id,
     catId: catId ?? this.catId,
@@ -1556,6 +1587,7 @@ class VaccineRow extends DataClass implements Insertable<VaccineRow> {
     nextDue: nextDue.present ? nextDue.value : this.nextDue,
     clinic: clinic.present ? clinic.value : this.clinic,
     notes: notes ?? this.notes,
+    batch: batch.present ? batch.value : this.batch,
   );
   VaccineRow copyWithCompanion(VaccinesCompanion data) {
     return VaccineRow(
@@ -1566,6 +1598,7 @@ class VaccineRow extends DataClass implements Insertable<VaccineRow> {
       nextDue: data.nextDue.present ? data.nextDue.value : this.nextDue,
       clinic: data.clinic.present ? data.clinic.value : this.clinic,
       notes: data.notes.present ? data.notes.value : this.notes,
+      batch: data.batch.present ? data.batch.value : this.batch,
     );
   }
 
@@ -1578,14 +1611,15 @@ class VaccineRow extends DataClass implements Insertable<VaccineRow> {
           ..write('givenOn: $givenOn, ')
           ..write('nextDue: $nextDue, ')
           ..write('clinic: $clinic, ')
-          ..write('notes: $notes')
+          ..write('notes: $notes, ')
+          ..write('batch: $batch')
           ..write(')'))
         .toString();
   }
 
   @override
   int get hashCode =>
-      Object.hash(id, catId, name, givenOn, nextDue, clinic, notes);
+      Object.hash(id, catId, name, givenOn, nextDue, clinic, notes, batch);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -1596,7 +1630,8 @@ class VaccineRow extends DataClass implements Insertable<VaccineRow> {
           other.givenOn == this.givenOn &&
           other.nextDue == this.nextDue &&
           other.clinic == this.clinic &&
-          other.notes == this.notes);
+          other.notes == this.notes &&
+          other.batch == this.batch);
 }
 
 class VaccinesCompanion extends UpdateCompanion<VaccineRow> {
@@ -1607,6 +1642,7 @@ class VaccinesCompanion extends UpdateCompanion<VaccineRow> {
   final Value<DateTime?> nextDue;
   final Value<String?> clinic;
   final Value<String> notes;
+  final Value<String?> batch;
   const VaccinesCompanion({
     this.id = const Value.absent(),
     this.catId = const Value.absent(),
@@ -1615,6 +1651,7 @@ class VaccinesCompanion extends UpdateCompanion<VaccineRow> {
     this.nextDue = const Value.absent(),
     this.clinic = const Value.absent(),
     this.notes = const Value.absent(),
+    this.batch = const Value.absent(),
   });
   VaccinesCompanion.insert({
     this.id = const Value.absent(),
@@ -1624,6 +1661,7 @@ class VaccinesCompanion extends UpdateCompanion<VaccineRow> {
     this.nextDue = const Value.absent(),
     this.clinic = const Value.absent(),
     this.notes = const Value.absent(),
+    this.batch = const Value.absent(),
   }) : catId = Value(catId),
        name = Value(name),
        givenOn = Value(givenOn);
@@ -1635,6 +1673,7 @@ class VaccinesCompanion extends UpdateCompanion<VaccineRow> {
     Expression<DateTime>? nextDue,
     Expression<String>? clinic,
     Expression<String>? notes,
+    Expression<String>? batch,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -1644,6 +1683,7 @@ class VaccinesCompanion extends UpdateCompanion<VaccineRow> {
       if (nextDue != null) 'next_due': nextDue,
       if (clinic != null) 'clinic': clinic,
       if (notes != null) 'notes': notes,
+      if (batch != null) 'batch': batch,
     });
   }
 
@@ -1655,6 +1695,7 @@ class VaccinesCompanion extends UpdateCompanion<VaccineRow> {
     Value<DateTime?>? nextDue,
     Value<String?>? clinic,
     Value<String>? notes,
+    Value<String?>? batch,
   }) {
     return VaccinesCompanion(
       id: id ?? this.id,
@@ -1664,6 +1705,7 @@ class VaccinesCompanion extends UpdateCompanion<VaccineRow> {
       nextDue: nextDue ?? this.nextDue,
       clinic: clinic ?? this.clinic,
       notes: notes ?? this.notes,
+      batch: batch ?? this.batch,
     );
   }
 
@@ -1691,6 +1733,9 @@ class VaccinesCompanion extends UpdateCompanion<VaccineRow> {
     if (notes.present) {
       map['notes'] = Variable<String>(notes.value);
     }
+    if (batch.present) {
+      map['batch'] = Variable<String>(batch.value);
+    }
     return map;
   }
 
@@ -1703,7 +1748,8 @@ class VaccinesCompanion extends UpdateCompanion<VaccineRow> {
           ..write('givenOn: $givenOn, ')
           ..write('nextDue: $nextDue, ')
           ..write('clinic: $clinic, ')
-          ..write('notes: $notes')
+          ..write('notes: $notes, ')
+          ..write('batch: $batch')
           ..write(')'))
         .toString();
   }
@@ -5046,6 +5092,17 @@ class $PantryItemsTable extends PantryItems
     type: DriftSqlType.int,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _dailyGramsMeta = const VerificationMeta(
+    'dailyGrams',
+  );
+  @override
+  late final GeneratedColumn<double> dailyGrams = GeneratedColumn<double>(
+    'daily_grams',
+    aliasedName,
+    true,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -5056,6 +5113,7 @@ class $PantryItemsTable extends PantryItems
     dateSource,
     openedAt,
     afterOpenDays,
+    dailyGrams,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -5122,6 +5180,12 @@ class $PantryItemsTable extends PantryItems
         ),
       );
     }
+    if (data.containsKey('daily_grams')) {
+      context.handle(
+        _dailyGramsMeta,
+        dailyGrams.isAcceptableOrUnknown(data['daily_grams']!, _dailyGramsMeta),
+      );
+    }
     return context;
   }
 
@@ -5163,6 +5227,10 @@ class $PantryItemsTable extends PantryItems
         DriftSqlType.int,
         data['${effectivePrefix}after_open_days'],
       ),
+      dailyGrams: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}daily_grams'],
+      ),
     );
   }
 
@@ -5181,6 +5249,7 @@ class PantryRow extends DataClass implements Insertable<PantryRow> {
   final String dateSource;
   final DateTime? openedAt;
   final int? afterOpenDays;
+  final double? dailyGrams;
   const PantryRow({
     required this.id,
     required this.productId,
@@ -5190,6 +5259,7 @@ class PantryRow extends DataClass implements Insertable<PantryRow> {
     required this.dateSource,
     this.openedAt,
     this.afterOpenDays,
+    this.dailyGrams,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -5211,6 +5281,9 @@ class PantryRow extends DataClass implements Insertable<PantryRow> {
     }
     if (!nullToAbsent || afterOpenDays != null) {
       map['after_open_days'] = Variable<int>(afterOpenDays);
+    }
+    if (!nullToAbsent || dailyGrams != null) {
+      map['daily_grams'] = Variable<double>(dailyGrams);
     }
     return map;
   }
@@ -5235,6 +5308,9 @@ class PantryRow extends DataClass implements Insertable<PantryRow> {
       afterOpenDays: afterOpenDays == null && nullToAbsent
           ? const Value.absent()
           : Value(afterOpenDays),
+      dailyGrams: dailyGrams == null && nullToAbsent
+          ? const Value.absent()
+          : Value(dailyGrams),
     );
   }
 
@@ -5252,6 +5328,7 @@ class PantryRow extends DataClass implements Insertable<PantryRow> {
       dateSource: serializer.fromJson<String>(json['dateSource']),
       openedAt: serializer.fromJson<DateTime?>(json['openedAt']),
       afterOpenDays: serializer.fromJson<int?>(json['afterOpenDays']),
+      dailyGrams: serializer.fromJson<double?>(json['dailyGrams']),
     );
   }
   @override
@@ -5266,6 +5343,7 @@ class PantryRow extends DataClass implements Insertable<PantryRow> {
       'dateSource': serializer.toJson<String>(dateSource),
       'openedAt': serializer.toJson<DateTime?>(openedAt),
       'afterOpenDays': serializer.toJson<int?>(afterOpenDays),
+      'dailyGrams': serializer.toJson<double?>(dailyGrams),
     };
   }
 
@@ -5278,6 +5356,7 @@ class PantryRow extends DataClass implements Insertable<PantryRow> {
     String? dateSource,
     Value<DateTime?> openedAt = const Value.absent(),
     Value<int?> afterOpenDays = const Value.absent(),
+    Value<double?> dailyGrams = const Value.absent(),
   }) => PantryRow(
     id: id ?? this.id,
     productId: productId ?? this.productId,
@@ -5291,6 +5370,7 @@ class PantryRow extends DataClass implements Insertable<PantryRow> {
     afterOpenDays: afterOpenDays.present
         ? afterOpenDays.value
         : this.afterOpenDays,
+    dailyGrams: dailyGrams.present ? dailyGrams.value : this.dailyGrams,
   );
   PantryRow copyWithCompanion(PantryItemsCompanion data) {
     return PantryRow(
@@ -5310,6 +5390,9 @@ class PantryRow extends DataClass implements Insertable<PantryRow> {
       afterOpenDays: data.afterOpenDays.present
           ? data.afterOpenDays.value
           : this.afterOpenDays,
+      dailyGrams: data.dailyGrams.present
+          ? data.dailyGrams.value
+          : this.dailyGrams,
     );
   }
 
@@ -5323,7 +5406,8 @@ class PantryRow extends DataClass implements Insertable<PantryRow> {
           ..write('batch: $batch, ')
           ..write('dateSource: $dateSource, ')
           ..write('openedAt: $openedAt, ')
-          ..write('afterOpenDays: $afterOpenDays')
+          ..write('afterOpenDays: $afterOpenDays, ')
+          ..write('dailyGrams: $dailyGrams')
           ..write(')'))
         .toString();
   }
@@ -5338,6 +5422,7 @@ class PantryRow extends DataClass implements Insertable<PantryRow> {
     dateSource,
     openedAt,
     afterOpenDays,
+    dailyGrams,
   );
   @override
   bool operator ==(Object other) =>
@@ -5350,7 +5435,8 @@ class PantryRow extends DataClass implements Insertable<PantryRow> {
           other.batch == this.batch &&
           other.dateSource == this.dateSource &&
           other.openedAt == this.openedAt &&
-          other.afterOpenDays == this.afterOpenDays);
+          other.afterOpenDays == this.afterOpenDays &&
+          other.dailyGrams == this.dailyGrams);
 }
 
 class PantryItemsCompanion extends UpdateCompanion<PantryRow> {
@@ -5362,6 +5448,7 @@ class PantryItemsCompanion extends UpdateCompanion<PantryRow> {
   final Value<String> dateSource;
   final Value<DateTime?> openedAt;
   final Value<int?> afterOpenDays;
+  final Value<double?> dailyGrams;
   const PantryItemsCompanion({
     this.id = const Value.absent(),
     this.productId = const Value.absent(),
@@ -5371,6 +5458,7 @@ class PantryItemsCompanion extends UpdateCompanion<PantryRow> {
     this.dateSource = const Value.absent(),
     this.openedAt = const Value.absent(),
     this.afterOpenDays = const Value.absent(),
+    this.dailyGrams = const Value.absent(),
   });
   PantryItemsCompanion.insert({
     this.id = const Value.absent(),
@@ -5381,6 +5469,7 @@ class PantryItemsCompanion extends UpdateCompanion<PantryRow> {
     this.dateSource = const Value.absent(),
     this.openedAt = const Value.absent(),
     this.afterOpenDays = const Value.absent(),
+    this.dailyGrams = const Value.absent(),
   }) : productId = Value(productId);
   static Insertable<PantryRow> custom({
     Expression<int>? id,
@@ -5391,6 +5480,7 @@ class PantryItemsCompanion extends UpdateCompanion<PantryRow> {
     Expression<String>? dateSource,
     Expression<DateTime>? openedAt,
     Expression<int>? afterOpenDays,
+    Expression<double>? dailyGrams,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -5401,6 +5491,7 @@ class PantryItemsCompanion extends UpdateCompanion<PantryRow> {
       if (dateSource != null) 'date_source': dateSource,
       if (openedAt != null) 'opened_at': openedAt,
       if (afterOpenDays != null) 'after_open_days': afterOpenDays,
+      if (dailyGrams != null) 'daily_grams': dailyGrams,
     });
   }
 
@@ -5413,6 +5504,7 @@ class PantryItemsCompanion extends UpdateCompanion<PantryRow> {
     Value<String>? dateSource,
     Value<DateTime?>? openedAt,
     Value<int?>? afterOpenDays,
+    Value<double?>? dailyGrams,
   }) {
     return PantryItemsCompanion(
       id: id ?? this.id,
@@ -5423,6 +5515,7 @@ class PantryItemsCompanion extends UpdateCompanion<PantryRow> {
       dateSource: dateSource ?? this.dateSource,
       openedAt: openedAt ?? this.openedAt,
       afterOpenDays: afterOpenDays ?? this.afterOpenDays,
+      dailyGrams: dailyGrams ?? this.dailyGrams,
     );
   }
 
@@ -5453,6 +5546,9 @@ class PantryItemsCompanion extends UpdateCompanion<PantryRow> {
     if (afterOpenDays.present) {
       map['after_open_days'] = Variable<int>(afterOpenDays.value);
     }
+    if (dailyGrams.present) {
+      map['daily_grams'] = Variable<double>(dailyGrams.value);
+    }
     return map;
   }
 
@@ -5466,7 +5562,8 @@ class PantryItemsCompanion extends UpdateCompanion<PantryRow> {
           ..write('batch: $batch, ')
           ..write('dateSource: $dateSource, ')
           ..write('openedAt: $openedAt, ')
-          ..write('afterOpenDays: $afterOpenDays')
+          ..write('afterOpenDays: $afterOpenDays, ')
+          ..write('dailyGrams: $dailyGrams')
           ..write(')'))
         .toString();
   }
@@ -11006,6 +11103,7 @@ typedef $$VaccinesTableCreateCompanionBuilder = VaccinesCompanion Function({
   Value<DateTime?> nextDue,
   Value<String?> clinic,
   Value<String> notes,
+  Value<String?> batch,
 });
 typedef $$VaccinesTableUpdateCompanionBuilder = VaccinesCompanion Function({
   Value<int> id,
@@ -11015,6 +11113,7 @@ typedef $$VaccinesTableUpdateCompanionBuilder = VaccinesCompanion Function({
   Value<DateTime?> nextDue,
   Value<String?> clinic,
   Value<String> notes,
+  Value<String?> batch,
 });
 
 final class $$VaccinesTableReferences
@@ -11075,6 +11174,11 @@ class $$VaccinesTableFilterComposer
 
   ColumnFilters<String> get notes => $composableBuilder(
     column: $table.notes,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get batch => $composableBuilder(
+    column: $table.batch,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -11141,6 +11245,11 @@ class $$VaccinesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get batch => $composableBuilder(
+    column: $table.batch,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   $$CatsTableOrderingComposer get catId {
     final $$CatsTableOrderingComposer composer = $composerBuilder(
       composer: this,
@@ -11191,6 +11300,9 @@ class $$VaccinesTableAnnotationComposer
 
   GeneratedColumn<String> get notes =>
       $composableBuilder(column: $table.notes, builder: (column) => column);
+
+  GeneratedColumn<String> get batch =>
+      $composableBuilder(column: $table.batch, builder: (column) => column);
 
   $$CatsTableAnnotationComposer get catId {
     final $$CatsTableAnnotationComposer composer = $composerBuilder(
@@ -11251,6 +11363,7 @@ class $$VaccinesTableTableManager
                 Value<DateTime?> nextDue = const Value.absent(),
                 Value<String?> clinic = const Value.absent(),
                 Value<String> notes = const Value.absent(),
+                Value<String?> batch = const Value.absent(),
               }) => VaccinesCompanion(
                 id: id,
                 catId: catId,
@@ -11259,6 +11372,7 @@ class $$VaccinesTableTableManager
                 nextDue: nextDue,
                 clinic: clinic,
                 notes: notes,
+                batch: batch,
               ),
           createCompanionCallback:
               ({
@@ -11269,6 +11383,7 @@ class $$VaccinesTableTableManager
                 Value<DateTime?> nextDue = const Value.absent(),
                 Value<String?> clinic = const Value.absent(),
                 Value<String> notes = const Value.absent(),
+                Value<String?> batch = const Value.absent(),
               }) => VaccinesCompanion.insert(
                 id: id,
                 catId: catId,
@@ -11277,6 +11392,7 @@ class $$VaccinesTableTableManager
                 nextDue: nextDue,
                 clinic: clinic,
                 notes: notes,
+                batch: batch,
               ),
           withReferenceMapper: (p0) => p0
               .map(
@@ -13994,6 +14110,7 @@ typedef $$PantryItemsTableCreateCompanionBuilder =
       Value<String> dateSource,
       Value<DateTime?> openedAt,
       Value<int?> afterOpenDays,
+      Value<double?> dailyGrams,
     });
 typedef $$PantryItemsTableUpdateCompanionBuilder =
     PantryItemsCompanion Function({
@@ -14005,6 +14122,7 @@ typedef $$PantryItemsTableUpdateCompanionBuilder =
       Value<String> dateSource,
       Value<DateTime?> openedAt,
       Value<int?> afterOpenDays,
+      Value<double?> dailyGrams,
     });
 
 final class $$PantryItemsTableReferences
@@ -14070,6 +14188,11 @@ class $$PantryItemsTableFilterComposer
 
   ColumnFilters<int> get afterOpenDays => $composableBuilder(
     column: $table.afterOpenDays,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get dailyGrams => $composableBuilder(
+    column: $table.dailyGrams,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -14141,6 +14264,11 @@ class $$PantryItemsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<double> get dailyGrams => $composableBuilder(
+    column: $table.dailyGrams,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   $$FoodProductsTableOrderingComposer get productId {
     final $$FoodProductsTableOrderingComposer composer = $composerBuilder(
       composer: this,
@@ -14200,6 +14328,11 @@ class $$PantryItemsTableAnnotationComposer
 
   GeneratedColumn<int> get afterOpenDays => $composableBuilder(
     column: $table.afterOpenDays,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<double> get dailyGrams => $composableBuilder(
+    column: $table.dailyGrams,
     builder: (column) => column,
   );
 
@@ -14263,6 +14396,7 @@ class $$PantryItemsTableTableManager
                 Value<String> dateSource = const Value.absent(),
                 Value<DateTime?> openedAt = const Value.absent(),
                 Value<int?> afterOpenDays = const Value.absent(),
+                Value<double?> dailyGrams = const Value.absent(),
               }) => PantryItemsCompanion(
                 id: id,
                 productId: productId,
@@ -14272,6 +14406,7 @@ class $$PantryItemsTableTableManager
                 dateSource: dateSource,
                 openedAt: openedAt,
                 afterOpenDays: afterOpenDays,
+                dailyGrams: dailyGrams,
               ),
           createCompanionCallback:
               ({
@@ -14283,6 +14418,7 @@ class $$PantryItemsTableTableManager
                 Value<String> dateSource = const Value.absent(),
                 Value<DateTime?> openedAt = const Value.absent(),
                 Value<int?> afterOpenDays = const Value.absent(),
+                Value<double?> dailyGrams = const Value.absent(),
               }) => PantryItemsCompanion.insert(
                 id: id,
                 productId: productId,
@@ -14292,6 +14428,7 @@ class $$PantryItemsTableTableManager
                 dateSource: dateSource,
                 openedAt: openedAt,
                 afterOpenDays: afterOpenDays,
+                dailyGrams: dailyGrams,
               ),
           withReferenceMapper: (p0) => p0
               .map(

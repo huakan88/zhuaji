@@ -45,6 +45,7 @@ class Vaccines extends Table {
   DateTimeColumn get nextDue => dateTime().nullable()();
   TextColumn get clinic => text().nullable()();
   TextColumn get notes => text().withDefault(const Constant(''))();
+  TextColumn get batch => text().nullable()();
 }
 
 @DataClassName('DewormRow')
@@ -147,6 +148,7 @@ class PantryItems extends Table {
   TextColumn get dateSource => text().withDefault(const Constant('none'))();
   DateTimeColumn get openedAt => dateTime().nullable()();
   IntColumn get afterOpenDays => integer().nullable()();
+  RealColumn get dailyGrams => real().nullable()();
 }
 
 @DataClassName('FeedingReminderRow')
@@ -281,7 +283,7 @@ class AppDatabase extends _$AppDatabase {
   factory AppDatabase.memory() => AppDatabase(NativeDatabase.memory());
 
   @override
-  int get schemaVersion => 4;
+  int get schemaVersion => 5;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -306,6 +308,9 @@ class AppDatabase extends _$AppDatabase {
             await _addMissing(migrator, foodProducts, foodProducts.photoPath);
             await _createMissing(migrator, labReports);
             await _createMissing(migrator, labValues);
+          case 5:
+            await _addMissing(migrator, pantryItems, pantryItems.dailyGrams);
+            await _addMissing(migrator, vaccines, vaccines.batch);
         }
       }
     },
@@ -341,7 +346,7 @@ class AppDatabase extends _$AppDatabase {
 /// Schema steps this build can apply. Skipping a missing step is how an
 /// already-upgraded file stays safe if the upgrade callback runs again.
 List<int> upgradesFrom(int from, int to) {
-  const steps = [2, 3, 4];
+  const steps = [2, 3, 4, 5];
   return [
     for (final step in steps)
       if (step > from && step <= to) step,
