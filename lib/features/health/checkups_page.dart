@@ -62,7 +62,7 @@ class _CheckupsPageState extends State<CheckupsPage> {
                 ChoiceChip(
                   label: Text(advice.item.name),
                   selected: advice.item.id == selected?.item.id,
-                  selectedColor: AppColors.coral,
+                  selectedColor: AppColors.tintCoral,
                   onSelected: (_) => setState(() => _selected = advice.item.id),
                 ),
             ],

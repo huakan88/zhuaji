@@ -52,31 +52,40 @@ class _VaccinesPageState extends State<VaccinesPage> {
             Text('还没记', style: zhuaji.copyWith(color: AppColors.muted))
           else
             for (final shot in shots.take(3)) _Record(shot: shot),
+          const SizedBox(height: 16),
+          const SectionLabel('记一针'),
           const SizedBox(height: 8),
-          Wrap(
-            spacing: 8,
-            children: [
-              for (final label in _names)
-                ChoiceChip(
-                  label: Text(label),
-                  selected: _name == label,
-                  selectedColor: AppColors.coral,
-                  onSelected: (_) => setState(() => _name = label),
+          QuietCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Wrap(
+                  spacing: 8,
+                  children: [
+                    for (final label in _names)
+                      ChoiceChip(
+                        label: Text(label),
+                        selected: _name == label,
+                        selectedColor: AppColors.tintCoral,
+                        onSelected: (_) => setState(() => _name = label),
+                      ),
+                  ],
                 ),
-            ],
-          ),
-          DateLine(
-            label: '接种',
-            date: given,
-            onTap: () async {
-              final picked = await pickDate(context, given);
-              if (picked == null) return;
-              setState(() => _given = dateOnly(picked));
-            },
-          ),
-          Text(
-            '下次 ${formatDate(next)}',
-            style: zhuaji.copyWith(color: AppColors.muted),
+                DateLine(
+                  label: '接种',
+                  date: given,
+                  onTap: () async {
+                    final picked = await pickDate(context, given);
+                    if (picked == null) return;
+                    setState(() => _given = dateOnly(picked));
+                  },
+                ),
+                Text(
+                  '下次 ${formatDate(next)}',
+                  style: zhuaji.copyWith(fontSize: 13, color: AppColors.muted),
+                ),
+              ],
+            ),
           ),
         ],
       ),
@@ -121,41 +130,56 @@ class _Record extends StatelessWidget {
   Widget build(BuildContext context) {
     final app = AppScope.of<AppController>(context);
     final due = shot.nextDue;
-    return Row(
-      children: [
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                shot.name,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: zhuaji.copyWith(fontWeight: FontWeight.w700),
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: QuietCard(
+        padding: const EdgeInsets.fromLTRB(16, 8, 8, 8),
+        child: Row(
+          children: [
+            const IconWell(icon: Icons.vaccines_outlined),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    shot.name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: zhuaji.copyWith(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    due == null ? '下次还没定' : '下次 ${countdownOf(due, app.now)}',
+                    style: zhuaji.copyWith(
+                      color: AppColors.muted,
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
               ),
-              Text(
-                due == null ? '下次还没定' : '下次 ${countdownOf(due, app.now)}',
-                style: zhuaji.copyWith(color: AppColors.muted, fontSize: 12),
-              ),
-            ],
-          ),
+            ),
+            TextButton(
+              onPressed: () async {
+                final next = await app.completeVaccine(shot);
+                if (!context.mounted) return;
+                showMessage(context, '下次 ${formatDate(next)}');
+              },
+              child: const Text('完成'),
+            ),
+            TextButton(
+              onPressed: () async {
+                if (!await confirmDelete(context, '删掉这针？')) return;
+                await app.removeVaccine(shot.id);
+              },
+              child: const Text('删除'),
+            ),
+          ],
         ),
-        TextButton(
-          onPressed: () async {
-            final next = await app.completeVaccine(shot);
-            if (!context.mounted) return;
-            showMessage(context, '下次 ${formatDate(next)}');
-          },
-          child: const Text('完成'),
-        ),
-        TextButton(
-          onPressed: () async {
-            if (!await confirmDelete(context, '删掉这针？')) return;
-            await app.removeVaccine(shot.id);
-          },
-          child: const Text('删除'),
-        ),
-      ],
+      ),
     );
   }
 }

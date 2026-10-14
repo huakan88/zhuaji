@@ -85,19 +85,18 @@ class _TabBar extends StatelessWidget {
     return DecoratedBox(
       decoration: const BoxDecoration(
         color: AppColors.card,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-        boxShadow: softShadow,
+        border: Border(top: BorderSide(color: AppColors.line)),
       ),
       child: SafeArea(
         top: false,
         child: SizedBox(
-          height: 92,
+          height: 72,
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               _item(0, Icons.today_outlined, '今天'),
               _item(1, Icons.favorite_border, '健康'),
-              const _ScanSlot(),
+              _scan(),
               _item(3, Icons.inventory_2_outlined, '粮仓'),
               _item(4, Icons.pets_outlined, '猫咪'),
             ],
@@ -118,12 +117,12 @@ class _TabBar extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
-              Icon(icon, color: color, size: 24),
+              Icon(icon, color: color, size: 22),
               const SizedBox(height: 2),
               Text(
                 label,
                 style: zhuaji.copyWith(
-                  fontSize: 12,
+                  fontSize: 11,
                   color: color,
                   fontWeight: selected ? FontWeight.w700 : FontWeight.w400,
                 ),
@@ -134,72 +133,22 @@ class _TabBar extends StatelessWidget {
       ),
     );
   }
-}
 
-class _ScanSlot extends StatefulWidget {
-  const _ScanSlot();
-
-  @override
-  State<_ScanSlot> createState() => _ScanSlotState();
-}
-
-class _ScanSlotState extends State<_ScanSlot>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _glow = AnimationController(
-    vsync: this,
-    duration: const Duration(milliseconds: 1400),
-  )..repeat(reverse: true);
-
-  @override
-  void dispose() {
-    _glow.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final bar = context.findAncestorWidgetOfExactType<_TabBar>()!;
+  Widget _scan() {
     return Expanded(
       child: GestureDetector(
-        onTap: () => bar.onSlot(2),
+        onTap: () => onSlot(2),
         child: Padding(
           padding: const EdgeInsets.only(bottom: 4),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
-              AnimatedBuilder(
-                animation: _glow,
-                builder: (context, child) {
-                  final t = Curves.easeInOut.transform(_glow.value);
-                  return Transform.translate(
-                    offset: Offset(0, -6 - 2 * t),
-                    child: Transform.scale(scale: 1 + 0.04 * t, child: child),
-                  );
-                },
-                child: Container(
-                  width: 60,
-                  height: 60,
-                  decoration: const BoxDecoration(
-                    shape: BoxShape.circle,
-                    gradient: LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [AppColors.coral, AppColors.coralDeep],
-                    ),
-                    boxShadow: scanGlow,
-                  ),
-                  child: const Icon(
-                    Icons.qr_code_scanner,
-                    color: Colors.white,
-                    size: 30,
-                  ),
-                ),
-              ),
+              const _ScanMark(),
               const SizedBox(height: 2),
               Text(
                 '扫粮',
                 style: zhuaji.copyWith(
-                  fontSize: 12,
+                  fontSize: 11,
                   color: AppColors.coralDeep,
                   fontWeight: FontWeight.w700,
                 ),
@@ -207,6 +156,22 @@ class _ScanSlotState extends State<_ScanSlot>
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _ScanMark extends StatelessWidget {
+  const _ScanMark();
+
+  @override
+  Widget build(BuildContext context) {
+    return const DecoratedBox(
+      decoration: BoxDecoration(color: AppColors.coral, shape: BoxShape.circle),
+      child: SizedBox(
+        width: 48,
+        height: 48,
+        child: Icon(Icons.qr_code_scanner, color: Colors.white, size: 22),
       ),
     );
   }

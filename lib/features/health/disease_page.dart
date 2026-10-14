@@ -48,7 +48,7 @@ class _DiseaseLibraryPageState extends State<DiseaseLibraryPage> {
                 ChoiceChip(
                   label: Text(item.name),
                   selected: item.id == disease.id,
-                  selectedColor: AppColors.coral,
+                  selectedColor: AppColors.tintCoral,
                   onSelected: (_) => setState(() => _selected = item.id),
                 ),
             ],
