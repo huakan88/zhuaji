@@ -131,6 +131,9 @@ class FoodProducts extends Table {
   TextColumn get storageMethod => text()();
   IntColumn get afterOpenDays => integer()();
   BoolColumn get isSample => boolean().withDefault(const Constant(false))();
+  TextColumn get flavor => text().withDefault(const Constant(''))();
+  BoolColumn get isCustom => boolean().withDefault(const Constant(false))();
+  TextColumn get photoPath => text().nullable()();
 }
 
 @DataClassName('PantryRow')
@@ -189,6 +192,34 @@ class WaterLogs extends Table {
   RealColumn get milliliters => real()();
 }
 
+@DataClassName('LabReportRow')
+class LabReports extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  IntColumn get catId =>
+      integer().references(Cats, #id, onDelete: KeyAction.cascade)();
+  TextColumn get kind => text()();
+  DateTimeColumn get takenOn => dateTime()();
+
+  /// JSON list of stored photo paths, in the order they were added.
+  TextColumn get photos => text().withDefault(const Constant('[]'))();
+  TextColumn get note => text().withDefault(const Constant(''))();
+  TextColumn get checkupItemId => text().nullable()();
+  DateTimeColumn get createdAt => dateTime()();
+}
+
+@DataClassName('LabValueRow')
+class LabValues extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  IntColumn get reportId =>
+      integer().references(LabReports, #id, onDelete: KeyAction.cascade)();
+  TextColumn get code => text()();
+  RealColumn get value => real()();
+  TextColumn get unit => text().withDefault(const Constant(''))();
+  TextColumn get source => text().withDefault(const Constant('ocr'))();
+  RealColumn get printedLow => real().nullable()();
+  RealColumn get printedHigh => real().nullable()();
+}
+
 @DataClassName('SyncOutboxRow')
 class SyncOutbox extends Table {
   IntColumn get id => integer().autoIncrement()();
@@ -235,6 +266,8 @@ class AppSettings extends Table {
     CatConditions,
     CheckupLogs,
     WaterLogs,
+    LabReports,
+    LabValues,
     SyncOutbox,
     SyncCursors,
     AppSettings,
@@ -248,7 +281,7 @@ class AppDatabase extends _$AppDatabase {
   factory AppDatabase.memory() => AppDatabase(NativeDatabase.memory());
 
   @override
-  int get schemaVersion => 3;
+  int get schemaVersion => 4;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -267,6 +300,12 @@ class AppDatabase extends _$AppDatabase {
           case 3:
             await _createMissing(migrator, syncOutbox);
             await _createMissing(migrator, syncCursors);
+          case 4:
+            await _addMissing(migrator, foodProducts, foodProducts.flavor);
+            await _addMissing(migrator, foodProducts, foodProducts.isCustom);
+            await _addMissing(migrator, foodProducts, foodProducts.photoPath);
+            await _createMissing(migrator, labReports);
+            await _createMissing(migrator, labValues);
         }
       }
     },
@@ -282,12 +321,27 @@ class AppDatabase extends _$AppDatabase {
     ).get();
     if (rows.isEmpty) await migrator.createTable(table);
   }
+
+  Future<void> _addMissing(
+    Migrator migrator,
+    TableInfo table,
+    GeneratedColumn column,
+  ) async {
+    final tableName = table.actualTableName.replaceAll("'", '');
+    final rows = await customSelect(
+      "SELECT name FROM pragma_table_info('$tableName')",
+    ).get();
+    final names = rows.map((row) => row.read<String>('name')).toSet();
+    if (!names.contains(column.name)) {
+      await migrator.addColumn(table, column);
+    }
+  }
 }
 
 /// Schema steps this build can apply. Skipping a missing step is how an
 /// already-upgraded file stays safe if the upgrade callback runs again.
 List<int> upgradesFrom(int from, int to) {
-  const steps = [2, 3];
+  const steps = [2, 3, 4];
   return [
     for (final step in steps)
       if (step > from && step <= to) step,

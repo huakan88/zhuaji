@@ -793,12 +793,20 @@ class DriftCareRepository implements CareRepository {
       storageMethod: Value(draft.storageMethod.trim()),
       afterOpenDays: Value(draft.afterOpenDays),
       isSample: Value(draft.isSample),
+      flavor: Value(draft.flavor.trim()),
+      isCustom: Value(draft.isCustom),
+      photoPath: Value(_blank(draft.photoPath)),
     );
     if (draft.id == null) return _db.into(_db.foodProducts).insert(companion);
     await (_db.update(
       _db.foodProducts,
     )..where((t) => t.id.equals(draft.id!))).write(companion);
     return draft.id!;
+  }
+
+  @override
+  Future<void> deleteProduct(int id) async {
+    await (_db.delete(_db.foodProducts)..where((t) => t.id.equals(id))).go();
   }
 
   @override
@@ -984,6 +992,108 @@ class DriftCareRepository implements CareRepository {
     return (_db.delete(_db.waterLogs)..where((t) => t.id.equals(id))).go();
   }
 
+  @override
+  Future<List<LabReport>> labs() async {
+    final reports = await (_db.select(_db.labReports)..orderBy([
+          (t) => OrderingTerm.desc(t.takenOn),
+          (t) => OrderingTerm.desc(t.id),
+        ]))
+        .get();
+    final values = await (_db.select(
+      _db.labValues,
+    )..orderBy([(t) => OrderingTerm.asc(t.id)])).get();
+    final byReport = <int, List<LabValue>>{};
+    for (final row in values) {
+      byReport
+          .putIfAbsent(row.reportId, () => [])
+          .add(
+            LabValue(
+              id: row.id,
+              code: row.code,
+              value: row.value,
+              unit: row.unit,
+              source: row.source == 'manual'
+                  ? LabValueSource.manual
+                  : LabValueSource.ocr,
+              printedLow: row.printedLow,
+              printedHigh: row.printedHigh,
+            ),
+          );
+    }
+    return [
+      for (final row in reports)
+        LabReport(
+          id: row.id,
+          catId: row.catId,
+          kind: parseLabKind(row.kind),
+          takenOn: row.takenOn,
+          photos: _paths(row.photos),
+          values: byReport[row.id] ?? const [],
+          note: row.note,
+          checkupItemId: row.checkupItemId,
+          createdAt: row.createdAt,
+        ),
+    ];
+  }
+
+  List<String> _paths(String raw) {
+    try {
+      final decoded = jsonDecode(raw);
+      if (decoded is List) return [for (final item in decoded) '$item'];
+    } catch (_) {}
+    return const [];
+  }
+
+  @override
+  Future<int> upsertLab(LabDraft draft) async {
+    final companion = LabReportsCompanion(
+      catId: Value(draft.catId),
+      kind: Value(labKindKey(draft.kind)),
+      takenOn: Value(draft.takenOn),
+      photos: Value(jsonEncode(draft.photos)),
+      note: Value(draft.note.trim()),
+      checkupItemId: Value(draft.checkupItemId),
+    );
+    if (draft.id == null) {
+      return _db
+          .into(_db.labReports)
+          .insert(companion.copyWith(createdAt: Value(DateTime.now())));
+    }
+    await (_db.update(
+      _db.labReports,
+    )..where((t) => t.id.equals(draft.id!))).write(companion);
+    return draft.id!;
+  }
+
+  @override
+  Future<void> deleteLab(int id) async {
+    await (_db.delete(_db.labReports)..where((t) => t.id.equals(id))).go();
+  }
+
+  @override
+  Future<void> setLabValues(int reportId, List<LabValue> values) {
+    return _db.transaction(() async {
+      await (_db.delete(
+        _db.labValues,
+      )..where((t) => t.reportId.equals(reportId))).go();
+      for (final value in values) {
+        await _db
+            .into(_db.labValues)
+            .insert(
+              LabValuesCompanion.insert(
+                reportId: reportId,
+                code: value.code,
+                value: value.value,
+                unit: Value(value.unit),
+                source: Value(value.source.name),
+                printedLow: Value(value.printedLow),
+                printedHigh: Value(value.printedHigh),
+              ),
+            );
+      }
+    });
+  }
+
   CatProfile _cat(CatRow row) => CatProfile(
     id: row.id,
     name: row.name,
@@ -1017,6 +1127,9 @@ class DriftCareRepository implements CareRepository {
     storageMethod: row.storageMethod,
     afterOpenDays: row.afterOpenDays,
     isSample: row.isSample,
+    flavor: row.flavor,
+    isCustom: row.isCustom,
+    photoPath: row.photoPath,
   );
 
   Future<String> ensureDeviceId() async {
