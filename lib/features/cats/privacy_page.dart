@@ -9,10 +9,15 @@ const privacySections = [
   (
     title: '存在哪里',
     body:
-        '猫咪资料、喂养和健康记录、粮仓、照片默认只存在这台手机里，没有账号。'
+        '猫咪资料、喂养和健康记录、粮仓、化验单和照片默认只存在这台手机里，没有账号。'
         '只有你自己配置了同步服务，记录才会同步到你指定的服务器。卸载应用会一起删掉本机数据。',
   ),
-  (title: '相机和相册', body: '只在你点「扫粮」或给猫拍照时使用。扫码和识别日期都在手机上完成，照片不上传。'),
+  (
+    title: '相机和相册',
+    body:
+        '只在你点「扫粮」、拍包装、拍化验单或给猫拍照时使用。'
+        '扫码、认包装和认化验单都在手机上完成，照片不上传。',
+  ),
   (title: '通知', body: '用来提醒疫苗、驱虫、体检和粮食到期。点通知上的「已完成」只会在手机里记一笔。'),
   (
     title: '蓝牙',
@@ -39,7 +44,7 @@ class PrivacyPage extends StatelessWidget {
         padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
         children: [
           Text(
-            '爪记 2.6 · 2026 年 10 月更新',
+            '爪记 2.7 · 2026 年 10 月更新',
             style: zhuaji.copyWith(fontSize: 13, color: AppColors.muted),
           ),
           const SizedBox(height: 16),

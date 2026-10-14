@@ -60,6 +60,11 @@ class Gs1Parser {
     text = text.replaceAll('<GS>', '\u001d').replaceAll('<FNC1>', '\u001d');
 
     final result = _Accumulator(reference ?? DateTime.now());
+    final link = Uri.tryParse(text);
+    if (link != null && (link.scheme == 'http' || link.scheme == 'https')) {
+      _consumeDigitalLink(link, result);
+      return result.toResult();
+    }
     if (text.contains('(')) {
       for (final match in _parentheses.allMatches(text)) {
         result.apply(match.group(1)!, match.group(2) ?? '');
@@ -71,6 +76,24 @@ class Gs1Parser {
     }
     return result.toResult();
   }
+
+  /// GS1 Digital Link QR codes, e.g. https://id.gs1.org/01/069.../10/A1?17=270412
+  void _consumeDigitalLink(Uri link, _Accumulator result) {
+    final segments = link.pathSegments;
+    for (var i = 0; i + 1 < segments.length; i++) {
+      final ai = segments[i];
+      if (!_digitalLinkAis.contains(ai)) continue;
+      result.apply(ai, Uri.decodeComponent(segments[i + 1]));
+      i++;
+    }
+    for (final entry in link.queryParameters.entries) {
+      if (_digitalLinkAis.contains(entry.key)) {
+        result.apply(entry.key, entry.value);
+      }
+    }
+  }
+
+  static const _digitalLinkAis = {'01', '10', '11', '15', '17', '21'};
 
   void _consumeElement(String segment, _Accumulator result) {
     if (segment.isEmpty) return;

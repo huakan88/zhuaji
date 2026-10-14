@@ -75,6 +75,7 @@ abstract class CareRepository {
   Future<List<FoodProduct>> products();
   Future<FoodProduct?> productByBarcode(String barcode);
   Future<int> upsertProduct(FoodDraft draft);
+  Future<void> deleteProduct(int id);
 
   Future<List<PantryEntry>> pantry();
   Future<int> upsertPantry(PantryDraft draft);
@@ -95,4 +96,11 @@ abstract class CareRepository {
     required double milliliters,
   });
   Future<void> deleteWater(int id);
+
+  Future<List<LabReport>> labs();
+  Future<int> upsertLab(LabDraft draft);
+  Future<void> deleteLab(int id);
+
+  /// Replaces every value of one report.
+  Future<void> setLabValues(int reportId, List<LabValue> values);
 }

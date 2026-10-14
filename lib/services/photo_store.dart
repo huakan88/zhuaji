@@ -7,15 +7,15 @@ import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
 class PhotoStore {
-  Future<String> persist(String sourcePath) async {
+  Future<String> persist(String sourcePath, {bool frameSubject = true}) async {
     final root = await getApplicationDocumentsDirectory();
     final folder = Directory(p.join(root.path, 'cat_photos'));
     await folder.create(recursive: true);
     final name = '${DateTime.now().microsecondsSinceEpoch}.jpg';
     final dest = File(p.join(folder.path, name));
     final bytes = await File(sourcePath).readAsBytes();
-    final cropped = centerCatPhoto(bytes);
-    await dest.writeAsBytes(compressStoredPhoto(cropped ?? bytes));
+    final framed = frameSubject ? centerCatPhoto(bytes) : null;
+    await dest.writeAsBytes(compressStoredPhoto(framed ?? bytes));
     return dest.path;
   }
 }

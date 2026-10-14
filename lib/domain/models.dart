@@ -2,7 +2,7 @@ enum CatSex { male, female, unknown }
 
 enum CareGoal { maintain, loss }
 
-enum FoodForm { dry, wet, freezeDried, treat }
+enum FoodForm { dry, wet, can, freezeDried, treat }
 
 enum DewormKind { internal, external }
 
@@ -23,6 +23,7 @@ CatSex parseSex(String raw) => switch (raw) {
 
 FoodForm parseFoodForm(String raw) => switch (raw) {
   'wet' => FoodForm.wet,
+  'can' => FoodForm.can,
   'freeze' => FoodForm.freezeDried,
   'treat' => FoodForm.treat,
   _ => FoodForm.dry,
@@ -31,6 +32,7 @@ FoodForm parseFoodForm(String raw) => switch (raw) {
 String foodFormKey(FoodForm form) => switch (form) {
   FoodForm.dry => 'dry',
   FoodForm.wet => 'wet',
+  FoodForm.can => 'can',
   FoodForm.freezeDried => 'freeze',
   FoodForm.treat => 'treat',
 };
@@ -393,6 +395,9 @@ class FoodProduct {
     required this.isSample,
     this.barcode,
     this.kcalPer100g,
+    this.flavor = '',
+    this.isCustom = false,
+    this.photoPath,
   });
 
   final int id;
@@ -405,6 +410,15 @@ class FoodProduct {
   final String storageMethod;
   final int afterOpenDays;
   final bool isSample;
+
+  /// Main protein or taste, e.g. 鸡肉; empty when not known.
+  final String flavor;
+
+  /// Added by the user rather than shipped in the catalog.
+  final bool isCustom;
+
+  /// Front-of-pack photo for custom foods.
+  final String? photoPath;
 
   String get displayName => '$brand $name';
 }
@@ -421,6 +435,9 @@ class FoodDraft {
     this.barcode,
     this.kcalPer100g,
     this.isSample = false,
+    this.flavor = '',
+    this.isCustom = false,
+    this.photoPath,
   });
 
   final int? id;
@@ -433,6 +450,9 @@ class FoodDraft {
   final String storageMethod;
   final int afterOpenDays;
   final bool isSample;
+  final String flavor;
+  final bool isCustom;
+  final String? photoPath;
 }
 
 class PantryItem {
@@ -600,4 +620,110 @@ class WaterRecord {
   final int catId;
   final DateTime loggedOn;
   final double milliliters;
+}
+
+enum LabKind { cbc, chem, urine, imaging, other }
+
+String labKindKey(LabKind kind) => kind.name;
+
+LabKind parseLabKind(String raw) => switch (raw) {
+  'cbc' => LabKind.cbc,
+  'chem' => LabKind.chem,
+  'urine' => LabKind.urine,
+  'imaging' => LabKind.imaging,
+  _ => LabKind.other,
+};
+
+String labKindLabel(LabKind kind) => switch (kind) {
+  LabKind.cbc => '血常规',
+  LabKind.chem => '生化',
+  LabKind.urine => '尿检',
+  LabKind.imaging => '影像',
+  LabKind.other => '其他',
+};
+
+enum LabValueSource { ocr, manual }
+
+class LabValue {
+  const LabValue({
+    required this.code,
+    required this.value,
+    this.id,
+    this.unit = '',
+    this.source = LabValueSource.ocr,
+    this.printedLow,
+    this.printedHigh,
+  });
+
+  final int? id;
+
+  /// Analyte code from the lab catalog, e.g. WBC.
+  final String code;
+
+  /// As printed, in [unit].
+  final double value;
+  final String unit;
+  final LabValueSource source;
+
+  /// Reference range printed on this report, same unit as [value].
+  final double? printedLow;
+  final double? printedHigh;
+
+  LabValue copyWith({
+    double? value,
+    String? unit,
+    LabValueSource? source,
+  }) => LabValue(
+    id: id,
+    code: code,
+    value: value ?? this.value,
+    unit: unit ?? this.unit,
+    source: source ?? this.source,
+    printedLow: printedLow,
+    printedHigh: printedHigh,
+  );
+}
+
+class LabReport {
+  const LabReport({
+    required this.id,
+    required this.catId,
+    required this.kind,
+    required this.takenOn,
+    required this.photos,
+    required this.values,
+    required this.createdAt,
+    this.note = '',
+    this.checkupItemId,
+  });
+
+  final int id;
+  final int catId;
+  final LabKind kind;
+  final DateTime takenOn;
+  final List<String> photos;
+  final List<LabValue> values;
+  final String note;
+  final String? checkupItemId;
+  final DateTime createdAt;
+}
+
+class LabDraft {
+  const LabDraft({
+    required this.catId,
+    required this.kind,
+    required this.takenOn,
+    required this.photos,
+    this.id,
+    this.note = '',
+    this.checkupItemId,
+  });
+
+  final int? id;
+  final int catId;
+  final LabKind kind;
+  final DateTime takenOn;
+  final List<String> photos;
+  final String note;
+  final String? checkupItemId;
 }

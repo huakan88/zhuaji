@@ -3369,6 +3369,42 @@ class $FoodProductsTable extends FoodProducts
     ),
     defaultValue: const Constant(false),
   );
+  static const VerificationMeta _flavorMeta = const VerificationMeta('flavor');
+  @override
+  late final GeneratedColumn<String> flavor = GeneratedColumn<String>(
+    'flavor',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(''),
+  );
+  static const VerificationMeta _isCustomMeta = const VerificationMeta(
+    'isCustom',
+  );
+  @override
+  late final GeneratedColumn<bool> isCustom = GeneratedColumn<bool>(
+    'is_custom',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_custom" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _photoPathMeta = const VerificationMeta(
+    'photoPath',
+  );
+  @override
+  late final GeneratedColumn<String> photoPath = GeneratedColumn<String>(
+    'photo_path',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -3381,6 +3417,9 @@ class $FoodProductsTable extends FoodProducts
     storageMethod,
     afterOpenDays,
     isSample,
+    flavor,
+    isCustom,
+    photoPath,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -3472,6 +3511,24 @@ class $FoodProductsTable extends FoodProducts
         isSample.isAcceptableOrUnknown(data['is_sample']!, _isSampleMeta),
       );
     }
+    if (data.containsKey('flavor')) {
+      context.handle(
+        _flavorMeta,
+        flavor.isAcceptableOrUnknown(data['flavor']!, _flavorMeta),
+      );
+    }
+    if (data.containsKey('is_custom')) {
+      context.handle(
+        _isCustomMeta,
+        isCustom.isAcceptableOrUnknown(data['is_custom']!, _isCustomMeta),
+      );
+    }
+    if (data.containsKey('photo_path')) {
+      context.handle(
+        _photoPathMeta,
+        photoPath.isAcceptableOrUnknown(data['photo_path']!, _photoPathMeta),
+      );
+    }
     return context;
   }
 
@@ -3521,6 +3578,18 @@ class $FoodProductsTable extends FoodProducts
         DriftSqlType.bool,
         data['${effectivePrefix}is_sample'],
       )!,
+      flavor: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}flavor'],
+      )!,
+      isCustom: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_custom'],
+      )!,
+      photoPath: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}photo_path'],
+      ),
     );
   }
 
@@ -3541,6 +3610,9 @@ class FoodProductRow extends DataClass implements Insertable<FoodProductRow> {
   final String storageMethod;
   final int afterOpenDays;
   final bool isSample;
+  final String flavor;
+  final bool isCustom;
+  final String? photoPath;
   const FoodProductRow({
     required this.id,
     this.barcode,
@@ -3552,6 +3624,9 @@ class FoodProductRow extends DataClass implements Insertable<FoodProductRow> {
     required this.storageMethod,
     required this.afterOpenDays,
     required this.isSample,
+    required this.flavor,
+    required this.isCustom,
+    this.photoPath,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -3570,6 +3645,11 @@ class FoodProductRow extends DataClass implements Insertable<FoodProductRow> {
     map['storage_method'] = Variable<String>(storageMethod);
     map['after_open_days'] = Variable<int>(afterOpenDays);
     map['is_sample'] = Variable<bool>(isSample);
+    map['flavor'] = Variable<String>(flavor);
+    map['is_custom'] = Variable<bool>(isCustom);
+    if (!nullToAbsent || photoPath != null) {
+      map['photo_path'] = Variable<String>(photoPath);
+    }
     return map;
   }
 
@@ -3589,6 +3669,11 @@ class FoodProductRow extends DataClass implements Insertable<FoodProductRow> {
       storageMethod: Value(storageMethod),
       afterOpenDays: Value(afterOpenDays),
       isSample: Value(isSample),
+      flavor: Value(flavor),
+      isCustom: Value(isCustom),
+      photoPath: photoPath == null && nullToAbsent
+          ? const Value.absent()
+          : Value(photoPath),
     );
   }
 
@@ -3608,6 +3693,9 @@ class FoodProductRow extends DataClass implements Insertable<FoodProductRow> {
       storageMethod: serializer.fromJson<String>(json['storageMethod']),
       afterOpenDays: serializer.fromJson<int>(json['afterOpenDays']),
       isSample: serializer.fromJson<bool>(json['isSample']),
+      flavor: serializer.fromJson<String>(json['flavor']),
+      isCustom: serializer.fromJson<bool>(json['isCustom']),
+      photoPath: serializer.fromJson<String?>(json['photoPath']),
     );
   }
   @override
@@ -3624,6 +3712,9 @@ class FoodProductRow extends DataClass implements Insertable<FoodProductRow> {
       'storageMethod': serializer.toJson<String>(storageMethod),
       'afterOpenDays': serializer.toJson<int>(afterOpenDays),
       'isSample': serializer.toJson<bool>(isSample),
+      'flavor': serializer.toJson<String>(flavor),
+      'isCustom': serializer.toJson<bool>(isCustom),
+      'photoPath': serializer.toJson<String?>(photoPath),
     };
   }
 
@@ -3638,6 +3729,9 @@ class FoodProductRow extends DataClass implements Insertable<FoodProductRow> {
     String? storageMethod,
     int? afterOpenDays,
     bool? isSample,
+    String? flavor,
+    bool? isCustom,
+    Value<String?> photoPath = const Value.absent(),
   }) => FoodProductRow(
     id: id ?? this.id,
     barcode: barcode.present ? barcode.value : this.barcode,
@@ -3649,6 +3743,9 @@ class FoodProductRow extends DataClass implements Insertable<FoodProductRow> {
     storageMethod: storageMethod ?? this.storageMethod,
     afterOpenDays: afterOpenDays ?? this.afterOpenDays,
     isSample: isSample ?? this.isSample,
+    flavor: flavor ?? this.flavor,
+    isCustom: isCustom ?? this.isCustom,
+    photoPath: photoPath.present ? photoPath.value : this.photoPath,
   );
   FoodProductRow copyWithCompanion(FoodProductsCompanion data) {
     return FoodProductRow(
@@ -3668,6 +3765,9 @@ class FoodProductRow extends DataClass implements Insertable<FoodProductRow> {
           ? data.afterOpenDays.value
           : this.afterOpenDays,
       isSample: data.isSample.present ? data.isSample.value : this.isSample,
+      flavor: data.flavor.present ? data.flavor.value : this.flavor,
+      isCustom: data.isCustom.present ? data.isCustom.value : this.isCustom,
+      photoPath: data.photoPath.present ? data.photoPath.value : this.photoPath,
     );
   }
 
@@ -3683,7 +3783,10 @@ class FoodProductRow extends DataClass implements Insertable<FoodProductRow> {
           ..write('kcalPer100g: $kcalPer100g, ')
           ..write('storageMethod: $storageMethod, ')
           ..write('afterOpenDays: $afterOpenDays, ')
-          ..write('isSample: $isSample')
+          ..write('isSample: $isSample, ')
+          ..write('flavor: $flavor, ')
+          ..write('isCustom: $isCustom, ')
+          ..write('photoPath: $photoPath')
           ..write(')'))
         .toString();
   }
@@ -3700,6 +3803,9 @@ class FoodProductRow extends DataClass implements Insertable<FoodProductRow> {
     storageMethod,
     afterOpenDays,
     isSample,
+    flavor,
+    isCustom,
+    photoPath,
   );
   @override
   bool operator ==(Object other) =>
@@ -3714,7 +3820,10 @@ class FoodProductRow extends DataClass implements Insertable<FoodProductRow> {
           other.kcalPer100g == this.kcalPer100g &&
           other.storageMethod == this.storageMethod &&
           other.afterOpenDays == this.afterOpenDays &&
-          other.isSample == this.isSample);
+          other.isSample == this.isSample &&
+          other.flavor == this.flavor &&
+          other.isCustom == this.isCustom &&
+          other.photoPath == this.photoPath);
 }
 
 class FoodProductsCompanion extends UpdateCompanion<FoodProductRow> {
@@ -3728,6 +3837,9 @@ class FoodProductsCompanion extends UpdateCompanion<FoodProductRow> {
   final Value<String> storageMethod;
   final Value<int> afterOpenDays;
   final Value<bool> isSample;
+  final Value<String> flavor;
+  final Value<bool> isCustom;
+  final Value<String?> photoPath;
   const FoodProductsCompanion({
     this.id = const Value.absent(),
     this.barcode = const Value.absent(),
@@ -3739,6 +3851,9 @@ class FoodProductsCompanion extends UpdateCompanion<FoodProductRow> {
     this.storageMethod = const Value.absent(),
     this.afterOpenDays = const Value.absent(),
     this.isSample = const Value.absent(),
+    this.flavor = const Value.absent(),
+    this.isCustom = const Value.absent(),
+    this.photoPath = const Value.absent(),
   });
   FoodProductsCompanion.insert({
     this.id = const Value.absent(),
@@ -3751,6 +3866,9 @@ class FoodProductsCompanion extends UpdateCompanion<FoodProductRow> {
     required String storageMethod,
     required int afterOpenDays,
     this.isSample = const Value.absent(),
+    this.flavor = const Value.absent(),
+    this.isCustom = const Value.absent(),
+    this.photoPath = const Value.absent(),
   }) : brand = Value(brand),
        name = Value(name),
        spec = Value(spec),
@@ -3768,6 +3886,9 @@ class FoodProductsCompanion extends UpdateCompanion<FoodProductRow> {
     Expression<String>? storageMethod,
     Expression<int>? afterOpenDays,
     Expression<bool>? isSample,
+    Expression<String>? flavor,
+    Expression<bool>? isCustom,
+    Expression<String>? photoPath,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -3780,6 +3901,9 @@ class FoodProductsCompanion extends UpdateCompanion<FoodProductRow> {
       if (storageMethod != null) 'storage_method': storageMethod,
       if (afterOpenDays != null) 'after_open_days': afterOpenDays,
       if (isSample != null) 'is_sample': isSample,
+      if (flavor != null) 'flavor': flavor,
+      if (isCustom != null) 'is_custom': isCustom,
+      if (photoPath != null) 'photo_path': photoPath,
     });
   }
 
@@ -3794,6 +3918,9 @@ class FoodProductsCompanion extends UpdateCompanion<FoodProductRow> {
     Value<String>? storageMethod,
     Value<int>? afterOpenDays,
     Value<bool>? isSample,
+    Value<String>? flavor,
+    Value<bool>? isCustom,
+    Value<String?>? photoPath,
   }) {
     return FoodProductsCompanion(
       id: id ?? this.id,
@@ -3806,6 +3933,9 @@ class FoodProductsCompanion extends UpdateCompanion<FoodProductRow> {
       storageMethod: storageMethod ?? this.storageMethod,
       afterOpenDays: afterOpenDays ?? this.afterOpenDays,
       isSample: isSample ?? this.isSample,
+      flavor: flavor ?? this.flavor,
+      isCustom: isCustom ?? this.isCustom,
+      photoPath: photoPath ?? this.photoPath,
     );
   }
 
@@ -3842,6 +3972,15 @@ class FoodProductsCompanion extends UpdateCompanion<FoodProductRow> {
     if (isSample.present) {
       map['is_sample'] = Variable<bool>(isSample.value);
     }
+    if (flavor.present) {
+      map['flavor'] = Variable<String>(flavor.value);
+    }
+    if (isCustom.present) {
+      map['is_custom'] = Variable<bool>(isCustom.value);
+    }
+    if (photoPath.present) {
+      map['photo_path'] = Variable<String>(photoPath.value);
+    }
     return map;
   }
 
@@ -3857,7 +3996,10 @@ class FoodProductsCompanion extends UpdateCompanion<FoodProductRow> {
           ..write('kcalPer100g: $kcalPer100g, ')
           ..write('storageMethod: $storageMethod, ')
           ..write('afterOpenDays: $afterOpenDays, ')
-          ..write('isSample: $isSample')
+          ..write('isSample: $isSample, ')
+          ..write('flavor: $flavor, ')
+          ..write('isCustom: $isCustom, ')
+          ..write('photoPath: $photoPath')
           ..write(')'))
         .toString();
   }
@@ -6896,6 +7038,1011 @@ class WaterLogsCompanion extends UpdateCompanion<WaterLogRow> {
   }
 }
 
+class $LabReportsTable extends LabReports
+    with TableInfo<$LabReportsTable, LabReportRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $LabReportsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _catIdMeta = const VerificationMeta('catId');
+  @override
+  late final GeneratedColumn<int> catId = GeneratedColumn<int>(
+    'cat_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES cats (id) ON DELETE CASCADE',
+    ),
+  );
+  static const VerificationMeta _kindMeta = const VerificationMeta('kind');
+  @override
+  late final GeneratedColumn<String> kind = GeneratedColumn<String>(
+    'kind',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _takenOnMeta = const VerificationMeta(
+    'takenOn',
+  );
+  @override
+  late final GeneratedColumn<DateTime> takenOn = GeneratedColumn<DateTime>(
+    'taken_on',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _photosMeta = const VerificationMeta('photos');
+  @override
+  late final GeneratedColumn<String> photos = GeneratedColumn<String>(
+    'photos',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('[]'),
+  );
+  static const VerificationMeta _noteMeta = const VerificationMeta('note');
+  @override
+  late final GeneratedColumn<String> note = GeneratedColumn<String>(
+    'note',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(''),
+  );
+  static const VerificationMeta _checkupItemIdMeta = const VerificationMeta(
+    'checkupItemId',
+  );
+  @override
+  late final GeneratedColumn<String> checkupItemId = GeneratedColumn<String>(
+    'checkup_item_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    catId,
+    kind,
+    takenOn,
+    photos,
+    note,
+    checkupItemId,
+    createdAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'lab_reports';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<LabReportRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('cat_id')) {
+      context.handle(
+        _catIdMeta,
+        catId.isAcceptableOrUnknown(data['cat_id']!, _catIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_catIdMeta);
+    }
+    if (data.containsKey('kind')) {
+      context.handle(
+        _kindMeta,
+        kind.isAcceptableOrUnknown(data['kind']!, _kindMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_kindMeta);
+    }
+    if (data.containsKey('taken_on')) {
+      context.handle(
+        _takenOnMeta,
+        takenOn.isAcceptableOrUnknown(data['taken_on']!, _takenOnMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_takenOnMeta);
+    }
+    if (data.containsKey('photos')) {
+      context.handle(
+        _photosMeta,
+        photos.isAcceptableOrUnknown(data['photos']!, _photosMeta),
+      );
+    }
+    if (data.containsKey('note')) {
+      context.handle(
+        _noteMeta,
+        note.isAcceptableOrUnknown(data['note']!, _noteMeta),
+      );
+    }
+    if (data.containsKey('checkup_item_id')) {
+      context.handle(
+        _checkupItemIdMeta,
+        checkupItemId.isAcceptableOrUnknown(
+          data['checkup_item_id']!,
+          _checkupItemIdMeta,
+        ),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  LabReportRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return LabReportRow(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      catId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}cat_id'],
+      )!,
+      kind: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}kind'],
+      )!,
+      takenOn: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}taken_on'],
+      )!,
+      photos: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}photos'],
+      )!,
+      note: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}note'],
+      )!,
+      checkupItemId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}checkup_item_id'],
+      ),
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+    );
+  }
+
+  @override
+  $LabReportsTable createAlias(String alias) {
+    return $LabReportsTable(attachedDatabase, alias);
+  }
+}
+
+class LabReportRow extends DataClass implements Insertable<LabReportRow> {
+  final int id;
+  final int catId;
+  final String kind;
+  final DateTime takenOn;
+
+  /// JSON list of stored photo paths, in the order they were added.
+  final String photos;
+  final String note;
+  final String? checkupItemId;
+  final DateTime createdAt;
+  const LabReportRow({
+    required this.id,
+    required this.catId,
+    required this.kind,
+    required this.takenOn,
+    required this.photos,
+    required this.note,
+    this.checkupItemId,
+    required this.createdAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['cat_id'] = Variable<int>(catId);
+    map['kind'] = Variable<String>(kind);
+    map['taken_on'] = Variable<DateTime>(takenOn);
+    map['photos'] = Variable<String>(photos);
+    map['note'] = Variable<String>(note);
+    if (!nullToAbsent || checkupItemId != null) {
+      map['checkup_item_id'] = Variable<String>(checkupItemId);
+    }
+    map['created_at'] = Variable<DateTime>(createdAt);
+    return map;
+  }
+
+  LabReportsCompanion toCompanion(bool nullToAbsent) {
+    return LabReportsCompanion(
+      id: Value(id),
+      catId: Value(catId),
+      kind: Value(kind),
+      takenOn: Value(takenOn),
+      photos: Value(photos),
+      note: Value(note),
+      checkupItemId: checkupItemId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(checkupItemId),
+      createdAt: Value(createdAt),
+    );
+  }
+
+  factory LabReportRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return LabReportRow(
+      id: serializer.fromJson<int>(json['id']),
+      catId: serializer.fromJson<int>(json['catId']),
+      kind: serializer.fromJson<String>(json['kind']),
+      takenOn: serializer.fromJson<DateTime>(json['takenOn']),
+      photos: serializer.fromJson<String>(json['photos']),
+      note: serializer.fromJson<String>(json['note']),
+      checkupItemId: serializer.fromJson<String?>(json['checkupItemId']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'catId': serializer.toJson<int>(catId),
+      'kind': serializer.toJson<String>(kind),
+      'takenOn': serializer.toJson<DateTime>(takenOn),
+      'photos': serializer.toJson<String>(photos),
+      'note': serializer.toJson<String>(note),
+      'checkupItemId': serializer.toJson<String?>(checkupItemId),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+    };
+  }
+
+  LabReportRow copyWith({
+    int? id,
+    int? catId,
+    String? kind,
+    DateTime? takenOn,
+    String? photos,
+    String? note,
+    Value<String?> checkupItemId = const Value.absent(),
+    DateTime? createdAt,
+  }) => LabReportRow(
+    id: id ?? this.id,
+    catId: catId ?? this.catId,
+    kind: kind ?? this.kind,
+    takenOn: takenOn ?? this.takenOn,
+    photos: photos ?? this.photos,
+    note: note ?? this.note,
+    checkupItemId: checkupItemId.present
+        ? checkupItemId.value
+        : this.checkupItemId,
+    createdAt: createdAt ?? this.createdAt,
+  );
+  LabReportRow copyWithCompanion(LabReportsCompanion data) {
+    return LabReportRow(
+      id: data.id.present ? data.id.value : this.id,
+      catId: data.catId.present ? data.catId.value : this.catId,
+      kind: data.kind.present ? data.kind.value : this.kind,
+      takenOn: data.takenOn.present ? data.takenOn.value : this.takenOn,
+      photos: data.photos.present ? data.photos.value : this.photos,
+      note: data.note.present ? data.note.value : this.note,
+      checkupItemId: data.checkupItemId.present
+          ? data.checkupItemId.value
+          : this.checkupItemId,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('LabReportRow(')
+          ..write('id: $id, ')
+          ..write('catId: $catId, ')
+          ..write('kind: $kind, ')
+          ..write('takenOn: $takenOn, ')
+          ..write('photos: $photos, ')
+          ..write('note: $note, ')
+          ..write('checkupItemId: $checkupItemId, ')
+          ..write('createdAt: $createdAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    catId,
+    kind,
+    takenOn,
+    photos,
+    note,
+    checkupItemId,
+    createdAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is LabReportRow &&
+          other.id == this.id &&
+          other.catId == this.catId &&
+          other.kind == this.kind &&
+          other.takenOn == this.takenOn &&
+          other.photos == this.photos &&
+          other.note == this.note &&
+          other.checkupItemId == this.checkupItemId &&
+          other.createdAt == this.createdAt);
+}
+
+class LabReportsCompanion extends UpdateCompanion<LabReportRow> {
+  final Value<int> id;
+  final Value<int> catId;
+  final Value<String> kind;
+  final Value<DateTime> takenOn;
+  final Value<String> photos;
+  final Value<String> note;
+  final Value<String?> checkupItemId;
+  final Value<DateTime> createdAt;
+  const LabReportsCompanion({
+    this.id = const Value.absent(),
+    this.catId = const Value.absent(),
+    this.kind = const Value.absent(),
+    this.takenOn = const Value.absent(),
+    this.photos = const Value.absent(),
+    this.note = const Value.absent(),
+    this.checkupItemId = const Value.absent(),
+    this.createdAt = const Value.absent(),
+  });
+  LabReportsCompanion.insert({
+    this.id = const Value.absent(),
+    required int catId,
+    required String kind,
+    required DateTime takenOn,
+    this.photos = const Value.absent(),
+    this.note = const Value.absent(),
+    this.checkupItemId = const Value.absent(),
+    required DateTime createdAt,
+  }) : catId = Value(catId),
+       kind = Value(kind),
+       takenOn = Value(takenOn),
+       createdAt = Value(createdAt);
+  static Insertable<LabReportRow> custom({
+    Expression<int>? id,
+    Expression<int>? catId,
+    Expression<String>? kind,
+    Expression<DateTime>? takenOn,
+    Expression<String>? photos,
+    Expression<String>? note,
+    Expression<String>? checkupItemId,
+    Expression<DateTime>? createdAt,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (catId != null) 'cat_id': catId,
+      if (kind != null) 'kind': kind,
+      if (takenOn != null) 'taken_on': takenOn,
+      if (photos != null) 'photos': photos,
+      if (note != null) 'note': note,
+      if (checkupItemId != null) 'checkup_item_id': checkupItemId,
+      if (createdAt != null) 'created_at': createdAt,
+    });
+  }
+
+  LabReportsCompanion copyWith({
+    Value<int>? id,
+    Value<int>? catId,
+    Value<String>? kind,
+    Value<DateTime>? takenOn,
+    Value<String>? photos,
+    Value<String>? note,
+    Value<String?>? checkupItemId,
+    Value<DateTime>? createdAt,
+  }) {
+    return LabReportsCompanion(
+      id: id ?? this.id,
+      catId: catId ?? this.catId,
+      kind: kind ?? this.kind,
+      takenOn: takenOn ?? this.takenOn,
+      photos: photos ?? this.photos,
+      note: note ?? this.note,
+      checkupItemId: checkupItemId ?? this.checkupItemId,
+      createdAt: createdAt ?? this.createdAt,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (catId.present) {
+      map['cat_id'] = Variable<int>(catId.value);
+    }
+    if (kind.present) {
+      map['kind'] = Variable<String>(kind.value);
+    }
+    if (takenOn.present) {
+      map['taken_on'] = Variable<DateTime>(takenOn.value);
+    }
+    if (photos.present) {
+      map['photos'] = Variable<String>(photos.value);
+    }
+    if (note.present) {
+      map['note'] = Variable<String>(note.value);
+    }
+    if (checkupItemId.present) {
+      map['checkup_item_id'] = Variable<String>(checkupItemId.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('LabReportsCompanion(')
+          ..write('id: $id, ')
+          ..write('catId: $catId, ')
+          ..write('kind: $kind, ')
+          ..write('takenOn: $takenOn, ')
+          ..write('photos: $photos, ')
+          ..write('note: $note, ')
+          ..write('checkupItemId: $checkupItemId, ')
+          ..write('createdAt: $createdAt')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $LabValuesTable extends LabValues
+    with TableInfo<$LabValuesTable, LabValueRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $LabValuesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _reportIdMeta = const VerificationMeta(
+    'reportId',
+  );
+  @override
+  late final GeneratedColumn<int> reportId = GeneratedColumn<int>(
+    'report_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES lab_reports (id) ON DELETE CASCADE',
+    ),
+  );
+  static const VerificationMeta _codeMeta = const VerificationMeta('code');
+  @override
+  late final GeneratedColumn<String> code = GeneratedColumn<String>(
+    'code',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _valueMeta = const VerificationMeta('value');
+  @override
+  late final GeneratedColumn<double> value = GeneratedColumn<double>(
+    'value',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _unitMeta = const VerificationMeta('unit');
+  @override
+  late final GeneratedColumn<String> unit = GeneratedColumn<String>(
+    'unit',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(''),
+  );
+  static const VerificationMeta _sourceMeta = const VerificationMeta('source');
+  @override
+  late final GeneratedColumn<String> source = GeneratedColumn<String>(
+    'source',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('ocr'),
+  );
+  static const VerificationMeta _printedLowMeta = const VerificationMeta(
+    'printedLow',
+  );
+  @override
+  late final GeneratedColumn<double> printedLow = GeneratedColumn<double>(
+    'printed_low',
+    aliasedName,
+    true,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _printedHighMeta = const VerificationMeta(
+    'printedHigh',
+  );
+  @override
+  late final GeneratedColumn<double> printedHigh = GeneratedColumn<double>(
+    'printed_high',
+    aliasedName,
+    true,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    reportId,
+    code,
+    value,
+    unit,
+    source,
+    printedLow,
+    printedHigh,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'lab_values';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<LabValueRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('report_id')) {
+      context.handle(
+        _reportIdMeta,
+        reportId.isAcceptableOrUnknown(data['report_id']!, _reportIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_reportIdMeta);
+    }
+    if (data.containsKey('code')) {
+      context.handle(
+        _codeMeta,
+        code.isAcceptableOrUnknown(data['code']!, _codeMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_codeMeta);
+    }
+    if (data.containsKey('value')) {
+      context.handle(
+        _valueMeta,
+        value.isAcceptableOrUnknown(data['value']!, _valueMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_valueMeta);
+    }
+    if (data.containsKey('unit')) {
+      context.handle(
+        _unitMeta,
+        unit.isAcceptableOrUnknown(data['unit']!, _unitMeta),
+      );
+    }
+    if (data.containsKey('source')) {
+      context.handle(
+        _sourceMeta,
+        source.isAcceptableOrUnknown(data['source']!, _sourceMeta),
+      );
+    }
+    if (data.containsKey('printed_low')) {
+      context.handle(
+        _printedLowMeta,
+        printedLow.isAcceptableOrUnknown(data['printed_low']!, _printedLowMeta),
+      );
+    }
+    if (data.containsKey('printed_high')) {
+      context.handle(
+        _printedHighMeta,
+        printedHigh.isAcceptableOrUnknown(
+          data['printed_high']!,
+          _printedHighMeta,
+        ),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  LabValueRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return LabValueRow(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      reportId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}report_id'],
+      )!,
+      code: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}code'],
+      )!,
+      value: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}value'],
+      )!,
+      unit: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}unit'],
+      )!,
+      source: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}source'],
+      )!,
+      printedLow: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}printed_low'],
+      ),
+      printedHigh: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}printed_high'],
+      ),
+    );
+  }
+
+  @override
+  $LabValuesTable createAlias(String alias) {
+    return $LabValuesTable(attachedDatabase, alias);
+  }
+}
+
+class LabValueRow extends DataClass implements Insertable<LabValueRow> {
+  final int id;
+  final int reportId;
+  final String code;
+  final double value;
+  final String unit;
+  final String source;
+  final double? printedLow;
+  final double? printedHigh;
+  const LabValueRow({
+    required this.id,
+    required this.reportId,
+    required this.code,
+    required this.value,
+    required this.unit,
+    required this.source,
+    this.printedLow,
+    this.printedHigh,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['report_id'] = Variable<int>(reportId);
+    map['code'] = Variable<String>(code);
+    map['value'] = Variable<double>(value);
+    map['unit'] = Variable<String>(unit);
+    map['source'] = Variable<String>(source);
+    if (!nullToAbsent || printedLow != null) {
+      map['printed_low'] = Variable<double>(printedLow);
+    }
+    if (!nullToAbsent || printedHigh != null) {
+      map['printed_high'] = Variable<double>(printedHigh);
+    }
+    return map;
+  }
+
+  LabValuesCompanion toCompanion(bool nullToAbsent) {
+    return LabValuesCompanion(
+      id: Value(id),
+      reportId: Value(reportId),
+      code: Value(code),
+      value: Value(value),
+      unit: Value(unit),
+      source: Value(source),
+      printedLow: printedLow == null && nullToAbsent
+          ? const Value.absent()
+          : Value(printedLow),
+      printedHigh: printedHigh == null && nullToAbsent
+          ? const Value.absent()
+          : Value(printedHigh),
+    );
+  }
+
+  factory LabValueRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return LabValueRow(
+      id: serializer.fromJson<int>(json['id']),
+      reportId: serializer.fromJson<int>(json['reportId']),
+      code: serializer.fromJson<String>(json['code']),
+      value: serializer.fromJson<double>(json['value']),
+      unit: serializer.fromJson<String>(json['unit']),
+      source: serializer.fromJson<String>(json['source']),
+      printedLow: serializer.fromJson<double?>(json['printedLow']),
+      printedHigh: serializer.fromJson<double?>(json['printedHigh']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'reportId': serializer.toJson<int>(reportId),
+      'code': serializer.toJson<String>(code),
+      'value': serializer.toJson<double>(value),
+      'unit': serializer.toJson<String>(unit),
+      'source': serializer.toJson<String>(source),
+      'printedLow': serializer.toJson<double?>(printedLow),
+      'printedHigh': serializer.toJson<double?>(printedHigh),
+    };
+  }
+
+  LabValueRow copyWith({
+    int? id,
+    int? reportId,
+    String? code,
+    double? value,
+    String? unit,
+    String? source,
+    Value<double?> printedLow = const Value.absent(),
+    Value<double?> printedHigh = const Value.absent(),
+  }) => LabValueRow(
+    id: id ?? this.id,
+    reportId: reportId ?? this.reportId,
+    code: code ?? this.code,
+    value: value ?? this.value,
+    unit: unit ?? this.unit,
+    source: source ?? this.source,
+    printedLow: printedLow.present ? printedLow.value : this.printedLow,
+    printedHigh: printedHigh.present ? printedHigh.value : this.printedHigh,
+  );
+  LabValueRow copyWithCompanion(LabValuesCompanion data) {
+    return LabValueRow(
+      id: data.id.present ? data.id.value : this.id,
+      reportId: data.reportId.present ? data.reportId.value : this.reportId,
+      code: data.code.present ? data.code.value : this.code,
+      value: data.value.present ? data.value.value : this.value,
+      unit: data.unit.present ? data.unit.value : this.unit,
+      source: data.source.present ? data.source.value : this.source,
+      printedLow: data.printedLow.present
+          ? data.printedLow.value
+          : this.printedLow,
+      printedHigh: data.printedHigh.present
+          ? data.printedHigh.value
+          : this.printedHigh,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('LabValueRow(')
+          ..write('id: $id, ')
+          ..write('reportId: $reportId, ')
+          ..write('code: $code, ')
+          ..write('value: $value, ')
+          ..write('unit: $unit, ')
+          ..write('source: $source, ')
+          ..write('printedLow: $printedLow, ')
+          ..write('printedHigh: $printedHigh')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    reportId,
+    code,
+    value,
+    unit,
+    source,
+    printedLow,
+    printedHigh,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is LabValueRow &&
+          other.id == this.id &&
+          other.reportId == this.reportId &&
+          other.code == this.code &&
+          other.value == this.value &&
+          other.unit == this.unit &&
+          other.source == this.source &&
+          other.printedLow == this.printedLow &&
+          other.printedHigh == this.printedHigh);
+}
+
+class LabValuesCompanion extends UpdateCompanion<LabValueRow> {
+  final Value<int> id;
+  final Value<int> reportId;
+  final Value<String> code;
+  final Value<double> value;
+  final Value<String> unit;
+  final Value<String> source;
+  final Value<double?> printedLow;
+  final Value<double?> printedHigh;
+  const LabValuesCompanion({
+    this.id = const Value.absent(),
+    this.reportId = const Value.absent(),
+    this.code = const Value.absent(),
+    this.value = const Value.absent(),
+    this.unit = const Value.absent(),
+    this.source = const Value.absent(),
+    this.printedLow = const Value.absent(),
+    this.printedHigh = const Value.absent(),
+  });
+  LabValuesCompanion.insert({
+    this.id = const Value.absent(),
+    required int reportId,
+    required String code,
+    required double value,
+    this.unit = const Value.absent(),
+    this.source = const Value.absent(),
+    this.printedLow = const Value.absent(),
+    this.printedHigh = const Value.absent(),
+  }) : reportId = Value(reportId),
+       code = Value(code),
+       value = Value(value);
+  static Insertable<LabValueRow> custom({
+    Expression<int>? id,
+    Expression<int>? reportId,
+    Expression<String>? code,
+    Expression<double>? value,
+    Expression<String>? unit,
+    Expression<String>? source,
+    Expression<double>? printedLow,
+    Expression<double>? printedHigh,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (reportId != null) 'report_id': reportId,
+      if (code != null) 'code': code,
+      if (value != null) 'value': value,
+      if (unit != null) 'unit': unit,
+      if (source != null) 'source': source,
+      if (printedLow != null) 'printed_low': printedLow,
+      if (printedHigh != null) 'printed_high': printedHigh,
+    });
+  }
+
+  LabValuesCompanion copyWith({
+    Value<int>? id,
+    Value<int>? reportId,
+    Value<String>? code,
+    Value<double>? value,
+    Value<String>? unit,
+    Value<String>? source,
+    Value<double?>? printedLow,
+    Value<double?>? printedHigh,
+  }) {
+    return LabValuesCompanion(
+      id: id ?? this.id,
+      reportId: reportId ?? this.reportId,
+      code: code ?? this.code,
+      value: value ?? this.value,
+      unit: unit ?? this.unit,
+      source: source ?? this.source,
+      printedLow: printedLow ?? this.printedLow,
+      printedHigh: printedHigh ?? this.printedHigh,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (reportId.present) {
+      map['report_id'] = Variable<int>(reportId.value);
+    }
+    if (code.present) {
+      map['code'] = Variable<String>(code.value);
+    }
+    if (value.present) {
+      map['value'] = Variable<double>(value.value);
+    }
+    if (unit.present) {
+      map['unit'] = Variable<String>(unit.value);
+    }
+    if (source.present) {
+      map['source'] = Variable<String>(source.value);
+    }
+    if (printedLow.present) {
+      map['printed_low'] = Variable<double>(printedLow.value);
+    }
+    if (printedHigh.present) {
+      map['printed_high'] = Variable<double>(printedHigh.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('LabValuesCompanion(')
+          ..write('id: $id, ')
+          ..write('reportId: $reportId, ')
+          ..write('code: $code, ')
+          ..write('value: $value, ')
+          ..write('unit: $unit, ')
+          ..write('source: $source, ')
+          ..write('printedLow: $printedLow, ')
+          ..write('printedHigh: $printedHigh')
+          ..write(')'))
+        .toString();
+  }
+}
+
 class $SyncOutboxTable extends SyncOutbox
     with TableInfo<$SyncOutboxTable, SyncOutboxRow> {
   @override
@@ -7772,6 +8919,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $CatConditionsTable catConditions = $CatConditionsTable(this);
   late final $CheckupLogsTable checkupLogs = $CheckupLogsTable(this);
   late final $WaterLogsTable waterLogs = $WaterLogsTable(this);
+  late final $LabReportsTable labReports = $LabReportsTable(this);
+  late final $LabValuesTable labValues = $LabValuesTable(this);
   late final $SyncOutboxTable syncOutbox = $SyncOutboxTable(this);
   late final $SyncCursorsTable syncCursors = $SyncCursorsTable(this);
   late final $AppSettingsTable appSettings = $AppSettingsTable(this);
@@ -7795,6 +8944,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     catConditions,
     checkupLogs,
     waterLogs,
+    labReports,
+    labValues,
     syncOutbox,
     syncCursors,
     appSettings,
@@ -7898,6 +9049,20 @@ abstract class _$AppDatabase extends GeneratedDatabase {
         limitUpdateKind: UpdateKind.delete,
       ),
       result: [TableUpdate('water_logs', kind: UpdateKind.delete)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'cats',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('lab_reports', kind: UpdateKind.delete)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'lab_reports',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('lab_values', kind: UpdateKind.delete)],
     ),
   ]);
 }
@@ -8156,6 +9321,24 @@ final class $$CatsTableReferences
     ).filter((f) => f.catId.id.sqlEquals($_itemColumn<int>('id')!));
 
     final cache = $_typedResult.readTableOrNull(_waterLogsRefsTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+
+  static MultiTypedResultKey<$LabReportsTable, List<LabReportRow>>
+  _labReportsRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
+    db.labReports,
+    aliasName: 'cats__id__lab_reports__cat_id',
+  );
+
+  $$LabReportsTableProcessedTableManager get labReportsRefs {
+    final manager = $$LabReportsTableTableManager(
+      $_db,
+      $_db.labReports,
+    ).filter((f) => f.catId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_labReportsRefsTable($_db));
     return ProcessedTableManager(
       manager.$state.copyWith(prefetchedData: cache),
     );
@@ -8536,6 +9719,31 @@ class $$CatsTableFilterComposer extends Composer<_$AppDatabase, $CatsTable> {
           }) => $$WaterLogsTableFilterComposer(
             $db: $db,
             $table: $db.waterLogs,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<bool> labReportsRefs(
+    Expression<bool> Function($$LabReportsTableFilterComposer f) f,
+  ) {
+    final $$LabReportsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.labReports,
+      getReferencedColumn: (t) => t.catId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$LabReportsTableFilterComposer(
+            $db: $db,
+            $table: $db.labReports,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer:
@@ -8991,6 +10199,31 @@ class $$CatsTableAnnotationComposer
     );
     return f(composer);
   }
+
+  Expression<T> labReportsRefs<T extends Object>(
+    Expression<T> Function($$LabReportsTableAnnotationComposer a) f,
+  ) {
+    final $$LabReportsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.labReports,
+      getReferencedColumn: (t) => t.catId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$LabReportsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.labReports,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
 }
 
 class $$CatsTableTableManager
@@ -9019,6 +10252,7 @@ class $$CatsTableTableManager
             bool catConditionsRefs,
             bool checkupLogsRefs,
             bool waterLogsRefs,
+            bool labReportsRefs,
           })
         > {
   $$CatsTableTableManager(_$AppDatabase db, $CatsTable table)
@@ -9122,6 +10356,7 @@ class $$CatsTableTableManager
                 catConditionsRefs = false,
                 checkupLogsRefs = false,
                 waterLogsRefs = false,
+                labReportsRefs = false,
               }) {
                 return PrefetchHooks(
                   db: db,
@@ -9138,6 +10373,7 @@ class $$CatsTableTableManager
                     if (catConditionsRefs) db.catConditions,
                     if (checkupLogsRefs) db.checkupLogs,
                     if (waterLogsRefs) db.waterLogs,
+                    if (labReportsRefs) db.labReports,
                   ],
                   addJoins: null,
                   getPrefetchedDataCallback: (items) async {
@@ -9379,6 +10615,26 @@ class $$CatsTableTableManager
                           ) => referencedItems.where((e) => e.catId == item.id),
                           typedResults: items,
                         ),
+                      if (labReportsRefs)
+                        await $_getPrefetchedData<
+                          CatRow,
+                          $CatsTable,
+                          LabReportRow
+                        >(
+                          currentTable: table,
+                          referencedTable: $$CatsTableReferences
+                              ._labReportsRefsTable(db),
+                          managerFromTypedResult: (p0) => $$CatsTableReferences(
+                            db,
+                            table,
+                            p0,
+                          ).labReportsRefs,
+                          referencedItemsForCurrentItem: (
+                            item,
+                            referencedItems,
+                          ) => referencedItems.where((e) => e.catId == item.id),
+                          typedResults: items,
+                        ),
                     ];
                   },
                 );
@@ -9412,6 +10668,7 @@ typedef $$CatsTableProcessedTableManager =
         bool catConditionsRefs,
         bool checkupLogsRefs,
         bool waterLogsRefs,
+        bool labReportsRefs,
       })
     >;
 typedef $$CatPhotosTableCreateCompanionBuilder = CatPhotosCompanion Function({
@@ -11387,6 +12644,9 @@ typedef $$FoodProductsTableCreateCompanionBuilder =
       required String storageMethod,
       required int afterOpenDays,
       Value<bool> isSample,
+      Value<String> flavor,
+      Value<bool> isCustom,
+      Value<String?> photoPath,
     });
 typedef $$FoodProductsTableUpdateCompanionBuilder =
     FoodProductsCompanion Function({
@@ -11400,6 +12660,9 @@ typedef $$FoodProductsTableUpdateCompanionBuilder =
       Value<String> storageMethod,
       Value<int> afterOpenDays,
       Value<bool> isSample,
+      Value<String> flavor,
+      Value<bool> isCustom,
+      Value<String?> photoPath,
     });
 
 final class $$FoodProductsTableReferences
@@ -11499,6 +12762,21 @@ class $$FoodProductsTableFilterComposer
 
   ColumnFilters<bool> get isSample => $composableBuilder(
     column: $table.isSample,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get flavor => $composableBuilder(
+    column: $table.flavor,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isCustom => $composableBuilder(
+    column: $table.isCustom,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get photoPath => $composableBuilder(
+    column: $table.photoPath,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -11611,6 +12889,21 @@ class $$FoodProductsTableOrderingComposer
     column: $table.isSample,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<String> get flavor => $composableBuilder(
+    column: $table.flavor,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isCustom => $composableBuilder(
+    column: $table.isCustom,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get photoPath => $composableBuilder(
+    column: $table.photoPath,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$FoodProductsTableAnnotationComposer
@@ -11657,6 +12950,15 @@ class $$FoodProductsTableAnnotationComposer
 
   GeneratedColumn<bool> get isSample =>
       $composableBuilder(column: $table.isSample, builder: (column) => column);
+
+  GeneratedColumn<String> get flavor =>
+      $composableBuilder(column: $table.flavor, builder: (column) => column);
+
+  GeneratedColumn<bool> get isCustom =>
+      $composableBuilder(column: $table.isCustom, builder: (column) => column);
+
+  GeneratedColumn<String> get photoPath =>
+      $composableBuilder(column: $table.photoPath, builder: (column) => column);
 
   Expression<T> feedingLogsRefs<T extends Object>(
     Expression<T> Function($$FeedingLogsTableAnnotationComposer a) f,
@@ -11747,6 +13049,9 @@ class $$FoodProductsTableTableManager
                 Value<String> storageMethod = const Value.absent(),
                 Value<int> afterOpenDays = const Value.absent(),
                 Value<bool> isSample = const Value.absent(),
+                Value<String> flavor = const Value.absent(),
+                Value<bool> isCustom = const Value.absent(),
+                Value<String?> photoPath = const Value.absent(),
               }) => FoodProductsCompanion(
                 id: id,
                 barcode: barcode,
@@ -11758,6 +13063,9 @@ class $$FoodProductsTableTableManager
                 storageMethod: storageMethod,
                 afterOpenDays: afterOpenDays,
                 isSample: isSample,
+                flavor: flavor,
+                isCustom: isCustom,
+                photoPath: photoPath,
               ),
           createCompanionCallback:
               ({
@@ -11771,6 +13079,9 @@ class $$FoodProductsTableTableManager
                 required String storageMethod,
                 required int afterOpenDays,
                 Value<bool> isSample = const Value.absent(),
+                Value<String> flavor = const Value.absent(),
+                Value<bool> isCustom = const Value.absent(),
+                Value<String?> photoPath = const Value.absent(),
               }) => FoodProductsCompanion.insert(
                 id: id,
                 barcode: barcode,
@@ -11782,6 +13093,9 @@ class $$FoodProductsTableTableManager
                 storageMethod: storageMethod,
                 afterOpenDays: afterOpenDays,
                 isSample: isSample,
+                flavor: flavor,
+                isCustom: isCustom,
+                photoPath: photoPath,
               ),
           withReferenceMapper: (p0) => p0
               .map(
@@ -14364,6 +15678,828 @@ typedef $$WaterLogsTableProcessedTableManager =
       WaterLogRow,
       PrefetchHooks Function({bool catId})
     >;
+typedef $$LabReportsTableCreateCompanionBuilder = LabReportsCompanion Function({
+  Value<int> id,
+  required int catId,
+  required String kind,
+  required DateTime takenOn,
+  Value<String> photos,
+  Value<String> note,
+  Value<String?> checkupItemId,
+  required DateTime createdAt,
+});
+typedef $$LabReportsTableUpdateCompanionBuilder = LabReportsCompanion Function({
+  Value<int> id,
+  Value<int> catId,
+  Value<String> kind,
+  Value<DateTime> takenOn,
+  Value<String> photos,
+  Value<String> note,
+  Value<String?> checkupItemId,
+  Value<DateTime> createdAt,
+});
+
+final class $$LabReportsTableReferences
+    extends BaseReferences<_$AppDatabase, $LabReportsTable, LabReportRow> {
+  $$LabReportsTableReferences(super.$_db, super.$_table, super.$_typedResult);
+
+  static $CatsTable _catIdTable(_$AppDatabase db) =>
+      db.cats.createAlias('lab_reports__cat_id__cats__id');
+
+  $$CatsTableProcessedTableManager get catId {
+    final $_column = $_itemColumn<int>('cat_id')!;
+
+    final manager = $$CatsTableTableManager(
+      $_db,
+      $_db.cats,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_catIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+
+  static MultiTypedResultKey<$LabValuesTable, List<LabValueRow>>
+  _labValuesRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
+    db.labValues,
+    aliasName: 'lab_reports__id__lab_values__report_id',
+  );
+
+  $$LabValuesTableProcessedTableManager get labValuesRefs {
+    final manager = $$LabValuesTableTableManager(
+      $_db,
+      $_db.labValues,
+    ).filter((f) => f.reportId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_labValuesRefsTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+}
+
+class $$LabReportsTableFilterComposer
+    extends Composer<_$AppDatabase, $LabReportsTable> {
+  $$LabReportsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get kind => $composableBuilder(
+    column: $table.kind,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get takenOn => $composableBuilder(
+    column: $table.takenOn,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get photos => $composableBuilder(
+    column: $table.photos,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get note => $composableBuilder(
+    column: $table.note,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get checkupItemId => $composableBuilder(
+    column: $table.checkupItemId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$CatsTableFilterComposer get catId {
+    final $$CatsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.catId,
+      referencedTable: $db.cats,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$CatsTableFilterComposer(
+            $db: $db,
+            $table: $db.cats,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  Expression<bool> labValuesRefs(
+    Expression<bool> Function($$LabValuesTableFilterComposer f) f,
+  ) {
+    final $$LabValuesTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.labValues,
+      getReferencedColumn: (t) => t.reportId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$LabValuesTableFilterComposer(
+            $db: $db,
+            $table: $db.labValues,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+}
+
+class $$LabReportsTableOrderingComposer
+    extends Composer<_$AppDatabase, $LabReportsTable> {
+  $$LabReportsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get kind => $composableBuilder(
+    column: $table.kind,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get takenOn => $composableBuilder(
+    column: $table.takenOn,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get photos => $composableBuilder(
+    column: $table.photos,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get note => $composableBuilder(
+    column: $table.note,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get checkupItemId => $composableBuilder(
+    column: $table.checkupItemId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$CatsTableOrderingComposer get catId {
+    final $$CatsTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.catId,
+      referencedTable: $db.cats,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$CatsTableOrderingComposer(
+            $db: $db,
+            $table: $db.cats,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$LabReportsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $LabReportsTable> {
+  $$LabReportsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get kind =>
+      $composableBuilder(column: $table.kind, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get takenOn =>
+      $composableBuilder(column: $table.takenOn, builder: (column) => column);
+
+  GeneratedColumn<String> get photos =>
+      $composableBuilder(column: $table.photos, builder: (column) => column);
+
+  GeneratedColumn<String> get note =>
+      $composableBuilder(column: $table.note, builder: (column) => column);
+
+  GeneratedColumn<String> get checkupItemId => $composableBuilder(
+    column: $table.checkupItemId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  $$CatsTableAnnotationComposer get catId {
+    final $$CatsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.catId,
+      referencedTable: $db.cats,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$CatsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.cats,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  Expression<T> labValuesRefs<T extends Object>(
+    Expression<T> Function($$LabValuesTableAnnotationComposer a) f,
+  ) {
+    final $$LabValuesTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.labValues,
+      getReferencedColumn: (t) => t.reportId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$LabValuesTableAnnotationComposer(
+            $db: $db,
+            $table: $db.labValues,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+}
+
+class $$LabReportsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $LabReportsTable,
+          LabReportRow,
+          $$LabReportsTableFilterComposer,
+          $$LabReportsTableOrderingComposer,
+          $$LabReportsTableAnnotationComposer,
+          $$LabReportsTableCreateCompanionBuilder,
+          $$LabReportsTableUpdateCompanionBuilder,
+          (LabReportRow, $$LabReportsTableReferences),
+          LabReportRow,
+          PrefetchHooks Function({bool catId, bool labValuesRefs})
+        > {
+  $$LabReportsTableTableManager(_$AppDatabase db, $LabReportsTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$LabReportsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$LabReportsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$LabReportsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<int> catId = const Value.absent(),
+                Value<String> kind = const Value.absent(),
+                Value<DateTime> takenOn = const Value.absent(),
+                Value<String> photos = const Value.absent(),
+                Value<String> note = const Value.absent(),
+                Value<String?> checkupItemId = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+              }) => LabReportsCompanion(
+                id: id,
+                catId: catId,
+                kind: kind,
+                takenOn: takenOn,
+                photos: photos,
+                note: note,
+                checkupItemId: checkupItemId,
+                createdAt: createdAt,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required int catId,
+                required String kind,
+                required DateTime takenOn,
+                Value<String> photos = const Value.absent(),
+                Value<String> note = const Value.absent(),
+                Value<String?> checkupItemId = const Value.absent(),
+                required DateTime createdAt,
+              }) => LabReportsCompanion.insert(
+                id: id,
+                catId: catId,
+                kind: kind,
+                takenOn: takenOn,
+                photos: photos,
+                note: note,
+                checkupItemId: checkupItemId,
+                createdAt: createdAt,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<$LabReportsTable, LabReportRow>(table),
+                  $$LabReportsTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({catId = false, labValuesRefs = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [if (labValuesRefs) db.labValues],
+              addJoins:
+                  <
+                    T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic
+                    >
+                  >(state) {
+                    if (catId) {
+                      state = state.withJoin(
+                        currentTable: table,
+                        currentColumn: table.catId,
+                        referencedTable: $$LabReportsTableReferences
+                            ._catIdTable(db),
+                        referencedColumn: $$LabReportsTableReferences
+                            ._catIdTable(db)
+                            .id,
+                      ) as T;
+                    }
+
+                    return state;
+                  },
+              getPrefetchedDataCallback: (items) async {
+                return [
+                  if (labValuesRefs)
+                    await $_getPrefetchedData<
+                      LabReportRow,
+                      $LabReportsTable,
+                      LabValueRow
+                    >(
+                      currentTable: table,
+                      referencedTable: $$LabReportsTableReferences
+                          ._labValuesRefsTable(db),
+                      managerFromTypedResult: (p0) =>
+                          $$LabReportsTableReferences(
+                            db,
+                            table,
+                            p0,
+                          ).labValuesRefs,
+                      referencedItemsForCurrentItem: (item, referencedItems) =>
+                          referencedItems.where((e) => e.reportId == item.id),
+                      typedResults: items,
+                    ),
+                ];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$LabReportsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $LabReportsTable,
+      LabReportRow,
+      $$LabReportsTableFilterComposer,
+      $$LabReportsTableOrderingComposer,
+      $$LabReportsTableAnnotationComposer,
+      $$LabReportsTableCreateCompanionBuilder,
+      $$LabReportsTableUpdateCompanionBuilder,
+      (LabReportRow, $$LabReportsTableReferences),
+      LabReportRow,
+      PrefetchHooks Function({bool catId, bool labValuesRefs})
+    >;
+typedef $$LabValuesTableCreateCompanionBuilder = LabValuesCompanion Function({
+  Value<int> id,
+  required int reportId,
+  required String code,
+  required double value,
+  Value<String> unit,
+  Value<String> source,
+  Value<double?> printedLow,
+  Value<double?> printedHigh,
+});
+typedef $$LabValuesTableUpdateCompanionBuilder = LabValuesCompanion Function({
+  Value<int> id,
+  Value<int> reportId,
+  Value<String> code,
+  Value<double> value,
+  Value<String> unit,
+  Value<String> source,
+  Value<double?> printedLow,
+  Value<double?> printedHigh,
+});
+
+final class $$LabValuesTableReferences
+    extends BaseReferences<_$AppDatabase, $LabValuesTable, LabValueRow> {
+  $$LabValuesTableReferences(super.$_db, super.$_table, super.$_typedResult);
+
+  static $LabReportsTable _reportIdTable(_$AppDatabase db) =>
+      db.labReports.createAlias('lab_values__report_id__lab_reports__id');
+
+  $$LabReportsTableProcessedTableManager get reportId {
+    final $_column = $_itemColumn<int>('report_id')!;
+
+    final manager = $$LabReportsTableTableManager(
+      $_db,
+      $_db.labReports,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_reportIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$LabValuesTableFilterComposer
+    extends Composer<_$AppDatabase, $LabValuesTable> {
+  $$LabValuesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get code => $composableBuilder(
+    column: $table.code,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get value => $composableBuilder(
+    column: $table.value,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get unit => $composableBuilder(
+    column: $table.unit,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get source => $composableBuilder(
+    column: $table.source,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get printedLow => $composableBuilder(
+    column: $table.printedLow,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get printedHigh => $composableBuilder(
+    column: $table.printedHigh,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$LabReportsTableFilterComposer get reportId {
+    final $$LabReportsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.reportId,
+      referencedTable: $db.labReports,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$LabReportsTableFilterComposer(
+            $db: $db,
+            $table: $db.labReports,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$LabValuesTableOrderingComposer
+    extends Composer<_$AppDatabase, $LabValuesTable> {
+  $$LabValuesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get code => $composableBuilder(
+    column: $table.code,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get value => $composableBuilder(
+    column: $table.value,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get unit => $composableBuilder(
+    column: $table.unit,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get source => $composableBuilder(
+    column: $table.source,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get printedLow => $composableBuilder(
+    column: $table.printedLow,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get printedHigh => $composableBuilder(
+    column: $table.printedHigh,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$LabReportsTableOrderingComposer get reportId {
+    final $$LabReportsTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.reportId,
+      referencedTable: $db.labReports,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$LabReportsTableOrderingComposer(
+            $db: $db,
+            $table: $db.labReports,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$LabValuesTableAnnotationComposer
+    extends Composer<_$AppDatabase, $LabValuesTable> {
+  $$LabValuesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get code =>
+      $composableBuilder(column: $table.code, builder: (column) => column);
+
+  GeneratedColumn<double> get value =>
+      $composableBuilder(column: $table.value, builder: (column) => column);
+
+  GeneratedColumn<String> get unit =>
+      $composableBuilder(column: $table.unit, builder: (column) => column);
+
+  GeneratedColumn<String> get source =>
+      $composableBuilder(column: $table.source, builder: (column) => column);
+
+  GeneratedColumn<double> get printedLow => $composableBuilder(
+    column: $table.printedLow,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<double> get printedHigh => $composableBuilder(
+    column: $table.printedHigh,
+    builder: (column) => column,
+  );
+
+  $$LabReportsTableAnnotationComposer get reportId {
+    final $$LabReportsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.reportId,
+      referencedTable: $db.labReports,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$LabReportsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.labReports,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$LabValuesTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $LabValuesTable,
+          LabValueRow,
+          $$LabValuesTableFilterComposer,
+          $$LabValuesTableOrderingComposer,
+          $$LabValuesTableAnnotationComposer,
+          $$LabValuesTableCreateCompanionBuilder,
+          $$LabValuesTableUpdateCompanionBuilder,
+          (LabValueRow, $$LabValuesTableReferences),
+          LabValueRow,
+          PrefetchHooks Function({bool reportId})
+        > {
+  $$LabValuesTableTableManager(_$AppDatabase db, $LabValuesTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$LabValuesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$LabValuesTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$LabValuesTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<int> reportId = const Value.absent(),
+                Value<String> code = const Value.absent(),
+                Value<double> value = const Value.absent(),
+                Value<String> unit = const Value.absent(),
+                Value<String> source = const Value.absent(),
+                Value<double?> printedLow = const Value.absent(),
+                Value<double?> printedHigh = const Value.absent(),
+              }) => LabValuesCompanion(
+                id: id,
+                reportId: reportId,
+                code: code,
+                value: value,
+                unit: unit,
+                source: source,
+                printedLow: printedLow,
+                printedHigh: printedHigh,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required int reportId,
+                required String code,
+                required double value,
+                Value<String> unit = const Value.absent(),
+                Value<String> source = const Value.absent(),
+                Value<double?> printedLow = const Value.absent(),
+                Value<double?> printedHigh = const Value.absent(),
+              }) => LabValuesCompanion.insert(
+                id: id,
+                reportId: reportId,
+                code: code,
+                value: value,
+                unit: unit,
+                source: source,
+                printedLow: printedLow,
+                printedHigh: printedHigh,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<$LabValuesTable, LabValueRow>(table),
+                  $$LabValuesTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({reportId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins:
+                  <
+                    T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic
+                    >
+                  >(state) {
+                    if (reportId) {
+                      state = state.withJoin(
+                        currentTable: table,
+                        currentColumn: table.reportId,
+                        referencedTable: $$LabValuesTableReferences
+                            ._reportIdTable(db),
+                        referencedColumn: $$LabValuesTableReferences
+                            ._reportIdTable(db)
+                            .id,
+                      ) as T;
+                    }
+
+                    return state;
+                  },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$LabValuesTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $LabValuesTable,
+      LabValueRow,
+      $$LabValuesTableFilterComposer,
+      $$LabValuesTableOrderingComposer,
+      $$LabValuesTableAnnotationComposer,
+      $$LabValuesTableCreateCompanionBuilder,
+      $$LabValuesTableUpdateCompanionBuilder,
+      (LabValueRow, $$LabValuesTableReferences),
+      LabValueRow,
+      PrefetchHooks Function({bool reportId})
+    >;
 typedef $$SyncOutboxTableCreateCompanionBuilder = SyncOutboxCompanion Function({
   Value<int> id,
   required String entity,
@@ -14935,6 +17071,10 @@ class $AppDatabaseManager {
       $$CheckupLogsTableTableManager(_db, _db.checkupLogs);
   $$WaterLogsTableTableManager get waterLogs =>
       $$WaterLogsTableTableManager(_db, _db.waterLogs);
+  $$LabReportsTableTableManager get labReports =>
+      $$LabReportsTableTableManager(_db, _db.labReports);
+  $$LabValuesTableTableManager get labValues =>
+      $$LabValuesTableTableManager(_db, _db.labValues);
   $$SyncOutboxTableTableManager get syncOutbox =>
       $$SyncOutboxTableTableManager(_db, _db.syncOutbox);
   $$SyncCursorsTableTableManager get syncCursors =>

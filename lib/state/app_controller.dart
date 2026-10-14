@@ -40,6 +40,7 @@ class AppController extends ChangeNotifier {
   List<ConditionRecord> conditions = [];
   List<CheckupRecord> checkups = [];
   List<WaterRecord> waters = [];
+  List<LabReport> labs = [];
   Set<String> weightAcks = {};
   Set<String> pantryAcks = {};
 
@@ -73,6 +74,8 @@ class AppController extends ChangeNotifier {
       checkups.where((item) => item.catId == activeCatId).toList();
   List<WaterRecord> get catWaters =>
       waters.where((item) => item.catId == activeCatId).toList();
+  List<LabReport> get catLabs =>
+      labs.where((item) => item.catId == activeCatId).toList();
 
   double get todayWaterMl => catWaters
       .where((item) => isSameDay(item.loggedOn, now))
@@ -396,6 +399,62 @@ class AppController extends ChangeNotifier {
     await _refresh();
   }
 
+  LabReport? labById(int id) {
+    for (final report in labs) {
+      if (report.id == id) return report;
+    }
+    return null;
+  }
+
+  Future<int> saveLab(LabDraft draft, {List<LabValue>? values}) async {
+    final id = await repo.upsertLab(draft);
+    if (values != null) await repo.setLabValues(id, values);
+    await _refresh();
+    return id;
+  }
+
+  /// Replaces the value with the same code, or adds it.
+  Future<void> setLabValue(int reportId, LabValue value) async {
+    final report = labById(reportId);
+    if (report == null) return;
+    final next = [
+      for (final item in report.values)
+        if (item.code != value.code) item,
+      value,
+    ];
+    await repo.setLabValues(reportId, next);
+    await _refresh();
+  }
+
+  Future<void> removeLabValue(int reportId, String code) async {
+    final report = labById(reportId);
+    if (report == null) return;
+    await repo.setLabValues(reportId, [
+      for (final item in report.values)
+        if (item.code != code) item,
+    ]);
+    await _refresh();
+  }
+
+  Future<void> removeLab(int id) async {
+    await repo.deleteLab(id);
+    await _refresh();
+  }
+
+  /// One analyte across the active cat's reports, oldest first.
+  List<({DateTime date, int reportId, LabValue value})> labTrend(String code) {
+    final points = <({DateTime date, int reportId, LabValue value})>[];
+    for (final report in catLabs) {
+      for (final value in report.values) {
+        if (value.code == code) {
+          points.add((date: report.takenOn, reportId: report.id, value: value));
+        }
+      }
+    }
+    points.sort((a, b) => a.date.compareTo(b.date));
+    return points;
+  }
+
   Future<void> removeCheckup(int id) async {
     await repo.deleteCheckup(id);
     await _refresh();
@@ -490,6 +549,49 @@ class AppController extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Saves a user-made food. A scanned [barcode] is tied to it so the next
+  /// scan finds it straight away.
+  Future<int> saveFood(FoodDraft draft, {String? barcode}) async {
+    final code = barcode?.trim() ?? '';
+    final owner = code.isEmpty ? null : findBarcode(code);
+    final keepOwn = code.isNotEmpty && (owner == null || owner.id == draft.id);
+    final id = await repo.upsertProduct(
+      FoodDraft(
+        id: draft.id,
+        barcode: keepOwn ? code : draft.barcode,
+        brand: draft.brand,
+        name: draft.name,
+        spec: draft.spec,
+        foodForm: draft.foodForm,
+        kcalPer100g: draft.kcalPer100g,
+        storageMethod: draft.storageMethod,
+        afterOpenDays: draft.afterOpenDays,
+        isSample: false,
+        flavor: draft.flavor,
+        isCustom: true,
+        photoPath: draft.photoPath,
+      ),
+    );
+    if (code.isNotEmpty) {
+      final key = barcodeKey(code);
+      if (key.isNotEmpty) barcodeMemory[key] = id;
+      await repo.setSetting('barcodeMemory', jsonEncode(barcodeMemory));
+    }
+    await _refresh();
+    return id;
+  }
+
+  int pantryCountOf(int productId) =>
+      pantry.where((entry) => entry.product.id == productId).length;
+
+  /// Removes a food and every bag of it in the pantry.
+  Future<void> deleteFood(int id) async {
+    await repo.deleteProduct(id);
+    barcodeMemory.removeWhere((_, value) => value == id);
+    await repo.setSetting('barcodeMemory', jsonEncode(barcodeMemory));
+    await _refresh();
+  }
+
   /// Next scan of [barcode] goes straight to [productId].
   Future<void> rememberBarcode(String barcode, int productId) async {
     final key = barcodeKey(barcode);
@@ -538,6 +640,7 @@ class AppController extends ChangeNotifier {
     conditions = await repo.conditions();
     checkups = await repo.checkups();
     waters = await repo.waters();
+    labs = await repo.labs();
     final raw = await repo.setting('weightAcks') ?? '';
     weightAcks = raw.split(',').where((item) => item.isNotEmpty).toSet();
     final pantryRaw = await repo.setting('pantryAcks') ?? '';

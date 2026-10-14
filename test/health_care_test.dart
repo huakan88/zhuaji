@@ -41,6 +41,8 @@ void main() {
     expect(find.textContaining('仅供参考'), findsNothing);
     await tapText(tester, '完成');
     expect(find.text('记下了'), findsWidgets);
+    expect(find.text('记化验单'), findsOneWidget);
+    await back(tester);
 
     final again = AppController(
       repo: DriftCareRepository(database),
