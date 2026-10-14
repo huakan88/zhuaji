@@ -103,7 +103,11 @@ class _ConfirmPageState extends State<ConfirmPage> {
           ),
           const SizedBox(height: 4),
           Text(
-            _fromCode ? '日期已填上，核对后记下' : '点品牌，日期用滚轮改',
+            _fromCode
+                ? '日期已填上，核对后记下'
+                : matched
+                ? '日期用滚轮改'
+                : '点品牌，日期用滚轮改',
             style: zhuaji.copyWith(fontSize: 13, color: AppColors.muted),
           ),
           if (matched)
