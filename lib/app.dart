@@ -9,8 +9,10 @@ import 'features/cats/cats_page.dart';
 import 'features/health/checkups_page.dart';
 import 'features/health/deworms_page.dart';
 import 'features/health/disease_page.dart';
+import 'features/health/health_page.dart';
 import 'features/health/vaccines_page.dart';
 import 'features/health/visits_page.dart';
+import 'features/health/weight_page.dart';
 import 'features/home/home_page.dart';
 import 'features/pantry/bag_page.dart';
 import 'features/pantry/confirm_page.dart';
@@ -20,9 +22,14 @@ import 'features/shell/app_shell.dart';
 import 'state/app_controller.dart';
 
 class ZhuajiApp extends StatefulWidget {
-  const ZhuajiApp({required this.controller, super.key});
+  const ZhuajiApp({
+    required this.controller,
+    this.initialLocation = '/home',
+    super.key,
+  });
 
   final AppController controller;
+  final String initialLocation;
 
   @override
   State<ZhuajiApp> createState() => _ZhuajiAppState();
@@ -30,7 +37,7 @@ class ZhuajiApp extends StatefulWidget {
 
 class _ZhuajiAppState extends State<ZhuajiApp> {
   late final GoRouter _router = GoRouter(
-    initialLocation: '/home',
+    initialLocation: widget.initialLocation,
     routes: [
       StatefulShellRoute.indexedStack(
         builder: (context, state, shell) => AppShell(shell: shell),
@@ -38,6 +45,16 @@ class _ZhuajiAppState extends State<ZhuajiApp> {
           StatefulShellBranch(
             routes: [
               GoRoute(path: '/home', builder: (_, _) => const HomePage()),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(path: '/health', builder: (_, _) => const HealthPage()),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(path: '/pantry', builder: (_, _) => const PantryPage()),
             ],
           ),
           StatefulShellBranch(
@@ -64,10 +81,10 @@ class _ZhuajiAppState extends State<ZhuajiApp> {
           catId: int.tryParse(state.uri.queryParameters['id'] ?? ''),
         ),
       ),
+      GoRoute(path: '/weight', builder: (_, _) => const WeightPage()),
       GoRoute(path: '/vaccines', builder: (_, _) => const VaccinesPage()),
       GoRoute(path: '/deworms', builder: (_, _) => const DewormsPage()),
       GoRoute(path: '/visits', builder: (_, _) => const VisitsPage()),
-      GoRoute(path: '/pantry', builder: (_, _) => const PantryPage()),
       GoRoute(path: '/checkups', builder: (_, _) => const CheckupsPage()),
       GoRoute(path: '/diseases', builder: (_, _) => const DiseaseLibraryPage()),
       GoRoute(

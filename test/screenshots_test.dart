@@ -34,18 +34,9 @@ void main() {
     await _frames(tester);
     await _shot(tester, 'today');
 
-    await _tapOnScreen(tester, '扫粮');
+    await _tapOnScreen(tester, '健康');
     await _frames(tester);
-    await _shot(tester, 'scan');
-    await _tapOnScreen(tester, '没扫到');
-    await _frames(tester);
-    await _shot(tester, 'scan-result');
-    await tester.tap(find.byTooltip('返回'));
-    await _frames(tester);
-
-    await _tapOnScreen(tester, '猫');
-    await _frames(tester);
-    await _shot(tester, 'cat');
+    await _shot(tester, 'health');
 
     await _tapOnScreen(tester, '疫苗');
     await _frames(tester);
@@ -53,41 +44,22 @@ void main() {
     await tester.tap(find.byTooltip('返回'));
     await _frames(tester);
 
-    await _tapOnScreen(tester, '驱虫');
+    await _tapOnScreen(tester, '扫粮');
     await _frames(tester);
-    await _shot(tester, 'deworm');
-    await tester.tap(find.byTooltip('返回'));
+    await _shot(tester, 'scan');
+    await _tapOnScreen(tester, '选品牌');
     await _frames(tester);
-
-    await _tapOnScreen(tester, '就医');
-    await _frames(tester);
-    await _shot(tester, 'visit');
-    await tester.tap(find.byTooltip('返回'));
-    await _frames(tester);
-
-    await _tapOnScreen(tester, '体检');
-    await _frames(tester);
-    await _shot(tester, 'checkup');
-    await tester.tap(find.byTooltip('返回'));
-    await _frames(tester);
-
-    await _tapOnScreen(tester, '看病');
-    await _frames(tester);
-    await _shot(tester, 'disease');
+    await _shot(tester, 'scan-result');
     await tester.tap(find.byTooltip('返回'));
     await _frames(tester);
 
     await _tapOnScreen(tester, '粮仓');
     await _frames(tester);
     await _shot(tester, 'pantry');
-    await tester.tap(find.byTooltip('返回'));
-    await _frames(tester);
 
-    await _tapOnScreen(tester, '添加');
+    await _tapOnScreen(tester, '猫咪');
     await _frames(tester);
-    await _shot(tester, 'onboard');
-    await tester.tap(find.byTooltip('返回'));
-    await _frames(tester);
+    await _shot(tester, 'cat');
   });
 }
 
@@ -146,7 +118,7 @@ Future<void> _shot(WidgetTester tester, String name) async {
     );
     final image = await boundary.toImage(pixelRatio: 2);
     final data = await image.toByteData(format: ui.ImageByteFormat.png);
-    final file = File('/opt/cursor/artifacts/screenshots/v210/$name.png');
+    final file = File('/opt/cursor/artifacts/screenshots/v220/$name.png');
     await file.parent.create(recursive: true);
     await file.writeAsBytes(data!.buffer.asUint8List());
   });

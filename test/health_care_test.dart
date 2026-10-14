@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:maokangji/data/db/app_database.dart';
 import 'package:maokangji/data/repositories/drift_care_repository.dart';
@@ -32,7 +33,7 @@ void main() {
     await boot(tester, controller);
     expect(controller.catConditions.map((item) => item.diseaseId), ['ckd']);
 
-    await tapText(tester, '猫');
+    await tapText(tester, '健康');
     await tapText(tester, '体检');
     expect(find.textContaining('3 岁'), findsOneWidget);
     expect(find.textContaining('成年'), findsWidgets);
@@ -55,12 +56,8 @@ void main() {
     await tapText(tester, '慢性肾病');
     expect(find.text('红灯'), findsOneWidget);
     expect(find.text('已记'), findsOneWidget);
-    await back(tester);
+    expect(find.byType(TextField), findsNothing);
 
-    await enterField(tester, '搜索', '不存在的病xyz');
-    expect(find.text('没有'), findsOneWidget);
-    await enterField(tester, '搜索', '口炎');
-    expect(find.text('口炎与牙病'), findsOneWidget);
     await tapText(tester, '口炎与牙病');
     expect(find.text('红灯'), findsOneWidget);
     await tapText(tester, '记下');
@@ -69,10 +66,11 @@ void main() {
       contains('stomatitis'),
     );
     await back(tester);
-    await back(tester);
 
+    await tapText(tester, '猫咪');
     await tapText(tester, '奶油');
     expect(controller.active?.name, '奶油');
+    await tapText(tester, '健康');
     await tapText(tester, '体检');
     await revealText(tester, 'PKD 基因或肾脏超声');
     expect(find.text('PKD 基因或肾脏超声'), findsOneWidget);

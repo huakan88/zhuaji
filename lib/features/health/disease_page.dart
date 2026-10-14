@@ -1,81 +1,101 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 
 import '../../core/theme/app_fonts.dart';
 import '../../core/theme/app_tokens.dart';
 import '../../core/widgets/common.dart';
-import '../../domain/health/checkup_catalog.dart';
 import '../../domain/health/disease_catalog.dart';
 import '../../state/app_controller.dart';
 
 class DiseaseLibraryPage extends StatefulWidget {
-  const DiseaseLibraryPage({super.key});
+  const DiseaseLibraryPage({this.initialId, super.key});
+
+  final String? initialId;
 
   @override
   State<DiseaseLibraryPage> createState() => _DiseaseLibraryPageState();
 }
 
 class _DiseaseLibraryPageState extends State<DiseaseLibraryPage> {
-  var _query = '';
-  var _showAll = false;
-
-  bool _matchesDisease(DiseaseInfo disease, String query, Set<String> related) {
-    if (query.isNotEmpty) {
-      return disease.name.contains(query) || disease.summary.contains(query);
-    }
-    return _showAll || related.contains(disease.id);
-  }
+  String? _selected;
+  var _busy = false;
 
   @override
   Widget build(BuildContext context) {
     final app = AppScope.of<AppController>(context);
     final cat = app.active;
-    final query = _query.trim();
-    final related = <String>{
+    final marked = <String>{
       for (final item in app.catConditions) item.diseaseId,
     };
-    if (breedMatches(cat?.breed, const ['缅因', '布偶', 'maine', 'ragdoll'])) {
-      related.add('hcm');
-    }
-    final items = [
-      for (final disease in diseaseCatalog)
-        if (_matchesDisease(disease, query, related)) disease,
-    ];
+    final selectedId =
+        _selected ??
+        widget.initialId ??
+        (marked.isEmpty ? diseaseCatalog.first.id : marked.first);
+    final disease = diseaseById(selectedId) ?? diseaseCatalog.first;
+    final already = cat == null ? false : app.conditionFor(disease.id) != null;
+    final flag = disease.redFlags.isEmpty ? '' : disease.redFlags.first;
+    final diet = _oneLine(disease.diet);
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(title: const Text('看病')),
       body: ListView(
-        padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
+        padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
         children: [
-          TextField(
-            decoration: const InputDecoration(labelText: '搜索'),
-            onChanged: (value) => setState(() => _query = value),
-          ),
-          if (query.isEmpty && !_showAll)
-            Align(
-              alignment: Alignment.centerLeft,
-              child: TextButton(
-                onPressed: () => setState(() => _showAll = true),
-                child: const Text('全部'),
-              ),
-            ),
-          if (items.isEmpty)
-            const EmptyHint(title: '没有', body: '')
-          else
-            for (final disease in items) ...[
-              ListTile(
-                contentPadding: EdgeInsets.zero,
-                title: Text(
-                  disease.name,
-                  style: zhuaji.copyWith(fontWeight: FontWeight.w700),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              for (final item in diseaseCatalog)
+                ChoiceChip(
+                  label: Text(item.name),
+                  selected: item.id == disease.id,
+                  selectedColor: AppColors.coral,
+                  onSelected: (_) => setState(() => _selected = item.id),
                 ),
-                onTap: () => context.push('/disease?id=${disease.id}'),
-              ),
-              const Divider(height: 1),
             ],
+          ),
+          const SizedBox(height: 16),
+          Text('红灯', style: zhuaji.copyWith(fontWeight: FontWeight.w700)),
+          const SizedBox(height: 4),
+          Text(
+            flag.isEmpty ? '没有' : flag,
+            style: zhuaji.copyWith(height: 1.35),
+          ),
+          const SizedBox(height: 12),
+          Text('喂养', style: zhuaji.copyWith(fontWeight: FontWeight.w700)),
+          const SizedBox(height: 4),
+          Text(diet, style: zhuaji.copyWith(height: 1.35)),
         ],
       ),
+      bottomNavigationBar: cat == null
+          ? null
+          : SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(20, 8, 20, 12),
+                child: FilledButton(
+                  onPressed: already || _busy
+                      ? null
+                      : () async {
+                          setState(() => _busy = true);
+                          await app.markDisease(diseaseId: disease.id);
+                          if (!mounted) return;
+                          setState(() => _busy = false);
+                          if (!context.mounted) return;
+                          showMessage(context, '记下了');
+                        },
+                  style: FilledButton.styleFrom(
+                    minimumSize: const Size.fromHeight(56),
+                  ),
+                  child: Text(already ? '已记' : '记下'),
+                ),
+              ),
+            ),
     );
+  }
+
+  String _oneLine(String raw) {
+    final sentence = raw.trim().split('。').first.trim();
+    if (sentence.isEmpty) return '';
+    return sentence.endsWith('。') ? sentence : '$sentence。';
   }
 }
 
@@ -93,42 +113,6 @@ class DiseaseDetailPage extends StatelessWidget {
         body: const Center(child: Text('没有')),
       );
     }
-    final app = AppScope.of<AppController>(context);
-    final marked = app.active == null ? null : app.conditionFor(disease.id);
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: AppBar(title: Text(disease.name)),
-      body: ListView(
-        padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
-        children: [
-          Text(disease.summary, style: zhuaji.copyWith(height: 1.4)),
-          const SizedBox(height: 16),
-          Text('红灯', style: zhuaji.copyWith(fontWeight: FontWeight.w700)),
-          const SizedBox(height: 6),
-          for (final flag in disease.redFlags)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 4),
-              child: Text('· $flag'),
-            ),
-          const SizedBox(height: 16),
-          Text('喂养', style: zhuaji.copyWith(fontWeight: FontWeight.w700)),
-          const SizedBox(height: 6),
-          Text(disease.diet, style: zhuaji.copyWith(height: 1.4)),
-          if (app.active != null) ...[
-            const SizedBox(height: 20),
-            FilledButton(
-              onPressed: marked != null
-                  ? null
-                  : () async {
-                      await app.markDisease(diseaseId: disease.id);
-                      if (!context.mounted) return;
-                      showMessage(context, '记下了');
-                    },
-              child: Text(marked == null ? '记下' : '已记'),
-            ),
-          ],
-        ],
-      ),
-    );
+    return DiseaseLibraryPage(initialId: diseaseId);
   }
 }

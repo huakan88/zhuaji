@@ -15,14 +15,11 @@ class ScanPage extends StatefulWidget {
 
 class _ScanPageState extends State<ScanPage> {
   MobileScannerController? _camera;
-  final _manual = TextEditingController();
   var _handled = false;
-  var _manualOpen = false;
 
   @override
   void dispose() {
     _camera?.dispose();
-    _manual.dispose();
     super.dispose();
   }
 
@@ -47,45 +44,13 @@ class _ScanPageState extends State<ScanPage> {
             child: SafeArea(
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
-                child: _manualOpen
-                    ? Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          TextField(
-                            controller: _manual,
-                            style: zhuaji.copyWith(color: Colors.white),
-                            decoration: InputDecoration(
-                              labelText: '条码',
-                              labelStyle: zhuaji.copyWith(
-                                color: Colors.white70,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          FilledButton(
-                            onPressed: () => _finish(_manual.text),
-                            child: const Text('确定'),
-                          ),
-                        ],
-                      )
-                    : Row(
-                        children: [
-                          TextButton(
-                            onPressed: () => setState(() => _manualOpen = true),
-                            child: Text(
-                              '手输',
-                              style: zhuaji.copyWith(color: Colors.white),
-                            ),
-                          ),
-                          TextButton(
-                            onPressed: () => _openConfirm(''),
-                            child: Text(
-                              '没扫到',
-                              style: zhuaji.copyWith(color: Colors.white),
-                            ),
-                          ),
-                        ],
-                      ),
+                child: FilledButton(
+                  onPressed: () => _openConfirm(''),
+                  style: FilledButton.styleFrom(
+                    minimumSize: const Size.fromHeight(52),
+                  ),
+                  child: const Text('选品牌'),
+                ),
               ),
             ),
           ),
@@ -109,19 +74,9 @@ class _ScanPageState extends State<ScanPage> {
             .whereType<String>()
             .where((value) => value.trim().isNotEmpty)
             .firstOrNull;
-        if (raw != null) _finish(raw);
+        if (raw != null) _openConfirm(raw);
       },
     );
-  }
-
-  Future<void> _finish(String raw) async {
-    final value = raw.trim();
-    if (_handled) return;
-    if (value.isEmpty) {
-      await _openConfirm('');
-      return;
-    }
-    await _openConfirm(value);
   }
 
   Future<void> _openConfirm(String value) async {

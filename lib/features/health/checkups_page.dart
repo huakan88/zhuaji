@@ -8,91 +8,101 @@ import '../../domain/health/checkup_catalog.dart';
 import '../../domain/health/life_stage.dart';
 import '../../state/app_controller.dart';
 
-class CheckupsPage extends StatelessWidget {
+class CheckupsPage extends StatefulWidget {
   const CheckupsPage({super.key});
+
+  @override
+  State<CheckupsPage> createState() => _CheckupsPageState();
+}
+
+class _CheckupsPageState extends State<CheckupsPage> {
+  String? _selected;
+  var _busy = false;
 
   @override
   Widget build(BuildContext context) {
     final app = AppScope.of<AppController>(context);
     final cat = app.active;
     if (cat == null) {
-      return const Scaffold(body: Center(child: Text('先选择一只猫')));
+      return Scaffold(
+        backgroundColor: AppColors.background,
+        appBar: AppBar(title: const Text('体检')),
+        body: const Center(child: Text('先选择一只猫')),
+      );
     }
     final plan = recommendCheckups(
       birthday: cat.birthday,
       breed: cat.breed,
       now: app.now,
     );
+    final selectedId = _selected ??= plan.items.isEmpty
+        ? ''
+        : plan.items.first.item.id;
+    CheckupAdvice? selected;
+    for (final advice in plan.items) {
+      if (advice.item.id == selectedId) selected = advice;
+    }
+    selected ??= plan.items.isEmpty ? null : plan.items.first;
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(title: const Text('体检')),
       body: ListView(
-        padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
+        padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
         children: [
           Text(
             '${ageLabel(cat.birthday, app.now)} · ${lifeStageLabel(plan.stage)}',
             style: zhuaji.copyWith(fontSize: 17, fontWeight: FontWeight.w700),
           ),
-          const SizedBox(height: 8),
-          for (final advice in plan.items) ...[
-            _CheckupCard(advice: advice),
-            const SizedBox(height: 10),
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              for (final advice in plan.items)
+                ChoiceChip(
+                  label: Text(advice.item.name),
+                  selected: advice.item.id == selected?.item.id,
+                  selectedColor: AppColors.coral,
+                  onSelected: (_) => setState(() => _selected = advice.item.id),
+                ),
+            ],
+          ),
+          if (selected != null) ...[
+            const SizedBox(height: 12),
+            Text(
+              selected.plan.frequency,
+              style: zhuaji.copyWith(color: AppColors.muted, height: 1.35),
+            ),
           ],
         ],
       ),
-    );
-  }
-}
-
-class _CheckupCard extends StatelessWidget {
-  const _CheckupCard({required this.advice});
-
-  final CheckupAdvice advice;
-
-  @override
-  Widget build(BuildContext context) {
-    final app = AppScope.of<AppController>(context);
-    DateTime? nextDue;
-    for (final log in app.checkupsFor(advice.item.id)) {
-      if (log.nextDue != null &&
-          (nextDue == null || log.nextDue!.isBefore(nextDue))) {
-        nextDue = log.nextDue;
-      }
-    }
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Divider(height: 1),
-        const SizedBox(height: 10),
-        Text(
-          advice.item.name,
-          style: zhuaji.copyWith(fontWeight: FontWeight.w700, fontSize: 16),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          advice.plan.frequency,
-          style: zhuaji.copyWith(color: AppColors.muted, height: 1.35),
-        ),
-        if (nextDue != null) ...[
-          const SizedBox(height: 4),
-          Text(
-            formatDate(nextDue),
-            style: zhuaji.copyWith(color: AppColors.muted, fontSize: 12),
+      bottomNavigationBar: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 8, 20, 12),
+          child: FilledButton(
+            onPressed: selected == null || _busy
+                ? null
+                : () async {
+                    final advice = selected;
+                    if (advice == null) return;
+                    setState(() => _busy = true);
+                    await app.completeCheckup(
+                      itemId: advice.item.id,
+                      result: '已完成',
+                      intervalDays: advice.plan.intervalDays,
+                    );
+                    if (!mounted) return;
+                    setState(() => _busy = false);
+                    if (!context.mounted) return;
+                    showMessage(context, '记下了');
+                  },
+            style: FilledButton.styleFrom(
+              minimumSize: const Size.fromHeight(56),
+            ),
+            child: const Text('完成'),
           ),
-        ],
-        TextButton(
-          onPressed: () async {
-            await app.completeCheckup(
-              itemId: advice.item.id,
-              result: '已完成',
-              intervalDays: advice.plan.intervalDays,
-            );
-            if (!context.mounted) return;
-            showMessage(context, '记下了');
-          },
-          child: const Text('完成'),
         ),
-      ],
+      ),
     );
   }
 }

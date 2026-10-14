@@ -38,6 +38,7 @@ class AppController extends ChangeNotifier {
   List<CheckupRecord> checkups = [];
   List<WaterRecord> waters = [];
   Set<String> weightAcks = {};
+  Set<String> pantryAcks = {};
   String? permissionNote;
 
   DateTime get now => _clock();
@@ -436,6 +437,20 @@ class AppController extends ChangeNotifier {
     waters = await repo.waters();
     final raw = await repo.setting('weightAcks') ?? '';
     weightAcks = raw.split(',').where((item) => item.isNotEmpty).toSet();
+    final pantryRaw = await repo.setting('pantryAcks') ?? '';
+    pantryAcks = pantryRaw.split(',').where((item) => item.isNotEmpty).toSet();
+  }
+
+  String pantryAckKey(PantryEntry entry) =>
+      '${entry.item.id}|${entry.item.expiryDate?.millisecondsSinceEpoch ?? 0}|${entry.item.openedAt?.millisecondsSinceEpoch ?? 0}';
+
+  bool pantryAcked(PantryEntry entry) =>
+      pantryAcks.contains(pantryAckKey(entry));
+
+  Future<void> ackPantry(PantryEntry entry) async {
+    pantryAcks.add(pantryAckKey(entry));
+    await repo.setSetting('pantryAcks', pantryAcks.join(','));
+    notifyListeners();
   }
 
   String weightAckKey(int catId, WeightChange change) =>

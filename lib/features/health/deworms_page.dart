@@ -4,23 +4,38 @@ import '../../core/format.dart';
 import '../../core/theme/app_fonts.dart';
 import '../../core/theme/app_tokens.dart';
 import '../../core/widgets/common.dart';
+import '../../domain/dates.dart';
 import '../../domain/models.dart';
 import '../../state/app_controller.dart';
 import '../records/record_sheets.dart';
 
-class DewormsPage extends StatelessWidget {
+class DewormsPage extends StatefulWidget {
   const DewormsPage({super.key});
+
+  @override
+  State<DewormsPage> createState() => _DewormsPageState();
+}
+
+class _DewormsPageState extends State<DewormsPage> {
+  static const _products = ['大宠爱', '博来恩', '海乐妙'];
+  var _kind = DewormKind.internal;
+  var _product = '大宠爱';
+  DateTime? _given;
+  var _busy = false;
 
   @override
   Widget build(BuildContext context) {
     final app = AppScope.of<AppController>(context);
-    if (app.active == null) {
+    final cat = app.active;
+    if (cat == null) {
       return Scaffold(
         backgroundColor: AppColors.background,
         appBar: AppBar(title: const Text('驱虫')),
         body: const Center(child: Text('先选择一只猫')),
       );
     }
+    final given = _given ??= dateOnly(app.now);
+    final next = given.add(const Duration(days: 90));
     final items = [...app.catDeworms]
       ..sort((a, b) {
         final left = a.nextDue ?? a.givenOn;
@@ -31,35 +46,93 @@ class DewormsPage extends StatelessWidget {
       backgroundColor: AppColors.background,
       appBar: AppBar(title: const Text('驱虫')),
       body: ListView(
-        padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
+        padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
         children: [
+          if (items.isEmpty)
+            Text('还没记', style: zhuaji.copyWith(color: AppColors.muted))
+          else
+            for (final item in items.take(3)) _Record(item: item),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 8,
+            children: [
+              ChoiceChip(
+                label: const Text('体内'),
+                selected: _kind == DewormKind.internal,
+                selectedColor: AppColors.coral,
+                onSelected: (_) => setState(() => _kind = DewormKind.internal),
+              ),
+              ChoiceChip(
+                label: const Text('体外'),
+                selected: _kind == DewormKind.external,
+                selectedColor: AppColors.coral,
+                onSelected: (_) => setState(() => _kind = DewormKind.external),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 8,
+            children: [
+              for (final label in _products)
+                ChoiceChip(
+                  label: Text(label),
+                  selected: _product == label,
+                  selectedColor: AppColors.coral,
+                  onSelected: (_) => setState(() => _product = label),
+                ),
+            ],
+          ),
+          DateLine(
+            label: '使用',
+            date: given,
+            onTap: () async {
+              final picked = await pickDate(context, given);
+              if (picked == null) return;
+              setState(() => _given = dateOnly(picked));
+            },
+          ),
           Text(
-            '体内体外分开记。完成后下次默认 90 天。',
+            '下次 ${formatDate(next)}',
             style: zhuaji.copyWith(color: AppColors.muted),
           ),
-          const SizedBox(height: 12),
-          if (items.isEmpty)
-            const EmptyHint(title: '还没记', body: '点下面选药')
-          else
-            for (final item in items) ...[
-              _WormCard(item: item),
-              const SizedBox(height: 12),
-            ],
-          FilledButton(
-            onPressed: () => showDewormSheet(context),
+        ],
+      ),
+      bottomNavigationBar: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 8, 20, 12),
+          child: FilledButton(
+            onPressed: _busy
+                ? null
+                : () async {
+                    setState(() => _busy = true);
+                    await app.saveDeworm(
+                      DewormDraft(
+                        catId: cat.id,
+                        kind: _kind,
+                        product: _product,
+                        givenOn: given,
+                        nextDue: next,
+                      ),
+                    );
+                    if (!mounted) return;
+                    setState(() => _busy = false);
+                    if (!context.mounted) return;
+                    showMessage(context, '记下了');
+                  },
             style: FilledButton.styleFrom(
-              minimumSize: const Size.fromHeight(52),
+              minimumSize: const Size.fromHeight(56),
             ),
             child: const Text('记下'),
           ),
-        ],
+        ),
       ),
     );
   }
 }
 
-class _WormCard extends StatelessWidget {
-  const _WormCard({required this.item});
+class _Record extends StatelessWidget {
+  const _Record({required this.item});
 
   final DewormRecord item;
 
@@ -67,52 +140,45 @@ class _WormCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final app = AppScope.of<AppController>(context);
     final due = item.nextDue;
-    return Material(
-      color: AppColors.card,
-      borderRadius: BorderRadius.circular(16),
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 14, 16, 8),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              dewormLabel(item.kind),
-              style: zhuaji.copyWith(fontSize: 18, fontWeight: FontWeight.w700),
-            ),
-            const SizedBox(height: 4),
-            Text(item.product, style: zhuaji.copyWith(color: AppColors.muted)),
-            Text(
-              due == null
-                  ? '使用 ${formatDate(item.givenOn)}'
-                  : '下次 ${formatDate(due)} · ${countdownOf(due, app.now)}',
-              style: zhuaji.copyWith(color: AppColors.muted),
-            ),
-            Row(
-              children: [
-                TextButton(
-                  onPressed: () async {
-                    final next = await app.completeDeworm(item);
-                    if (!context.mounted) return;
-                    showMessage(context, '下次 ${formatDate(next)}');
-                  },
-                  child: const Text('完成'),
-                ),
-                TextButton(
-                  onPressed: () => showDewormSheet(context, existing: item),
-                  child: const Text('改'),
-                ),
-                TextButton(
-                  onPressed: () async {
-                    if (!await confirmDelete(context, '删掉这次？')) return;
-                    await app.removeDeworm(item.id);
-                  },
-                  child: const Text('删除'),
-                ),
-              ],
-            ),
-          ],
+    return Row(
+      children: [
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                item.product,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: zhuaji.copyWith(fontWeight: FontWeight.w700),
+              ),
+              Text(
+                due == null
+                    ? dewormLabel(item.kind)
+                    : '${dewormLabel(item.kind)} · ${countdownOf(due, app.now)}',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: zhuaji.copyWith(color: AppColors.muted, fontSize: 12),
+              ),
+            ],
+          ),
         ),
-      ),
+        TextButton(
+          onPressed: () async {
+            final next = await app.completeDeworm(item);
+            if (!context.mounted) return;
+            showMessage(context, '下次 ${formatDate(next)}');
+          },
+          child: const Text('完成'),
+        ),
+        TextButton(
+          onPressed: () async {
+            if (!await confirmDelete(context, '删掉这次？')) return;
+            await app.removeDeworm(item.id);
+          },
+          child: const Text('删除'),
+        ),
+      ],
     );
   }
 }

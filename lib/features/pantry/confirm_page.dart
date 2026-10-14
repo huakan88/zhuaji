@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../core/format.dart';
 import '../../core/theme/app_fonts.dart';
 import '../../core/theme/app_tokens.dart';
 import '../../core/widgets/common.dart';
@@ -21,13 +20,12 @@ class ConfirmPage extends StatefulWidget {
 }
 
 class _ConfirmPageState extends State<ConfirmPage> {
-  final _name = TextEditingController();
+  FoodProduct? _product;
   DateTime? _production;
   DateTime? _expiry;
   DateTime? _opened;
   var _days = 30;
   String _storage = '阴凉干燥，封好袋口。';
-  String? _brand;
   String? _batch;
   var _fromCode = false;
   var _ready = false;
@@ -47,140 +45,147 @@ class _ConfirmPageState extends State<ConfirmPage> {
     _expiry = parsed.suggestedExpiry ?? today.add(const Duration(days: 365));
     _opened = today;
     _batch = parsed.batch;
-    final fallback = _fallbackProduct(app, known);
-    _applyProduct(fallback, keepName: known != null);
-    if (known != null) _name.text = known.name;
+    _apply(known ?? _fallback(app));
     _ready = true;
   }
 
-  FoodProduct? _fallbackProduct(AppController app, FoodProduct? known) {
-    if (known != null) return known;
+  FoodProduct? _fallback(AppController app) {
     for (final item in app.products) {
       if (item.name.contains('室内成猫')) return item;
     }
     return app.products.isEmpty ? null : app.products.first;
   }
 
-  void _applyProduct(FoodProduct? product, {bool keepName = false}) {
-    if (product == null) {
-      if (_name.text.trim().isEmpty) _name.text = '这袋粮';
-      return;
-    }
-    _brand = product.brand;
-    if (!keepName) _name.text = product.name;
+  void _apply(FoodProduct? product) {
+    _product = product;
+    if (product == null) return;
     if (product.afterOpenDays > 0) _days = product.afterOpenDays;
     final line = _oneLine(product.storageMethod);
     if (line.isNotEmpty) _storage = line;
   }
 
   String _oneLine(String raw) {
-    final text = raw.trim();
-    if (text.isEmpty) return '';
-    final sentence = text.split('。').first.trim();
+    final sentence = raw.trim().split('。').first.trim();
     if (sentence.isEmpty) return '';
     return sentence.endsWith('。') ? sentence : '$sentence。';
-  }
-
-  @override
-  void dispose() {
-    _name.dispose();
-    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     final app = AppScope.of<AppController>(context);
     final brands = <String>[];
-    final seenBrands = <String>{};
+    final seen = <String>{};
     for (final item in app.products) {
-      if (item.brand.isEmpty || !seenBrands.add(item.brand)) continue;
+      if (item.brand.isEmpty || !seen.add(item.brand)) continue;
       brands.add(item.brand);
+    }
+    final selectedBrand = _product?.brand;
+    if (selectedBrand != null && brands.remove(selectedBrand)) {
+      brands.insert(0, selectedBrand);
     }
     final products = [
       for (final item in app.products)
-        if (_brand != null && item.brand == _brand) item,
+        if (_product != null && item.brand == _product!.brand) item,
     ];
     final matched =
         widget.code.isNotEmpty && app.findBarcode(widget.code) != null;
+    final days = {7, 30, 42, _days}.toList()..sort();
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(title: const Text('确认')),
       body: ListView(
-        padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
+        padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
         children: [
           Text(
-            _fromCode ? '日期已填上，核对后记下' : '没认到日期，用滚轮改',
+            _fromCode ? '日期已填上，核对后记下' : '点品牌，日期用滚轮改',
             style: zhuaji.copyWith(color: AppColors.muted),
           ),
-          const SizedBox(height: 12),
-          TextField(
-            controller: _name,
-            decoration: const InputDecoration(labelText: '粮名'),
+          const SizedBox(height: 8),
+          Text(
+            _product?.name ?? '先选品牌',
+            style: zhuaji.copyWith(fontSize: 22, fontWeight: FontWeight.w700),
           ),
           if (!matched && brands.isNotEmpty) ...[
-            const SizedBox(height: 12),
-            Text('品牌', style: zhuaji.copyWith(fontWeight: FontWeight.w700)),
             const SizedBox(height: 8),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: [
-                for (final brand in brands)
-                  ChoiceChip(
-                    label: Text(_shortBrand(brand)),
-                    selected: brand == _brand,
-                    selectedColor: AppColors.coral,
-                    onSelected: (_) {
-                      FoodProduct? first;
-                      for (final item in app.products) {
-                        if (item.brand == brand) {
-                          first = item;
-                          break;
-                        }
-                      }
-                      setState(() {
-                        _brand = brand;
-                        _applyProduct(first);
-                      });
-                    },
-                  ),
-              ],
-            ),
-            if (products.length > 1) ...[
-              const SizedBox(height: 8),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
+            SizedBox(
+              height: 48,
+              child: ListView(
+                scrollDirection: Axis.horizontal,
                 children: [
-                  for (final item in products)
-                    ChoiceChip(
-                      label: Text(item.name),
-                      selected: item.name == _name.text,
-                      selectedColor: AppColors.tintCoral,
-                      onSelected: (_) => setState(() => _applyProduct(item)),
+                  for (final brand in brands)
+                    Padding(
+                      padding: const EdgeInsets.only(right: 8),
+                      child: ChoiceChip(
+                        label: Text(_shortBrand(brand)),
+                        selected: brand == _product?.brand,
+                        selectedColor: AppColors.coral,
+                        onSelected: (_) {
+                          FoodProduct? first;
+                          for (final item in app.products) {
+                            if (item.brand == brand) {
+                              first = item;
+                              break;
+                            }
+                          }
+                          setState(() => _apply(first));
+                        },
+                      ),
                     ),
                 ],
               ),
-            ],
+            ),
+            if (products.length > 1)
+              SizedBox(
+                height: 48,
+                child: ListView(
+                  scrollDirection: Axis.horizontal,
+                  children: [
+                    for (final item in products)
+                      Padding(
+                        padding: const EdgeInsets.only(right: 8),
+                        child: ChoiceChip(
+                          label: Text(item.name),
+                          selected: item.id == _product?.id,
+                          selectedColor: AppColors.tintCoral,
+                          onSelected: (_) => setState(() => _apply(item)),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
           ],
-          const SizedBox(height: 12),
-          Text(_storage, style: zhuaji.copyWith(height: 1.4)),
           const SizedBox(height: 8),
-          _dateRow('生产', _production!, (value) => _production = value),
-          _dateRow('到期', _expiry!, (value) => _expiry = value),
-          _dateRow('开封', _opened!, (value) => _opened = value),
-          const SizedBox(height: 8),
-          Text('开封后', style: zhuaji.copyWith(fontWeight: FontWeight.w700)),
-          const SizedBox(height: 8),
+          Text(
+            _storage,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: zhuaji.copyWith(height: 1.35),
+          ),
+          DateLine(
+            label: '生产',
+            date: _production!,
+            onTap: () => _pick(_production!, (value) => _production = value),
+          ),
+          DateLine(
+            label: '到期',
+            date: _expiry!,
+            onTap: () => _pick(_expiry!, (value) => _expiry = value),
+          ),
+          DateLine(
+            label: '开封',
+            date: _opened!,
+            onTap: () => _pick(_opened!, (value) => _opened = value),
+          ),
+          const SizedBox(height: 4),
           Wrap(
             spacing: 8,
             children: [
-              for (final days in _dayChoices)
+              for (final day in days)
                 ChoiceChip(
-                  label: Text('$days天'),
-                  selected: _days == days,
+                  label: Text('$day天'),
+                  selected: _days == day,
                   selectedColor: AppColors.coral,
-                  onSelected: (_) => setState(() => _days = days),
+                  onSelected: (_) => setState(() => _days = day),
                 ),
             ],
           ),
@@ -201,28 +206,10 @@ class _ConfirmPageState extends State<ConfirmPage> {
     );
   }
 
-  List<int> get _dayChoices {
-    final values = {7, 30, 42, _days};
-    final list = values.toList()..sort();
-    return list;
-  }
-
-  Widget _dateRow(
-    String label,
-    DateTime value,
-    void Function(DateTime) assign,
-  ) {
-    return ListTile(
-      contentPadding: EdgeInsets.zero,
-      title: Text(label, style: zhuaji.copyWith(fontWeight: FontWeight.w700)),
-      subtitle: Text(formatDate(value), style: zhuaji.copyWith(fontSize: 16)),
-      trailing: Text('改', style: zhuaji.copyWith(color: AppColors.coralDeep)),
-      onTap: () async {
-        final picked = await pickDate(context, value);
-        if (picked == null) return;
-        setState(() => assign(dateOnly(picked)));
-      },
-    );
+  Future<void> _pick(DateTime current, void Function(DateTime) assign) async {
+    final picked = await pickDate(context, current);
+    if (picked == null) return;
+    setState(() => assign(dateOnly(picked)));
   }
 
   String _shortBrand(String brand) {
@@ -234,41 +221,14 @@ class _ConfirmPageState extends State<ConfirmPage> {
   }
 
   Future<void> _save() async {
-    final name = _name.text.trim();
-    if (name.isEmpty) {
-      showMessage(context, '先写粮名');
+    final product = _product;
+    if (product == null) {
+      showMessage(context, '先选品牌');
       return;
     }
     final app = AppScope.of<AppController>(context);
     setState(() => _busy = true);
     try {
-      var product = widget.code.isEmpty ? null : app.findBarcode(widget.code);
-      if (product == null || product.name != name) {
-        FoodProduct? template;
-        for (final item in app.products) {
-          if (item.brand == _brand && item.name == name) {
-            template = item;
-            break;
-          }
-        }
-        template ??= _fallbackProduct(app, product);
-        final id = await app.saveProduct(
-          FoodDraft(
-            id: product?.id,
-            barcode: widget.code.isEmpty ? null : widget.code,
-            brand: _brand ?? template?.brand ?? '猫粮',
-            name: name,
-            spec: template?.spec ?? '',
-            foodForm: template?.foodForm ?? FoodForm.dry,
-            storageMethod: _storage,
-            afterOpenDays: _days,
-            kcalPer100g: template?.kcalPer100g,
-            isSample: false,
-          ),
-        );
-        product = app.productById(id);
-      }
-      if (product == null) return;
       await app.savePantry(
         PantryDraft(
           productId: product.id,

@@ -44,16 +44,6 @@ class PantryPage extends StatelessWidget {
               _BagRow(entry: entry),
               const SizedBox(height: 8),
             ],
-          if (bags.isNotEmpty) ...[
-            const SizedBox(height: 16),
-            FilledButton(
-              onPressed: () => context.push('/scan'),
-              style: FilledButton.styleFrom(
-                minimumSize: const Size.fromHeight(52),
-              ),
-              child: const Text('扫粮'),
-            ),
-          ],
         ],
       ),
     );

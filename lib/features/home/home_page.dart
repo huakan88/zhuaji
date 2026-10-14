@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/format.dart';
 import '../../core/theme/app_fonts.dart';
 import '../../core/theme/app_tokens.dart';
-import '../../domain/dates.dart';
 import '../../core/widgets/common.dart';
+import '../../domain/dates.dart';
 import '../../domain/models.dart';
 import '../../state/app_controller.dart';
-import '../records/record_sheets.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -21,57 +21,20 @@ class HomePage extends StatelessWidget {
       backgroundColor: AppColors.background,
       appBar: AppBar(title: const Text('今天')),
       body: ListView(
-        padding: const EdgeInsets.fromLTRB(20, 12, 20, 120),
+        padding: const EdgeInsets.fromLTRB(20, 8, 20, 120),
         children: [
-          Center(
-            child: cat == null
-                ? GestureDetector(
-                    onTap: () => context.push('/cat-form'),
-                    child: const CatAvatar(
-                      path: null,
-                      size: 96,
-                      selected: true,
-                    ),
-                  )
-                : CatAvatar(path: cat.avatarPath, size: 96, selected: true),
-          ),
-          if (cat != null) ...[
-            const SizedBox(height: 8),
-            Center(
-              child: Text(
-                cat.name,
-                style: zhuaji.copyWith(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
+          if (cat != null)
+            Text(
+              cat.name,
+              style: zhuaji.copyWith(fontSize: 20, fontWeight: FontWeight.w700),
             ),
-          ],
-          const SizedBox(height: 28),
+          const SizedBox(height: 12),
           if (todos.isEmpty)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 8),
-              child: Text(
-                '今天没什么要办',
-                style: zhuaji.copyWith(color: AppColors.muted),
-              ),
-            ),
+            Text('今天没什么要办', style: zhuaji.copyWith(color: AppColors.muted)),
           for (final todo in todos) ...[
             _TodoRow(todo: todo),
             const SizedBox(height: 8),
           ],
-          const SizedBox(height: 20),
-          FilledButton(
-            onPressed: () => context.push('/scan'),
-            style: FilledButton.styleFrom(
-              minimumSize: const Size.fromHeight(56),
-              textStyle: zhuaji.copyWith(
-                fontSize: 18,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-            child: const Text('扫粮'),
-          ),
         ],
       ),
     );
@@ -84,7 +47,9 @@ class HomePage extends StatelessWidget {
     final foods =
         [
           for (final entry in app.pantry)
-            if (_foodDue(entry, soon) || _openedToday(entry, today)) entry,
+            if ((_foodDue(entry, soon) || _openedToday(entry, today)) &&
+                !app.pantryAcked(entry))
+              entry,
         ]..sort((a, b) {
           final aFresh = _openedToday(a, today);
           final bFresh = _openedToday(b, today);
@@ -99,17 +64,17 @@ class HomePage extends StatelessWidget {
           title: '到期粮',
           detail: entry.product.name,
           onTap: () async {
-            await context.push('/bag?id=${entry.item.id}');
+            await app.ackPantry(entry);
+            if (!context.mounted) return;
+            showMessage(context, '还在粮仓');
           },
         ),
       );
     }
     if (cat != null) {
-      final soonShot = dateOnly(app.now).add(const Duration(days: 30));
       final shots = [
         for (final shot in app.catVaccines)
-          if (shot.nextDue != null &&
-              !dateOnly(shot.nextDue!).isAfter(soonShot))
+          if (shot.nextDue != null && !dateOnly(shot.nextDue!).isAfter(soon))
             shot,
       ]..sort((a, b) => a.nextDue!.compareTo(b.nextDue!));
       for (final shot in shots) {
@@ -118,16 +83,16 @@ class HomePage extends StatelessWidget {
             title: '疫苗',
             detail: shot.name,
             onTap: () async {
-              await context.push('/vaccines');
+              final next = await app.completeVaccine(shot);
+              if (!context.mounted) return;
+              showMessage(context, '下次 ${formatDate(next)}');
             },
           ),
         );
       }
-      final soonDeworm = dateOnly(app.now).add(const Duration(days: 30));
       final worms = [
         for (final item in app.catDeworms)
-          if (item.nextDue != null &&
-              !dateOnly(item.nextDue!).isAfter(soonDeworm))
+          if (item.nextDue != null && !dateOnly(item.nextDue!).isAfter(soon))
             item,
       ]..sort((a, b) => a.nextDue!.compareTo(b.nextDue!));
       for (final item in worms) {
@@ -136,7 +101,9 @@ class HomePage extends StatelessWidget {
             title: '驱虫',
             detail: item.product,
             onTap: () async {
-              await context.push('/deworms');
+              final next = await app.completeDeworm(item);
+              if (!context.mounted) return;
+              showMessage(context, '下次 ${formatDate(next)}');
             },
           ),
         );
@@ -148,9 +115,7 @@ class HomePage extends StatelessWidget {
             title: '体重',
             detail: kg == null ? '去称一下' : '${kg.toStringAsFixed(2)} kg',
             onTap: () async {
-              final saved = await showWeightSheet(context);
-              if (!saved || !context.mounted) return;
-              await app.ackWeightAlert(cat);
+              await context.push('/weight');
             },
           ),
         );
@@ -221,7 +186,7 @@ class _TodoRow extends StatelessWidget {
                   style: zhuaji.copyWith(color: AppColors.muted),
                 ),
               ),
-              const Icon(Icons.chevron_right, color: AppColors.muted, size: 20),
+              const Icon(Icons.check, color: AppColors.coralDeep, size: 20),
             ],
           ),
         ),

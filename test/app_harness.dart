@@ -5,13 +5,19 @@ import 'package:maokangji/state/app_controller.dart';
 
 import 'cjk_font.dart';
 
-Future<void> boot(WidgetTester tester, AppController controller) async {
+Future<void> boot(
+  WidgetTester tester,
+  AppController controller, {
+  String location = '/home',
+}) async {
   await tester.runAsync(loadZhuajiFonts);
   tester.view.physicalSize = const Size(390, 844);
   tester.view.devicePixelRatio = 1;
   addTearDown(tester.view.resetPhysicalSize);
   addTearDown(tester.view.resetDevicePixelRatio);
-  await tester.pumpWidget(ZhuajiApp(controller: controller));
+  await tester.pumpWidget(
+    ZhuajiApp(controller: controller, initialLocation: location),
+  );
   await frames(tester);
 }
 

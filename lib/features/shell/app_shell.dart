@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/theme/app_fonts.dart';
 import '../../core/theme/app_tokens.dart';
 import '../../core/widgets/common.dart';
 import '../../state/app_controller.dart';
@@ -24,6 +25,20 @@ class _AppShellState extends State<AppShell> {
     });
   }
 
+  int _branchFor(int slot) => switch (slot) {
+    0 => 0,
+    1 => 1,
+    3 => 2,
+    _ => 3,
+  };
+
+  int _slotFor(int branch) => switch (branch) {
+    0 => 0,
+    1 => 1,
+    2 => 3,
+    _ => 4,
+  };
+
   @override
   Widget build(BuildContext context) {
     final app = AppScope.of<AppController>(context);
@@ -44,26 +59,113 @@ class _AppShellState extends State<AppShell> {
             )
           : widget.shell,
       bottomNavigationBar: showBar
-          ? NavigationBar(
-              height: 64,
-              elevation: 0,
-              backgroundColor: AppColors.background,
-              indicatorColor: AppColors.tintCoral,
-              selectedIndex: widget.shell.currentIndex,
-              labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
-              destinations: const [
-                NavigationDestination(
-                  icon: Icon(Icons.today_outlined),
-                  label: '今天',
-                ),
-                NavigationDestination(
-                  icon: Icon(Icons.pets_outlined),
-                  label: '猫',
-                ),
-              ],
-              onDestinationSelected: (index) => widget.shell.goBranch(index),
+          ? _TabBar(
+              slot: _slotFor(widget.shell.currentIndex),
+              onSlot: (slot) {
+                if (slot == 2) {
+                  context.push('/scan');
+                  return;
+                }
+                widget.shell.goBranch(_branchFor(slot));
+              },
             )
           : null,
+    );
+  }
+}
+
+class _TabBar extends StatelessWidget {
+  const _TabBar({required this.slot, required this.onSlot});
+
+  final int slot;
+  final ValueChanged<int> onSlot;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: AppColors.background,
+      child: SafeArea(
+        top: false,
+        child: SizedBox(
+          height: 78,
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              _item(0, Icons.today_outlined, '今天'),
+              _item(1, Icons.favorite_border, '健康'),
+              _scan(),
+              _item(3, Icons.inventory_2_outlined, '粮仓'),
+              _item(4, Icons.pets_outlined, '猫咪'),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _item(int index, IconData icon, String label) {
+    final selected = slot == index;
+    final color = selected ? AppColors.coralDeep : AppColors.muted;
+    return Expanded(
+      child: InkWell(
+        onTap: () => onSlot(index),
+        child: Padding(
+          padding: const EdgeInsets.only(bottom: 8),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              Icon(icon, color: color, size: 24),
+              const SizedBox(height: 2),
+              Text(
+                label,
+                style: zhuaji.copyWith(
+                  fontSize: 12,
+                  color: color,
+                  fontWeight: selected ? FontWeight.w700 : FontWeight.w400,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _scan() {
+    return Expanded(
+      child: GestureDetector(
+        onTap: () => onSlot(2),
+        child: Padding(
+          padding: const EdgeInsets.only(bottom: 6),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              Container(
+                width: 52,
+                height: 52,
+                decoration: const BoxDecoration(
+                  color: AppColors.coralDeep,
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.qr_code_scanner,
+                  color: Colors.white,
+                  size: 28,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                '扫粮',
+                style: zhuaji.copyWith(
+                  fontSize: 12,
+                  color: AppColors.coralDeep,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
