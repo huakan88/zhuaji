@@ -156,6 +156,8 @@ class CatsPage extends StatelessWidget {
                         weights: app.weights,
                         conditions: app.conditions,
                         now: app.now,
+                        labs: app.labs,
+                        foods: app.products,
                       ),
                     ),
                   );

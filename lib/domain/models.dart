@@ -156,6 +156,7 @@ class VaccineRecord {
     required this.notes,
     this.nextDue,
     this.clinic,
+    this.batch,
   });
 
   final int id;
@@ -165,6 +166,9 @@ class VaccineRecord {
   final DateTime? nextDue;
   final String? clinic;
   final String notes;
+
+  /// Lot number read from the sticker, after the user confirms it.
+  final String? batch;
 }
 
 class VaccineDraft {
@@ -176,6 +180,7 @@ class VaccineDraft {
     this.nextDue,
     this.clinic,
     this.notes = '',
+    this.batch,
   });
 
   final int? id;
@@ -185,6 +190,7 @@ class VaccineDraft {
   final DateTime? nextDue;
   final String? clinic;
   final String notes;
+  final String? batch;
 }
 
 class DewormRecord {
@@ -465,6 +471,7 @@ class PantryItem {
     this.batch,
     this.openedAt,
     this.afterOpenDays,
+    this.dailyGrams,
   });
 
   final int id;
@@ -475,6 +482,9 @@ class PantryItem {
   final DateSource dateSource;
   final DateTime? openedAt;
   final int? afterOpenDays;
+
+  /// Grams the household feeds from this bag each day. Null until picked.
+  final double? dailyGrams;
 }
 
 class PantryEntry {
@@ -496,6 +506,7 @@ class PantryDraft {
     this.batch,
     this.openedAt,
     this.afterOpenDays,
+    this.dailyGrams,
   });
 
   final int? id;
@@ -506,6 +517,7 @@ class PantryDraft {
   final DateSource dateSource;
   final DateTime? openedAt;
   final int? afterOpenDays;
+  final double? dailyGrams;
 }
 
 class RecognitionSuggestion {
