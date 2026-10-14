@@ -51,6 +51,17 @@ void main() {
     expect(result.gtin, '06971000000014');
   });
 
+  test('a GS1 Digital Link QR carries the same dates as the element string', () {
+    final result = parser.parse(
+      'https://id.gs1.org/01/06971000000014/10/LOT9?17=270412&11=251012',
+      reference: reference,
+    );
+    expect(result.gtin, '06971000000014');
+    expect(result.batch, 'LOT9');
+    expect(result.expiryDate, DateTime(2027, 4, 12));
+    expect(result.productionDate, DateTime(2025, 10, 12));
+  });
+
   test('invalid month and a plain EAN are not dates', () {
     expect(
       parser.parse('(11)251322', reference: reference).productionDate,

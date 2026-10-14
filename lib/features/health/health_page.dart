@@ -23,6 +23,7 @@ class HealthPage extends StatelessWidget {
       _Tile('就医', '体检、呕吐', Icons.local_hospital_outlined, '/visits'),
       _Tile('体检', '按年龄', Icons.fact_check_outlined, '/checkups'),
       _Tile('看病', '点病名', Icons.healing_outlined, '/diseases'),
+      _Tile('化验', '血常规、生化', Icons.biotech_outlined, '/labs'),
     ];
     return Scaffold(
       backgroundColor: AppColors.background,

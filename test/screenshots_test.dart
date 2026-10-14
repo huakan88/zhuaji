@@ -13,6 +13,7 @@ import 'package:maokangji/services/coat_recognizer.dart';
 import 'package:maokangji/domain/scale/scale_parser.dart';
 import 'package:maokangji/services/notification_service.dart';
 import 'package:maokangji/services/scale_service.dart';
+import 'package:maokangji/domain/models.dart';
 import 'package:maokangji/state/app_controller.dart';
 
 import 'cjk_font.dart';
@@ -53,6 +54,41 @@ void main() {
       clock: () => DateTime(2026, 10, 12, 10),
     );
     await controller.init();
+    final cat = controller.active!;
+    await controller.saveFood(
+      const FoodDraft(
+        brand: '山野',
+        name: '冻干双拼',
+        spec: '1.5kg',
+        foodForm: FoodForm.freezeDried,
+        storageMethod: '阴凉干燥，封好袋口。',
+        afterOpenDays: 30,
+        flavor: '鸡肉',
+        isCustom: true,
+      ),
+      barcode: '6901111222233',
+    );
+    await controller.saveLab(
+      LabDraft(
+        catId: cat.id,
+        kind: LabKind.cbc,
+        takenOn: DateTime(2026, 9, 1),
+        photos: const [],
+      ),
+      values: const [LabValue(code: 'WBC', value: 10, unit: '10^9/L')],
+    );
+    await controller.saveLab(
+      LabDraft(
+        catId: cat.id,
+        kind: LabKind.cbc,
+        takenOn: DateTime(2026, 10, 12),
+        photos: const [],
+      ),
+      values: const [
+        LabValue(code: 'WBC', value: 18.2, unit: '10^9/L'),
+        LabValue(code: 'PLT', value: 88, unit: '10^9/L'),
+      ],
+    );
     final scale = _ShotScale();
     await tester.pumpWidget(
       ZhuajiApp(controller: controller, scaleSource: () => scale),
@@ -159,6 +195,30 @@ void main() {
     await _frames(tester);
     await _shot(tester, 'pantry');
 
+    await _tapOnScreen(tester, '图鉴');
+    await _frames(tester);
+    await _shot(tester, 'catalog');
+    await _tapOnScreen(tester, '山野 冻干双拼');
+    await _frames(tester);
+    await _shot(tester, 'custom-food');
+    await tester.tap(find.byTooltip('返回'));
+    await _frames(tester);
+    await tester.tap(find.byTooltip('返回'));
+    await _frames(tester);
+
+    await _tapOnScreen(tester, '健康');
+    await _frames(tester);
+    await _tapOnScreen(tester, '化验');
+    await _frames(tester);
+    await _shot(tester, 'labs');
+    await _tapOnScreen(tester, '2026年10月12日 · 血常规');
+    await _frames(tester);
+    await _shot(tester, 'lab-sheet');
+    await tester.tap(find.byTooltip('返回'));
+    await _frames(tester);
+    await tester.tap(find.byTooltip('返回'));
+    await _frames(tester);
+
     await _tapOnScreen(tester, '猫咪');
     await _frames(tester);
     await _shot(tester, 'cat');
@@ -233,7 +293,7 @@ Future<void> _shot(WidgetTester tester, String name) async {
     );
     final image = await boundary.toImage(pixelRatio: 2);
     final data = await image.toByteData(format: ui.ImageByteFormat.png);
-    final file = File('/opt/cursor/artifacts/screenshots/v260/$name.png');
+    final file = File('/opt/cursor/artifacts/screenshots/v270/$name.png');
     await file.parent.create(recursive: true);
     await file.writeAsBytes(data!.buffer.asUint8List());
   });

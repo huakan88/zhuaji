@@ -17,6 +17,7 @@ String sexLabel(CatSex sex) => switch (sex) {
 String formLabel(FoodForm form) => switch (form) {
   FoodForm.dry => '干粮',
   FoodForm.wet => '湿粮',
+  FoodForm.can => '主食罐',
   FoodForm.freezeDried => '冻干',
   FoodForm.treat => '零食',
 };

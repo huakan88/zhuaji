@@ -28,6 +28,38 @@ class PantryPage extends StatelessWidget {
         child: ListView(
           padding: const EdgeInsets.fromLTRB(20, 12, 20, 120),
           children: [
+            QuietCard(
+              onTap: () => context.push('/catalog'),
+              child: Row(
+                children: [
+                  const IconWell(icon: Icons.menu_book_outlined),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          '图鉴',
+                          style: zhuaji.copyWith(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          '搜已有的，也能看自己加的',
+                          style: zhuaji.copyWith(
+                            fontSize: 12,
+                            color: AppColors.muted,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
             const SectionLabel('先到期的排在上面'),
             const SizedBox(height: 8),
             if (bags.isEmpty)
