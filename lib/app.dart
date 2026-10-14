@@ -7,10 +7,12 @@ import 'core/theme/app_theme.dart';
 import 'core/widgets/common.dart';
 import 'features/cats/cat_form_page.dart';
 import 'features/cats/cats_page.dart';
+import 'features/cats/privacy_page.dart';
 import 'features/health/checkups_page.dart';
 import 'features/health/deworms_page.dart';
 import 'features/health/disease_page.dart';
 import 'features/health/health_page.dart';
+import 'features/health/scale_page.dart';
 import 'features/health/vaccines_page.dart';
 import 'features/health/visits_page.dart';
 import 'features/health/weight_page.dart';
@@ -20,6 +22,7 @@ import 'features/pantry/confirm_page.dart';
 import 'features/pantry/pantry_page.dart';
 import 'features/pantry/scan_page.dart';
 import 'features/shell/app_shell.dart';
+import 'services/scale_service.dart';
 import 'state/app_controller.dart';
 
 /// Lets work that happens outside a page (notification taps) show a message.
@@ -43,11 +46,15 @@ class ZhuajiApp extends StatefulWidget {
   const ZhuajiApp({
     required this.controller,
     this.initialLocation = '/home',
+    this.scaleSource,
     super.key,
   });
 
   final AppController controller;
   final String initialLocation;
+
+  /// Defaults to the real Bluetooth scale; tests pass a fake.
+  final ScaleSource Function()? scaleSource;
 
   @override
   State<ZhuajiApp> createState() => _ZhuajiAppState();
@@ -100,6 +107,13 @@ class _ZhuajiAppState extends State<ZhuajiApp> {
         ),
       ),
       GoRoute(path: '/weight', builder: (_, _) => const WeightPage()),
+      GoRoute(
+        path: '/scale',
+        builder: (_, _) => ScalePage(
+          source: (widget.scaleSource ?? BleScaleSource.new).call(),
+        ),
+      ),
+      GoRoute(path: '/privacy', builder: (_, _) => const PrivacyPage()),
       GoRoute(path: '/vaccines', builder: (_, _) => const VaccinesPage()),
       GoRoute(path: '/deworms', builder: (_, _) => const DewormsPage()),
       GoRoute(path: '/visits', builder: (_, _) => const VisitsPage()),

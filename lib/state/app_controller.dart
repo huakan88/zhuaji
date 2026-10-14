@@ -45,6 +45,9 @@ class AppController extends ChangeNotifier {
 
   /// Barcodes the catalog did not know, mapped to the product the user chose.
   Map<String, int> barcodeMemory = {};
+
+  /// The owner's own weight from the last 「抱猫称」, offered again next time.
+  double? ownerWeightKg;
   String? permissionNote;
 
   DateTime get now => _clock();
@@ -481,6 +484,12 @@ class AppController extends ChangeNotifier {
     return null;
   }
 
+  Future<void> saveOwnerWeight(double kg) async {
+    ownerWeightKg = kg;
+    await repo.setSetting('ownerWeightKg', kg.toStringAsFixed(2));
+    notifyListeners();
+  }
+
   /// Next scan of [barcode] goes straight to [productId].
   Future<void> rememberBarcode(String barcode, int productId) async {
     final key = barcodeKey(barcode);
@@ -534,6 +543,7 @@ class AppController extends ChangeNotifier {
     final pantryRaw = await repo.setting('pantryAcks') ?? '';
     pantryAcks = pantryRaw.split(',').where((item) => item.isNotEmpty).toSet();
     barcodeMemory = _decodeMemory(await repo.setting('barcodeMemory'));
+    ownerWeightKg = double.tryParse(await repo.setting('ownerWeightKg') ?? '');
   }
 
   Map<String, int> _decodeMemory(String? raw) {
