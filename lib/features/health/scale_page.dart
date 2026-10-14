@@ -61,7 +61,10 @@ class _ScalePageState extends State<ScalePage> {
       _fail(switch (status) {
         ScaleStatus.unsupported => '这台手机不支持蓝牙秤',
         ScaleStatus.denied => '没有蓝牙权限，可以在系统设置里打开',
-        _ => '蓝牙没打开',
+        _ =>
+          defaultTargetPlatform == TargetPlatform.iOS
+              ? '请先在控制中心打开蓝牙，再回来重试'
+              : '蓝牙没打开',
       });
       return;
     }

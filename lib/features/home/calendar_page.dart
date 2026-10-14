@@ -86,8 +86,12 @@ class _CalendarPageState extends State<CalendarPage> {
             ],
           const SizedBox(height: 20),
           Text(
-            'Android 桌面可以加「今天的事」小组件，点一下进对应的页。',
-            style: zhuaji.copyWith(fontSize: 13, color: AppColors.muted, height: 1.4),
+            'Android 现在可以在桌面加「今天的事」，点一下进对应的页。iPhone 要等安装包里带上小组件后才会出现。',
+            style: zhuaji.copyWith(
+              fontSize: 13,
+              color: AppColors.muted,
+              height: 1.4,
+            ),
           ),
           const SizedBox(height: 8),
           Wrap(

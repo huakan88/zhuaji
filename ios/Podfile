@@ -1,0 +1,64 @@
+# 爪记的 iOS 依赖。
+# 新版 Flutter 用 Swift Package Manager。蓝牙秤（flutter_blue_plus）和
+# ML Kit 中文识别只有 CocoaPods，没有 Package.swift，所以还要这个文件。
+# 已经有 Package.swift 的插件不会在这里再装一遍。
+
+platform :ios, '15.5'
+
+# CocoaPods analytics sends network stats synchronously affecting flutter build latency.
+ENV['COCOAPODS_DISABLE_STATS'] = 'true'
+
+project 'Runner', {
+  'Debug' => :debug,
+  'Profile' => :release,
+  'Release' => :release,
+}
+
+def flutter_root
+  generated_xcode_build_settings_path = File.expand_path(File.join('..', 'Flutter', 'Generated.xcconfig'), __FILE__)
+  unless File.exist?(generated_xcode_build_settings_path)
+    raise "#{generated_xcode_build_settings_path} must exist. If you're running pod install manually, make sure flutter pub get is executed first"
+  end
+
+  File.foreach(generated_xcode_build_settings_path) do |line|
+    matches = line.match(/FLUTTER_ROOT\=(.*)/)
+    return matches[1].strip if matches
+  end
+  raise "FLUTTER_ROOT not found in #{generated_xcode_build_settings_path}. Try deleting Generated.xcconfig, then run flutter pub get"
+end
+
+require File.expand_path(File.join('packages', 'flutter_tools', 'bin', 'podhelper'), flutter_root)
+
+flutter_ios_podfile_setup
+
+target 'Runner' do
+  # ML Kit 需要静态链接。
+  use_frameworks! :linkage => :static
+
+  flutter_install_all_ios_pods File.dirname(File.realpath(__FILE__))
+  # 插件自带的 TextRecognition 只有拉丁字母。包装、化验单、疫苗贴纸要中文。
+  pod 'GoogleMLKit/TextRecognitionChinese', '~> 9.0.0'
+
+  target 'RunnerTests' do
+    inherit! :search_paths
+  end
+end
+
+post_install do |installer|
+  # ML Kit 不支持 32 位（armv7 / i386）。部署目标不低于 15.5。
+  installer.pods_project.build_configurations.each do |config|
+    config.build_settings['EXCLUDED_ARCHS[sdk=*]'] = 'armv7'
+    config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '15.5'
+  end
+
+  installer.pods_project.targets.each do |target|
+    flutter_additional_ios_build_settings(target)
+    target.build_configurations.each do |config|
+      config.build_settings['EXCLUDED_ARCHS[sdk=iphonesimulator*]'] = 'i386'
+      deployment = config.build_settings['IPHONEOS_DEPLOYMENT_TARGET']
+      if deployment.nil? || Gem::Version.new('15.5') > Gem::Version.new(deployment.to_s)
+        config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '15.5'
+      end
+    end
+  end
+end

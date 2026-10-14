@@ -23,7 +23,7 @@
 - 今天页「未来 30 天」：疫苗、驱虫、体检、粮到期、开封、补货和复诊在同一张日历上。点某一天看当天的事，点一下完成或顺延 7 天。
 - 粮仓按规格和每天喂食量（点选 30 到 100 克）估算还能吃几天。快吃完时日历和早上的提醒会说该补货。
 - 疫苗页「拍贴纸」：离线识别名称、批号和日期，对一下再记下。
-- Android 桌面小组件「今天的事」显示今天和下一个提醒，点一下进对应页。日历页可以改成不显示待办。
+- Android 桌面小组件「今天的事」显示今天和下一个提醒，点一下进对应页。日历页可以改成不显示待办。iPhone 的小组件源码已经放在工程里，还没编进安装包，桌面上还不会出现。
 - 「复制健康卡」加上最近的化验单、自定义猫粮，体重仍在卡上。
 
 2.7 补了图鉴和化验单：
@@ -65,22 +65,13 @@ flutter run -d android
 flutter build apk --release --target-platform android-arm64 --no-tree-shake-icons
 ```
 
-iOS（需要 Mac）：
-
-```bash
-cd ios
-pod install   # 若工程使用 CocoaPods；新版 Flutter 也可能走 Swift Package Manager
-cd ..
-flutter run -d ios
-```
-
-模拟器或真机出现后，`flutter devices` 能看到设备名。
+iOS 只能在 Mac 上编译。这台 Linux 环境里 `flutter build ios` 不是可用命令，产不出模拟器包，也产不出未签名真机包。步骤、限制和还缺的账号见下面的「iOS」。
 
 ## 权限
 
 Android `AndroidManifest.xml`：
 
-- `CAMERA`：扫条码、拍头像、拍包装日期
+- `CAMERA`：扫条码、拍头像、拍包装、拍化验单、拍疫苗贴纸
 - `POST_NOTIFICATIONS`：Android 13+ 的通知。第一次进入会请求，拒绝后记录仍留在手机上。
 - `RECEIVE_BOOT_COMPLETED`：重启后由系统拉起已登记的提醒。
 - `SCHEDULE_EXACT_ALARM`：Android 12+ 的精确提醒。允许时用精确闹钟，拒绝时退回非精确闹钟，避免提醒直接消失。第一次进入才会打开系统授权页。
@@ -95,11 +86,68 @@ Android `AndroidManifest.xml`：
 
 iOS `Info.plist`：
 
-- `NSCameraUsageDescription`
-- `NSPhotoLibraryUsageDescription`
-- `NSBluetoothAlwaysUsageDescription`：蓝牙秤
+- `NSCameraUsageDescription`：扫粮、拍包装、拍化验单、拍疫苗贴纸、拍猫
+- `NSPhotoLibraryUsageDescription`：从相册选猫的照片、包装或化验单。疫苗贴纸目前只走相机
+- `NSBluetoothAlwaysUsageDescription` / `NSBluetoothPeripheralUsageDescription`：前台读蓝牙秤，不定位、不后台扫描
+- 没有通知用途字符串。iOS 的本地通知不需要这条。第一次进入时由系统弹窗询问
+- 没有后台蓝牙。秤只在打开蓝牙秤页时读
+- `ITSAppUsesNonExemptEncryption` 为 false。只用系统 HTTPS，不含自行实现的加密
 
-本地通知在 `AppDelegate` 里把 `UNUserNotificationCenter` 的 delegate 交给 Flutter。首次进入会请求通知权限。iOS 最多保留 64 条待发送通知，应用只登记最近的 60 条。
+本地通知在 `AppDelegate` 里把 `UNUserNotificationCenter` 的 delegate 交给 Flutter。疫苗和驱虫的到期通知在 iOS 上同样有「已完成」，点了会打开 App 再记下。iOS 最多保留 64 条待发送通知，应用只登记最近的 60 条。
+
+## iOS
+
+Bundle ID 是 `com.maokangji.maokangji`，和 Android 的包名一样。显示名是「爪记」。部署目标 iOS 15.5。工程里没有 `DEVELOPMENT_TEAM`，没有描述文件，也没有把签名身份写死。`Runner.entitlements` 里写了 App Group，但没有挂到编译目标上，避免没有 Team ID 时签名失败。
+
+依赖分两路：
+
+- 有 Swift Package 的插件走 Swift Package Manager，工程里没有单独再声明。
+- 蓝牙秤和 ML Kit 中文识别只有 CocoaPods。`ios/Podfile` 会装它们，并额外加上 `GoogleMLKit/TextRecognitionChinese`。不装这个中文模型，包装、化验单和疫苗贴纸在 iPhone 上认不出中文。在 Mac 上先 `flutter pub get`，再在 `ios/` 里 `pod install`，然后用 `ios/Runner.xcworkspace` 打开。`pod install` 会生成 `Podfile.lock`，生成后可以提交。
+
+能和 Android 共用的功能（蓝牙秤、扫码、拍照、化验单、自定义猫粮、日历、余粮、健康卡）是同一套 Dart。权限说明已经按这些用途写进 `Info.plist`。日历页的「小组件显示待办 / 不显示」两端都生效。这些功能要在 Mac 上编译之后，才能在模拟器或真机上点。这里没有 iPhone 模拟器，没有真机点过。
+
+蓝牙秤：iPhone 不能由 App 直接打开蓝牙开关。没开时，页面会请你先到控制中心打开再重试。只在前台扫描，没有后台模式。解析仍是按公开协议写的，没有用真秤测过。
+
+长按图标的「称体重 / 记驱虫 / 扫粮」在 iOS 上使用模板图标，名字和 Android 的 drawable 相同。
+
+桌面小组件：Android 已经能加。iOS 的界面在 `ios/TodayWidget/TodayWidget.swift`，整块可点，打开对应页面。它还不是 Xcode 目标。有付费开发者账号之后，在 Xcode 里新建 Widget Extension，换上这份源码，Runner 和扩展都打开 App Group `group.com.maokangji.maokangji`。免费 Apple ID 签不了 App Group，桌面上不会出现这个小组件。互动按钮要 iOS 17，当前不做。
+
+在 Mac 上出包：
+
+```bash
+flutter pub get
+cd ios && pod install && cd ..
+flutter build ios --simulator
+```
+
+模拟器包在 `build/ios/iphonesimulator/Runner.app`。模拟器已经启动时：
+
+```bash
+xcrun simctl install booted build/ios/iphonesimulator/Runner.app
+```
+
+未签名真机包（不能装进模拟器，也不能直接装到手机）：
+
+```bash
+flutter build ios --no-codesign
+```
+
+产物在 `build/ios/iphoneos/Runner.app`。装到真机还要签名。
+
+这台 Linux 上实际跑过 `flutter build ios` 和 `flutter build ios --no-codesign`。前者提示没有名为 ios 的子命令，后者提示没有 `--no-codesign` 这个选项。Flutter 只在 macOS 上注册这条命令。所以这里没有 `.app`，也没有 `.ipa`。
+
+还需要你提供的，没有这些就停在源码，不假装已经能装：
+
+| 要什么 | 用来做什么 |
+| --- | --- |
+| 一台 Mac 和 Xcode | 编译。Linux 编不了 iOS |
+| Apple ID | 免费账号可以用 Xcode 自动签名，把主 App 装到自己的手机上，大约 7 天要重签 |
+| 付费 Apple Developer Program | 小组件和 App Group 需要。上架 App Store 也需要 |
+| Team ID | 填进 Xcode 的 Signing Team。工程里现在是空的 |
+| 真机 UDID | 不用 Xcode 自动签名、或要做 Ad Hoc 安装包时要登记这台机器 |
+| 开发或发布证书，以及描述文件 | 要在 Xcode 外面签名、或给别人安装时才单独导出。自动签名可以先不导出 |
+
+拿到 Team ID 之后，在 Xcode 里选中 Runner 的 Team。要做小组件时再把 `ios/Runner/Runner.entitlements` 和 `ios/TodayWidget/TodayWidget.entitlements` 挂到对应目标。在那之前不要挂。
 
 ## 功能说明
 
@@ -176,5 +224,6 @@ cd server && dart test
 - 通知不是精确到秒的闹钟，部分国产系统还会限制后台提醒。
 - 通知上的「已完成」会把爪记带到前台再记下，不是后台静默完成。
 - 蓝牙秤没在真秤上测过。小米秤要先踩一下才会广播；单位是斤或磅时会自动换算成 kg。读数不对请用「手动输入」。
-- 本仓库在 Linux 上验证了 `flutter analyze`、`flutter test` 和 Android 构建。iOS 需要在 Mac 上编译。
+- 本仓库在 Linux 上验证了 `flutter analyze`、`flutter test` 和 Android 构建。iOS 工程和权限已经补上，但 Linux 编不出安装包，模拟器和真机都还没跑过。
+- iPhone 桌面小组件只有源码，还没出现在桌面上。蓝牙秤不能由 App 打开系统开关，也不能在后台读。
 - 云同步骨架已接上，默认没有令牌，界面仍只读写手机。短信、微信开放平台、OSS 和厂商推送都是接口，不是已经开通的账号。

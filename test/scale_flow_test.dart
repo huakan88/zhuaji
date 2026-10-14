@@ -141,6 +141,15 @@ void main() {
     await close(tester);
   });
 
+  testWidgets('bluetooth off on iOS points at Control Center', (tester) async {
+    debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
+    addTearDown(() => debugDefaultTargetPlatformOverride = null);
+    scale.status = ScaleStatus.off;
+    await open(tester);
+    expect(find.text('请先在控制中心打开蓝牙，再回来重试'), findsOneWidget);
+    await close(tester);
+  });
+
   testWidgets('bluetooth off: say so, manual entry still works', (
     tester,
   ) async {
