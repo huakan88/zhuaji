@@ -10,6 +10,7 @@ import '../domain/care/easy_log.dart';
 import '../domain/dates.dart';
 import '../domain/food/barcode_lookup.dart';
 import '../domain/food/fresh_recipes.dart';
+import '../domain/food/local_barcodes.dart';
 import '../domain/food/stock.dart' as stock;
 import '../domain/health/checkup_catalog.dart';
 import '../domain/health/disease_catalog.dart';
@@ -682,12 +683,15 @@ class AppController extends ChangeNotifier {
     final spec = record.quantity.trim().isEmpty
         ? '见包装'
         : record.quantity.trim();
+    final known = localCatFood(record.code);
     return saveFood(
       FoodDraft(
         brand: brand,
         name: name,
         spec: spec,
-        foodForm: guessLookupForm(name, spec),
+        foodForm: known == null
+            ? guessLookupForm(name, spec)
+            : localFoodForm(known),
         storageMethod: '阴凉干燥，封好袋口。',
         afterOpenDays: 30,
         kcalPer100g: record.kcalPer100g,
@@ -711,13 +715,31 @@ class AppController extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Cache, then the public databases. Offline misses are not stored.
+  /// A food the user saved or picked for this code beats the built-in list.
+  /// The built-in list beats a cached public miss and the network.
+  /// Offline misses are not stored. A confirmed public miss is stored.
   Future<BarcodeRecord> resolveBarcode(
     String code, {
     bool refresh = false,
   }) async {
     final key = barcodeKey(code);
     if (key.isEmpty) return BarcodeRecord.miss(code);
+    final owned = findBarcode(code);
+    if (owned != null) {
+      return BarcodeRecord(
+        code: code.trim(),
+        found: true,
+        brand: owned.brand,
+        name: owned.name,
+        quantity: owned.spec,
+        ingredients: '',
+        nutrients: const [],
+        source: 'user',
+        kcalPer100g: owned.kcalPer100g,
+      );
+    }
+    final local = localCatFood(code);
+    if (local != null) return local.toRecord();
     if (!refresh) {
       final cached = barcodeCatalog[key];
       if (cached != null) return cached;

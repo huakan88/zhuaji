@@ -21,13 +21,15 @@ const privacySections = [
   (
     title: '条码查询',
     body:
-        '扫到 EAN 或 UPC 时，会把这串数字发给公开商品库'
+        '常见猫粮和猫罐头的条码表存在这台手机里。扫到表里的码，'
+        '直接显示品牌、名称和规格，不会把数字发出去。'
+        '表里没有的 EAN 或 UPC，才会把这串数字发给公开商品库'
         '（Open Pet Food Facts、Open Food Facts、Open Products Facts、'
-        'ProductGuru、UPCitemdb）查询品牌、名称、规格、配料和成分。'
-        '查到的结果存在这台手机里。照片和猫咪资料不会一起发出去。'
-        '这些免密钥的库经常没有国产粮。构建时如果填了聚合数据、阿里云市场、'
-        '顶想云、Go-UPC 或 EAN-Search 的密钥，条码数字也会发给对应服务；'
-        '没有密钥就不会请求它们。查不到时可以拍包装或点选品牌，记在手机里。',
+        'ProductGuru、UPCitemdb）查询。查到的结果存在这台手机里。'
+        '照片和猫咪资料不会一起发出去。'
+        '构建时如果填了聚合数据、阿里云市场、顶想云、Go-UPC 或 EAN-Search 的密钥，'
+        '没查到的条码数字也会发给对应服务；没有密钥就不会请求它们。'
+        '拍包装或点选品牌记下的结果优先于内置表，也存在这台手机里。',
   ),
   (title: '通知', body: '用来提醒疫苗、驱虫、体检、粮食到期和补货。点通知上的「已完成」只会在手机里记一笔。'),
   (
@@ -62,7 +64,7 @@ class PrivacyPage extends StatelessWidget {
         padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
         children: [
           Text(
-            '肉垫本 PawPad · 2.13.0 · 2026 年 10 月更新',
+            '肉垫本 PawPad · 2.14.0 · 2026 年 10 月更新',
             style: zhuaji.copyWith(
               fontSize: 13,
               color: AppColors.of(context).muted,

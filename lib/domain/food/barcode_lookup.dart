@@ -118,6 +118,8 @@ class BarcodeRecord {
     'topthink' => '顶想云',
     'goupc' => 'Go-UPC',
     'eansearch' => 'EAN-Search',
+    'local' => '本机常见猫粮',
+    'user' => '你之前记下的',
     _ => '',
   };
 
