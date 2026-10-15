@@ -78,6 +78,44 @@ String stockHint(StockEstimate estimate) {
   return '大约还能吃 $days 天';
 }
 
+/// One sentence for a bag. Eating the pack and the printed date compete;
+/// whichever comes first wins, so the row does not show two clocks.
+String bagStatus({
+  required StockEstimate estimate,
+  required DateTime? expiry,
+  required DateTime? useBy,
+  required DateTime today,
+  required bool opened,
+}) {
+  final eatDays = estimate.daysLeft;
+  DateTime? sooner;
+  for (final date in [expiry, useBy]) {
+    if (date == null) continue;
+    final day = dateOnly(date);
+    if (sooner == null || day.isBefore(sooner)) sooner = day;
+  }
+  final expireDays = sooner == null ? null : calendarDaysUntil(today, sooner);
+  if (eatDays != null && (expireDays == null || eatDays <= expireDays)) {
+    if (eatDays <= 0) return '今天会吃完';
+    if (eatDays <= stockRemindDays) return '快吃完，还能吃 $eatDays 天';
+    return '还能吃 $eatDays 天';
+  }
+  if (expireDays != null) {
+    if (expireDays < 0) return '已过期';
+    if (expireDays == 0) return opened ? '今天到期' : '没开封，今天到期';
+    if (expireDays <= stockRemindDays) {
+      return opened ? '快到期，还剩 $expireDays 天' : '没开封，还剩 $expireDays 天';
+    }
+    if (!opened) return '没开封';
+    return '还剩 $expireDays 天';
+  }
+  if (!opened) return '没开封';
+  if (estimate.dailyGrams == null && estimate.packGrams != null) {
+    return '点一下每天喂多少';
+  }
+  return '日期还没填';
+}
+
 String pantryAckKey(PantryEntry entry) =>
     '${entry.item.id}|${entry.item.expiryDate?.millisecondsSinceEpoch ?? 0}|${entry.item.openedAt?.millisecondsSinceEpoch ?? 0}';
 

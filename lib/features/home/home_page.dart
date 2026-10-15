@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/format.dart';
@@ -62,7 +63,7 @@ class _HomePageState extends State<HomePage> {
       appBar: zhuajiBar('今天'),
       body: FadeIn(
         child: ListView(
-          cacheExtent: 1200,
+          scrollCacheExtent: const ScrollCacheExtent.pixels(1200),
           padding: const EdgeInsets.fromLTRB(20, 4, 20, 108),
           children: [
             Row(
@@ -389,7 +390,10 @@ class _CatSwitch extends StatelessWidget {
                   ? activeCount
                   : app.dueCountFor(item),
               selected: item.id == app.activeCatId,
-              onTap: () => app.selectCat(item.id),
+              onTap: () {
+                pawTap();
+                app.selectCat(item.id);
+              },
             ),
             const SizedBox(width: 8),
           ],

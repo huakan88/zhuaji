@@ -8,6 +8,7 @@ import '../../core/theme/app_tokens.dart';
 import '../../core/widgets/care_timeline.dart';
 import '../../core/widgets/common.dart';
 import '../../domain/care/care_story.dart';
+import '../../domain/dates.dart';
 import '../../domain/models.dart';
 import '../../state/app_controller.dart';
 
@@ -121,6 +122,10 @@ class HealthPage extends StatelessWidget {
                 ),
               ],
             ),
+            if (cat != null && app.lastDeworm != null) ...[
+              const SizedBox(height: 8),
+              _RepeatDeworm(last: app.lastDeworm!, catId: cat.id),
+            ],
             const SizedBox(height: 16),
             const SectionLabel('近来'),
             const SizedBox(height: 8),
@@ -221,4 +226,52 @@ class _Tile {
   final String caption;
   final IconData icon;
   final String path;
+}
+
+/// One tap records another dose of the last product. No new form.
+class _RepeatDeworm extends StatefulWidget {
+  const _RepeatDeworm({required this.last, required this.catId});
+
+  final DewormRecord last;
+  final int catId;
+
+  @override
+  State<_RepeatDeworm> createState() => _RepeatDewormState();
+}
+
+class _RepeatDewormState extends State<_RepeatDeworm> {
+  var _busy = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final app = AppScope.of<AppController>(context);
+    return OutlinedButton(
+      onPressed: _busy
+          ? null
+          : () async {
+              pawTap();
+              setState(() => _busy = true);
+              final given = dateOnly(app.now);
+              await app.saveDeworm(
+                DewormDraft(
+                  catId: widget.catId,
+                  kind: widget.last.kind,
+                  product: widget.last.product,
+                  givenOn: given,
+                  nextDue: given.add(const Duration(days: 90)),
+                ),
+              );
+              if (!mounted) return;
+              setState(() => _busy = false);
+              if (!context.mounted) return;
+              showMessage(context, '记下了');
+            },
+      style: OutlinedButton.styleFrom(
+        minimumSize: const Size.fromHeight(48),
+        foregroundColor: AppColors.of(context).ink,
+        side: BorderSide(color: AppColors.of(context).line),
+      ),
+      child: Text('再记 ${widget.last.product}'),
+    );
+  }
 }

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../core/format.dart';
 import '../../core/theme/app_fonts.dart';
 import '../../core/theme/app_tokens.dart';
 import '../../core/widgets/common.dart';
@@ -232,7 +231,9 @@ class _BagRow extends StatelessWidget {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  _stockLine(entry, app.now),
+                  _status(entry, app.now),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                   style: zhuaji.copyWith(
                     fontSize: 12,
                     color: AppColors.of(context).muted,
@@ -241,31 +242,24 @@ class _BagRow extends StatelessWidget {
               ],
             ),
           ),
-          const SizedBox(width: 8),
-          Text(
-            _when(entry, app.now),
-            style: zhuaji.copyWith(fontSize: 15, fontWeight: FontWeight.w700),
-          ),
         ],
       ),
     );
   }
 
-  String _stockLine(PantryEntry entry, DateTime now) {
-    final estimate = estimateStock(
-      spec: entry.product.spec,
-      dailyGrams: entry.item.dailyGrams,
-      openedAt: entry.item.openedAt,
+  String _status(PantryEntry entry, DateTime now) {
+    return bagStatus(
+      estimate: estimateStock(
+        spec: entry.product.spec,
+        dailyGrams: entry.item.dailyGrams,
+        openedAt: entry.item.openedAt,
+        today: now,
+      ),
+      expiry: entry.item.expiryDate,
+      useBy: openedUseBy(entry),
       today: now,
+      opened: entry.item.openedAt != null,
     );
-    if (estimate.daysLeft != null) return stockHint(estimate);
-    return entry.item.openedAt == null ? '没开封' : '已开封';
-  }
-
-  String _when(PantryEntry entry, DateTime now) {
-    final sooner = _sooner(entry);
-    if (sooner == null) return '日期没填';
-    return countdownOf(sooner, now);
   }
 }
 
