@@ -672,6 +672,17 @@ class AppController extends ChangeNotifier {
     return null;
   }
 
+  /// A bag already on the shelf for this scan. Unknown codes return null
+  /// so the camera can open the confirm page instead.
+  PantryEntry? bagForBarcode(String raw) {
+    final product = findBarcode(raw);
+    if (product == null) return null;
+    for (final entry in pantry) {
+      if (entry.product.id == product.id) return entry;
+    }
+    return null;
+  }
+
   CatProfile? catById(int id) {
     for (final cat in cats) {
       if (cat.id == id) return cat;

@@ -6,6 +6,18 @@ import 'package:mobile_scanner/mobile_scanner.dart';
 
 import '../../core/theme/app_fonts.dart';
 import '../../core/theme/app_tokens.dart';
+import '../../core/widgets/common.dart';
+import '../../state/app_controller.dart';
+
+/// Where a finished scan should go. A code already in the pantry opens that
+/// bag. Anything else, including a blank "pick a brand", opens confirm.
+String scanDestination(AppController app, String raw) {
+  final value = raw.trim();
+  if (value.isEmpty) return '/confirm';
+  final bag = app.bagForBarcode(value);
+  if (bag != null) return '/bag?id=${bag.item.id}';
+  return '/confirm?code=${Uri.encodeComponent(value)}';
+}
 
 /// Formats the camera is asked to read. EAN and UPC are the barcodes on
 /// bags; DataBar, DataMatrix and QR cover GS1 (including Digital Link).
@@ -147,8 +159,8 @@ class _ScanPageState extends State<ScanPage> {
       await _camera?.stop();
     } catch (_) {}
     if (!mounted) return;
-    final query = value.isEmpty ? '' : '?code=${Uri.encodeComponent(value)}';
-    context.pushReplacement('/confirm$query');
+    final app = AppScope.of<AppController>(context);
+    context.pushReplacement(scanDestination(app, value));
   }
 }
 

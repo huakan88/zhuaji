@@ -32,7 +32,6 @@ void main() {
 
   testWidgets('today completes a todo in one tap', (tester) async {
     await boot(tester, controller);
-    expect(find.text('扫粮'), findsOneWidget);
     expect(find.text('健康'), findsOneWidget);
     expect(find.text('粮仓'), findsOneWidget);
     expect(find.text('猫咪'), findsOneWidget);
@@ -81,7 +80,9 @@ void main() {
     tester,
   ) async {
     await boot(tester, controller);
-    await tapText(tester, '扫粮');
+    await tapText(tester, '粮仓');
+    await tester.tap(find.byTooltip('扫码'));
+    await frames(tester);
     expect(find.text('手输'), findsNothing);
     expect(find.text('选品牌'), findsOneWidget);
     expect(find.byType(TextField), findsNothing);
