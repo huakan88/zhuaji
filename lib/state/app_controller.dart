@@ -20,6 +20,7 @@ import '../domain/parsing/gs1_parser.dart';
 import '../domain/reminders/reminder_planner.dart';
 import '../domain/repositories/care_repository.dart';
 import '../services/barcode_client.dart';
+import '../services/barcode_share.dart';
 import '../services/notification_service.dart';
 import '../services/widget_bridge.dart';
 
@@ -75,6 +76,14 @@ class AppController extends ChangeNotifier {
 
   /// Empty unless the build or the environment has barcode API keys.
   BarcodeKeys barcodeKeys = barcodeKeysFromEnvironment();
+
+  /// Empty URL keeps corrections on this phone. Tests can set [shareClient].
+  BarcodeShare share = BarcodeShare.fromEnvironment();
+  BarcodeShareClient? shareClient;
+  HttpBarcodeShareClient? _httpShare;
+
+  /// Local correction dates, keyed by [barcodeKey].
+  Map<String, BarcodeRevision> barcodeRevisions = {};
 
   /// The owner's own weight from the last 「抱猫称」, offered again next time.
   double? ownerWeightKg;
@@ -665,9 +674,20 @@ class AppController extends ChangeNotifier {
 
   /// Removes a food and every bag of it in the pantry.
   Future<void> deleteFood(int id) async {
+    final product = productById(id);
     await repo.deleteProduct(id);
+    final forgotten = [
+      for (final entry in barcodeMemory.entries)
+        if (entry.value == id) entry.key,
+    ];
     barcodeMemory.removeWhere((_, value) => value == id);
+    for (final key in forgotten) {
+      barcodeRevisions.remove(key);
+    }
+    final own = product?.barcode;
+    if (own != null && own.isNotEmpty) barcodeRevisions.remove(barcodeKey(own));
     await repo.setSetting('barcodeMemory', jsonEncode(barcodeMemory));
+    await _storeRevisions();
     await _refresh();
   }
 
@@ -715,9 +735,19 @@ class AppController extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// A food the user saved or picked for this code beats the built-in list.
-  /// The built-in list beats a cached public miss and the network.
-  /// Offline misses are not stored. A confirmed public miss is stored.
+  /// Uploads only when a share URL is configured. An injected client with no
+  /// URL can still answer lookups, and does not ask to publish.
+  bool get shareEnabled => share.enabled;
+
+  BarcodeShareClient? get _shares {
+    if (shareClient != null) return shareClient;
+    if (!share.enabled) return null;
+    return _httpShare ??= HttpBarcodeShareClient(share);
+  }
+
+  /// This phone's correction, then the shared library's newest row, then the
+  /// built-in list, then the public databases. A missing share server is skipped.
+  /// Offline public misses are not stored. A confirmed public miss is stored.
   Future<BarcodeRecord> resolveBarcode(
     String code, {
     bool refresh = false,
@@ -725,19 +755,9 @@ class AppController extends ChangeNotifier {
     final key = barcodeKey(code);
     if (key.isEmpty) return BarcodeRecord.miss(code);
     final owned = findBarcode(code);
-    if (owned != null) {
-      return BarcodeRecord(
-        code: code.trim(),
-        found: true,
-        brand: owned.brand,
-        name: owned.name,
-        quantity: owned.spec,
-        ingredients: '',
-        nutrients: const [],
-        source: 'user',
-        kcalPer100g: owned.kcalPer100g,
-      );
-    }
+    if (owned != null) return _userRecord(owned, code);
+    final shared = await _readShare(key, code);
+    if (shared != null) return shared;
     final local = localCatFood(code);
     if (local != null) return local.toRecord();
     if (!refresh) {
@@ -757,6 +777,143 @@ class AppController extends ChangeNotifier {
     }
     notifyListeners();
     return record;
+  }
+
+  BarcodeRecord _userRecord(FoodProduct product, String code) {
+    final revision = barcodeRevisions[barcodeKey(code)];
+    final image = product.photoPath;
+    final publicImage =
+        image != null &&
+            (image.startsWith('https://') || image.startsWith('http://'))
+        ? image
+        : null;
+    String pick(String revised, String stored) {
+      final text = revised.trim();
+      return text.isNotEmpty ? text : stored;
+    }
+
+    return BarcodeRecord(
+      code: code.trim(),
+      found: true,
+      brand: pick(revision?.brand ?? '', product.brand),
+      name: pick(revision?.name ?? '', product.name),
+      quantity: pick(revision?.spec ?? '', product.spec),
+      ingredients: revision?.ingredients ?? '',
+      nutrients: const [],
+      source: 'user',
+      imageUrl: publicImage,
+      kcalPer100g: product.kcalPer100g,
+      createdAt: revision?.createdAt,
+      updatedAt: revision?.updatedAt,
+    );
+  }
+
+  Future<BarcodeRecord?> _readShare(String key, String code) async {
+    final client = _shares;
+    if (client == null) return null;
+    try {
+      final answer = await client.lookup(code);
+      if (answer.status == ShareStatus.hit && answer.record != null) {
+        barcodeCatalog[key] = answer.record!;
+        await _storeCatalog();
+        return answer.record;
+      }
+      if (answer.status == ShareStatus.failed) {
+        final cached = barcodeCatalog[key];
+        if (cached != null && cached.source == 'share' && cached.found) {
+          return cached;
+        }
+      }
+    } catch (_) {
+      final cached = barcodeCatalog[key];
+      if (cached != null && cached.source == 'share' && cached.found) {
+        return cached;
+      }
+    }
+    return null;
+  }
+
+  /// Records a correction date on this phone. Uploads only after the person
+  /// has agreed, and only when a share server is configured.
+  Future<void> rememberUserBarcode({
+    required String code,
+    required String brand,
+    required String name,
+    required String spec,
+    String ingredients = '',
+    String? imageUrl,
+    Future<bool> Function()? ask,
+  }) async {
+    final key = barcodeKey(code);
+    if (key.isEmpty) return;
+    final now = _clock().toUtc();
+    final previous = barcodeRevisions[key];
+    final keptIngredients = ingredients.trim().isNotEmpty
+        ? ingredients.trim()
+        : (previous?.ingredients ?? '');
+    final revision = BarcodeRevision(
+      createdAt: previous?.createdAt ?? now,
+      updatedAt: now,
+      brand: brand.trim(),
+      name: name.trim(),
+      spec: spec.trim(),
+      ingredients: keptIngredients,
+    );
+    barcodeRevisions[key] = revision;
+    await _storeRevisions();
+    if (!shareEnabled) return;
+    final consent = await repo.setting('barcodeShareConsent');
+    if (consent == '0') return;
+    if (consent != '1') {
+      if (ask == null) return;
+      final ok = await ask();
+      await repo.setSetting('barcodeShareConsent', ok ? '1' : '0');
+      if (!ok) return;
+    }
+    final client = _shares;
+    if (client == null) return;
+    final contributor = await _contributorId();
+    final image =
+        imageUrl != null &&
+            (imageUrl.startsWith('https://') || imageUrl.startsWith('http://'))
+        ? imageUrl
+        : null;
+    try {
+      await client.submit(
+        BarcodeRecord(
+          code: code.trim(),
+          found: true,
+          brand: brand,
+          name: name,
+          quantity: spec,
+          ingredients: keptIngredients,
+          nutrients: const [],
+          source: 'user',
+          imageUrl: image,
+          createdAt: revision.createdAt,
+          updatedAt: revision.updatedAt,
+          contributorId: contributor,
+        ),
+      );
+    } catch (_) {}
+  }
+
+  Future<String> _contributorId() async {
+    final existing = await repo.setting('deviceId');
+    if (existing != null && existing.isNotEmpty) return existing;
+    final id = 'dev-${_clock().microsecondsSinceEpoch}';
+    await repo.setSetting('deviceId', id);
+    return id;
+  }
+
+  Future<void> _storeRevisions() {
+    return repo.setSetting(
+      'barcodeRevisions',
+      jsonEncode({
+        for (final entry in barcodeRevisions.entries)
+          entry.key: entry.value.toJson(),
+      }),
+    );
   }
 
   Future<void> pushRecentSearch(String query) async {
@@ -851,8 +1008,24 @@ class AppController extends ChangeNotifier {
     themeMode = ZhuajiThemeMode.fromStorage(await repo.setting('themeMode'));
     barcodeMemory = _decodeMemory(await repo.setting('barcodeMemory'));
     barcodeCatalog = _decodeCatalog(await repo.setting('barcodeCatalog'));
+    barcodeRevisions = _decodeRevisions(await repo.setting('barcodeRevisions'));
     recentSearches = _decodeSearches(await repo.setting('recentSearches'));
     ownerWeightKg = double.tryParse(await repo.setting('ownerWeightKg') ?? '');
+  }
+
+  Map<String, BarcodeRevision> _decodeRevisions(String? raw) {
+    if (raw == null || raw.isEmpty) return {};
+    try {
+      final decoded = jsonDecode(raw);
+      if (decoded is! Map) return {};
+      return {
+        for (final entry in decoded.entries)
+          if (entry.value is Map)
+            '${entry.key}': BarcodeRevision.fromJson(entry.value as Map),
+      };
+    } catch (_) {
+      return {};
+    }
   }
 
   Map<String, BarcodeRecord> _decodeCatalog(String? raw) {

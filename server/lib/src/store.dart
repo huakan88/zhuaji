@@ -4,6 +4,8 @@ import 'dart:math';
 import 'package:postgres/postgres.dart';
 import 'package:zhuaji_sync/zhuaji_sync.dart';
 
+import 'shared_barcode.dart';
+
 class ApiUser {
   const ApiUser({required this.id, this.phone, this.wechatOpenId});
 
@@ -26,6 +28,13 @@ abstract class ApiStore {
     required String token,
     required DateTime updatedAt,
   });
+
+  Future<SharedBarcode?> sharedBarcode(String code);
+
+  /// Keeps the row with the newer [SharedBarcode.updatedAt].
+  Future<({SharedBarcode row, bool applied})> saveSharedBarcode(
+    SharedBarcode incoming,
+  );
 }
 
 String newId(String prefix) {
@@ -39,6 +48,7 @@ class MemoryStore implements ApiStore {
   final _users = <String, ApiUser>{};
   final _records = <String, SyncRecord>{};
   final _pushes = <String, String>{};
+  final _shared = <String, SharedBarcode>{};
 
   Map<String, String> get pushes => _pushes;
 
@@ -115,6 +125,22 @@ class MemoryStore implements ApiStore {
   }) async {
     _pushes['$userId|$vendor|$token'] = updatedAt.toUtc().toIso8601String();
   }
+
+  @override
+  Future<SharedBarcode?> sharedBarcode(String code) async {
+    final key = SharedBarcode.canonical(code);
+    if (key.isEmpty) return null;
+    return _shared[key];
+  }
+
+  @override
+  Future<({SharedBarcode row, bool applied})> saveSharedBarcode(
+    SharedBarcode incoming,
+  ) async {
+    final kept = SharedBarcode.keep(_shared[incoming.barcode], incoming);
+    _shared[incoming.barcode] = kept.row;
+    return kept;
+  }
 }
 
 class PostgresStore implements ApiStore {
@@ -176,6 +202,19 @@ class PostgresStore implements ApiStore {
         token TEXT NOT NULL,
         updated_at TIMESTAMPTZ NOT NULL,
         PRIMARY KEY (user_id, vendor, token)
+      )
+      ''',
+      '''
+      CREATE TABLE IF NOT EXISTS shared_barcodes (
+        barcode TEXT PRIMARY KEY,
+        brand TEXT NOT NULL,
+        name TEXT NOT NULL,
+        spec TEXT NOT NULL,
+        ingredients TEXT NOT NULL,
+        image_url TEXT,
+        contributor_id TEXT NOT NULL,
+        created_at TIMESTAMPTZ NOT NULL,
+        updated_at TIMESTAMPTZ NOT NULL
       )
       ''',
     ];
@@ -363,5 +402,69 @@ class PostgresStore implements ApiStore {
         'updated_at': updatedAt.toUtc(),
       },
     );
+  }
+
+  SharedBarcode _sharedRow(Map<String, dynamic> row) {
+    return SharedBarcode(
+      barcode: row['barcode'] as String,
+      brand: row['brand'] as String,
+      name: row['name'] as String,
+      spec: row['spec'] as String,
+      ingredients: row['ingredients'] as String,
+      imageUrl: row['image_url'] as String?,
+      contributorId: row['contributor_id'] as String,
+      createdAt: (row['created_at'] as DateTime).toUtc(),
+      updatedAt: (row['updated_at'] as DateTime).toUtc(),
+    );
+  }
+
+  @override
+  Future<SharedBarcode?> sharedBarcode(String code) async {
+    final key = SharedBarcode.canonical(code);
+    if (key.isEmpty) return null;
+    final result = await _db.execute(
+      Sql.named(
+        'SELECT barcode, brand, name, spec, ingredients, image_url, '
+        'contributor_id, created_at, updated_at '
+        'FROM shared_barcodes WHERE barcode = @barcode',
+      ),
+      parameters: {'barcode': key},
+    );
+    if (result.isEmpty) return null;
+    return _sharedRow(result.first.toColumnMap());
+  }
+
+  @override
+  Future<({SharedBarcode row, bool applied})> saveSharedBarcode(
+    SharedBarcode incoming,
+  ) async {
+    final stored = await sharedBarcode(incoming.barcode);
+    final kept = SharedBarcode.keep(stored, incoming);
+    await _db.execute(
+      Sql.named(
+        'INSERT INTO shared_barcodes ('
+        'barcode, brand, name, spec, ingredients, image_url, contributor_id, '
+        'created_at, updated_at) VALUES ('
+        '@barcode, @brand, @name, @spec, @ingredients, @image_url, '
+        '@contributor_id, @created_at, @updated_at) '
+        'ON CONFLICT (barcode) DO UPDATE SET '
+        'brand = EXCLUDED.brand, name = EXCLUDED.name, spec = EXCLUDED.spec, '
+        'ingredients = EXCLUDED.ingredients, image_url = EXCLUDED.image_url, '
+        'contributor_id = EXCLUDED.contributor_id, '
+        'created_at = EXCLUDED.created_at, updated_at = EXCLUDED.updated_at',
+      ),
+      parameters: {
+        'barcode': kept.row.barcode,
+        'brand': kept.row.brand,
+        'name': kept.row.name,
+        'spec': kept.row.spec,
+        'ingredients': kept.row.ingredients,
+        'image_url': kept.row.imageUrl,
+        'contributor_id': kept.row.contributorId,
+        'created_at': kept.row.createdAt.toUtc(),
+        'updated_at': kept.row.updatedAt.toUtc(),
+      },
+    );
+    return kept;
   }
 }

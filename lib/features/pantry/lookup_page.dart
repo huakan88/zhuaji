@@ -175,11 +175,7 @@ class _Hit extends StatelessWidget {
         if (source.isNotEmpty) ...[
           const SizedBox(height: 12),
           Text(
-            record.source == 'user'
-                ? '这是你之前记下的，以包装为准。'
-                : record.source == 'local'
-                ? '来自本机常见猫粮。名称和规格来自公开条码页，以包装为准。'
-                : '来自 $source。公开资料，以包装为准。',
+            _lookupNote(record, source),
             style: zhuaji.copyWith(
               fontSize: 12,
               height: 1.4,
@@ -272,6 +268,19 @@ class _Miss extends StatelessWidget {
       ],
     );
   }
+}
+
+String _lookupNote(BarcodeRecord record, String source) {
+  final when = record.updatedAt;
+  final day = when == null
+      ? ''
+      : '修正于 ${when.toUtc().toIso8601String().substring(0, 10)}。';
+  return switch (record.source) {
+    'user' => '这是你之前记下的。$day以包装为准。',
+    'share' => '来自共享库。$day以包装为准。',
+    'local' => '来自本机常见猫粮。名称和规格来自公开条码页，以包装为准。',
+    _ => '来自 $source。公开资料，以包装为准。',
+  };
 }
 
 class _Photo extends StatelessWidget {
