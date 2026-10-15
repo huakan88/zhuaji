@@ -1001,7 +1001,7 @@ class AppController extends ChangeNotifier {
         ? homeWidgetCopy(now: now, items: agenda())
         : const HomeWidgetCopy(
             todayLines: ['小组件已关闭'],
-            nextLine: '打开爪记查看',
+            nextLine: '打开肉垫本查看',
             route: '/calendar',
           );
     await WidgetBridge.publish(copy.toJson(appearance: themeMode.storage));

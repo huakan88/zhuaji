@@ -1,4 +1,4 @@
-# 爪记的 iOS 依赖。
+# 肉垫本的 iOS 依赖。
 # 新版 Flutter 用 Swift Package Manager。蓝牙秤（flutter_blue_plus）和
 # ML Kit 中文识别只有 CocoaPods，没有 Package.swift，所以还要这个文件。
 # 已经有 Package.swift 的插件不会在这里再装一遍。

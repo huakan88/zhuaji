@@ -33,7 +33,7 @@ const privacySections = [
         '（支持小米体脂秤 2 和标准蓝牙体重秤）。'
         '不用蓝牙定位，不记录附近的其他设备，不连接秤以外的设备。'
         'Android 11 及更早的系统要求蓝牙扫描时给「位置」权限，'
-        '爪记不会读取或保存你的位置。',
+        '肉垫本不会读取或保存你的位置。',
   ),
   (title: '你自己的体重', body: '「抱猫称」会记住你上次自己的体重，下次直接带出，只存在这台手机里，随时可以重称覆盖。'),
   (title: '联系', body: '这是个人维护的原型应用。对隐私有疑问，可以在项目仓库里留言。'),
@@ -51,7 +51,7 @@ class PrivacyPage extends StatelessWidget {
         padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
         children: [
           Text(
-            '爪记 2.8 · 2026 年 10 月更新',
+            '肉垫本 PawPad · 2.10.1 · 2026 年 10 月更新',
             style: zhuaji.copyWith(
               fontSize: 13,
               color: AppColors.of(context).muted,
