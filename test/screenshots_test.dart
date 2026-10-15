@@ -230,6 +230,7 @@ Future<void> _capture(
   await tester.tap(find.byTooltip('返回'));
   await _frames(tester);
 
+  await revealText(tester, '猫三联');
   await _tapOnScreen(tester, '猫三联');
   await _frames(tester);
   await _frames(tester);
@@ -244,6 +245,7 @@ Future<void> _capture(
   await _frames(tester);
   await _shot(tester, folder, 'health');
 
+  await revealText(tester, '疫苗');
   await _tapOnScreen(tester, '疫苗');
   await _frames(tester);
   await _shot(tester, folder, 'vaccine');
@@ -263,18 +265,21 @@ Future<void> _capture(
   await tester.tap(find.byTooltip('返回'));
   await _frames(tester);
 
+  await revealText(tester, '驱虫');
   await _tapOnScreen(tester, '驱虫');
   await _frames(tester);
   await _shot(tester, folder, 'deworm');
   await tester.tap(find.byTooltip('返回'));
   await _frames(tester);
 
+  await revealText(tester, '就医');
   await _tapOnScreen(tester, '就医');
   await _frames(tester);
   await _shot(tester, folder, 'visit');
   await tester.tap(find.byTooltip('返回'));
   await _frames(tester);
 
+  await revealText(tester, '体重');
   await _tapOnScreen(tester, '体重');
   await _frames(tester);
   await _shot(tester, folder, 'weight');
