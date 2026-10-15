@@ -60,6 +60,38 @@ class PantryPage extends StatelessWidget {
                 ],
               ),
             ),
+            const SizedBox(height: 8),
+            QuietCard(
+              onTap: () => context.push('/recipes'),
+              child: Row(
+                children: [
+                  const IconWell(icon: Icons.soup_kitchen_outlined),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          '自制鲜食',
+                          style: zhuaji.copyWith(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          '食谱、添加剂和禁忌',
+                          style: zhuaji.copyWith(
+                            fontSize: 12,
+                            color: AppColors.of(context).muted,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
             const SizedBox(height: 16),
             const SectionLabel('先到期的排在上面'),
             const SizedBox(height: 8),
