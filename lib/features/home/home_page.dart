@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/format.dart';
+import '../../core/haptics.dart';
 import '../../core/theme/app_fonts.dart';
 import '../../core/theme/app_tokens.dart';
 import '../../core/widgets/common.dart';
@@ -33,6 +34,14 @@ class _HomePageState extends State<HomePage> {
     final cat = app.active;
     final todos = _todos(context, app, cat);
     final query = _query.text.trim();
+    final todayTodos = [
+      for (final item in todos)
+        if (item.today) item,
+    ];
+    final laterTodos = [
+      for (final item in todos)
+        if (!item.today) item,
+    ];
     final groups = query.isEmpty
         ? const <SearchGroup>[]
         : globalSearch(
@@ -53,6 +62,7 @@ class _HomePageState extends State<HomePage> {
       appBar: zhuajiBar('今天'),
       body: FadeIn(
         child: ListView(
+          cacheExtent: 1200,
           padding: const EdgeInsets.fromLTRB(20, 4, 20, 108),
           children: [
             Row(
@@ -173,13 +183,32 @@ class _HomePageState extends State<HomePage> {
                 ),
               ),
               const SizedBox(height: 24),
-              SectionLabel(todos.isEmpty ? '今天要办' : '今天要办  ${todos.length}'),
+              SectionLabel(
+                todayTodos.isEmpty ? '今天要办' : '今天要办  ${todayTodos.length}',
+              ),
               const SizedBox(height: 8),
               if (todos.isEmpty)
-                const EmptyHint(title: '今天没什么要办', body: '到期、疫苗和驱虫会出现在这里'),
-              for (final todo in todos) ...[
+                const EmptyHint(title: '今天清静', body: '到期会出现在这里')
+              else if (todayTodos.isEmpty)
+                Text(
+                  '今天没有到期',
+                  style: zhuaji.copyWith(
+                    fontSize: 13,
+                    color: AppColors.of(context).muted,
+                  ),
+                ),
+              for (final todo in todayTodos) ...[
                 _TodoRow(todo: todo),
                 const SizedBox(height: 8),
+              ],
+              if (laterTodos.isNotEmpty) ...[
+                const SizedBox(height: 16),
+                SectionLabel('接下来  ${laterTodos.length}'),
+                const SizedBox(height: 8),
+                for (final todo in laterTodos) ...[
+                  _TodoRow(todo: todo),
+                  const SizedBox(height: 8),
+                ],
               ],
             ],
           ],
@@ -216,10 +245,14 @@ class _HomePageState extends State<HomePage> {
           return left.compareTo(right);
         });
     for (final entry in foods) {
+      final due = entry.item.expiryDate ?? _useBy(entry);
+      final opened = _openedToday(entry, today);
       items.add(
         _Todo(
           title: '到期粮',
           detail: entry.product.name,
+          today: opened || _dueToday(due, app.now),
+          when: opened ? '今天' : _when(due, app.now),
           onTap: () async {
             await app.ackPantry(entry);
             if (!context.mounted) return;
@@ -239,6 +272,8 @@ class _HomePageState extends State<HomePage> {
           _Todo(
             title: '疫苗',
             detail: shot.name,
+            today: _dueToday(shot.nextDue, app.now),
+            when: _when(shot.nextDue, app.now),
             onTap: () async {
               final next = await app.completeVaccine(shot);
               if (!context.mounted) return;
@@ -261,6 +296,8 @@ class _HomePageState extends State<HomePage> {
           _Todo(
             title: '驱虫',
             detail: item.product,
+            today: _dueToday(item.nextDue, app.now),
+            when: _when(item.nextDue, app.now),
             onTap: () async {
               final next = await app.completeDeworm(item);
               if (!context.mounted) return;
@@ -279,6 +316,8 @@ class _HomePageState extends State<HomePage> {
           _Todo(
             title: '体重',
             detail: kg == null ? '去称一下' : '${kg.toStringAsFixed(2)} kg',
+            today: true,
+            when: '今天',
             onTap: () async {
               await context.push('/weight');
             },
@@ -309,6 +348,18 @@ class _HomePageState extends State<HomePage> {
     final opened = entry.item.openedAt;
     if (opened == null) return false;
     return dateOnly(opened) == today;
+  }
+
+  bool _dueToday(DateTime? due, DateTime now) {
+    if (due == null) return true;
+    return !dateOnly(due).isAfter(dateOnly(now));
+  }
+
+  String _when(DateTime? due, DateTime now) {
+    if (due == null) return '今天';
+    final day = dateOnly(due);
+    if (!day.isAfter(dateOnly(now))) return '今天';
+    return formatMonthDay(day);
   }
 
   DateTime? _useBy(PantryEntry entry) {
@@ -411,11 +462,19 @@ class _CatPill extends StatelessWidget {
 }
 
 class _Todo {
-  const _Todo({required this.title, required this.detail, required this.onTap});
+  const _Todo({
+    required this.title,
+    required this.detail,
+    required this.onTap,
+    required this.today,
+    required this.when,
+  });
 
   final String title;
   final String detail;
   final Future<void> Function() onTap;
+  final bool today;
+  final String when;
 }
 
 class _TodoRow extends StatefulWidget {
@@ -438,7 +497,10 @@ class _TodoRowState extends State<_TodoRow> {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: widget.todo.onTap,
+      onTap: () {
+        pawTap();
+        widget.todo.onTap();
+      },
       child: QuietCard(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         child: Row(
@@ -449,12 +511,24 @@ class _TodoRowState extends State<_TodoRow> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    widget.todo.title,
-                    style: zhuaji.copyWith(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w700,
-                    ),
+                  Row(
+                    children: [
+                      Text(
+                        widget.todo.title,
+                        style: zhuaji.copyWith(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      const Spacer(),
+                      Text(
+                        widget.todo.when,
+                        style: zhuaji.copyWith(
+                          fontSize: 12,
+                          color: AppColors.of(context).muted,
+                        ),
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 2),
                   Text(
@@ -469,6 +543,7 @@ class _TodoRowState extends State<_TodoRow> {
                 ],
               ),
             ),
+            const SizedBox(width: 8),
             Container(
               width: 28,
               height: 28,

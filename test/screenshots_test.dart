@@ -230,6 +230,7 @@ Future<void> _capture(
   await tester.tap(find.byTooltip('返回'));
   await _frames(tester);
 
+  await revealText(tester, '猫三联');
   await _tapOnScreen(tester, '猫三联');
   await _frames(tester);
   await _frames(tester);
@@ -244,6 +245,7 @@ Future<void> _capture(
   await _frames(tester);
   await _shot(tester, folder, 'health');
 
+  await revealText(tester, '疫苗');
   await _tapOnScreen(tester, '疫苗');
   await _frames(tester);
   await _shot(tester, folder, 'vaccine');
@@ -263,18 +265,21 @@ Future<void> _capture(
   await tester.tap(find.byTooltip('返回'));
   await _frames(tester);
 
+  await revealText(tester, '驱虫');
   await _tapOnScreen(tester, '驱虫');
   await _frames(tester);
   await _shot(tester, folder, 'deworm');
   await tester.tap(find.byTooltip('返回'));
   await _frames(tester);
 
+  await revealText(tester, '就医');
   await _tapOnScreen(tester, '就医');
   await _frames(tester);
   await _shot(tester, folder, 'visit');
   await tester.tap(find.byTooltip('返回'));
   await _frames(tester);
 
+  await revealText(tester, '体重');
   await _tapOnScreen(tester, '体重');
   await _frames(tester);
   await _shot(tester, folder, 'weight');
@@ -421,7 +426,7 @@ Future<void> _compare() async {
   for (final name in names) {
     for (final folder in ['light', 'dark']) {
       final file = File(
-        '/opt/cursor/artifacts/screenshots/v2140/$folder/$name.png',
+        '/opt/cursor/artifacts/screenshots/v2150/$folder/$name.png',
       );
       if (!file.existsSync()) return;
       final data = await file.readAsBytes();
@@ -448,7 +453,7 @@ Future<void> _compare() async {
   final composed = await picture.toImage(width * 2, height * names.length);
   final bytes = await composed.toByteData(format: ui.ImageByteFormat.png);
   final out = File(
-    '/opt/cursor/artifacts/screenshots/v2140/compare-light-dark.png',
+    '/opt/cursor/artifacts/screenshots/v2150/compare-light-dark.png',
   );
   await out.parent.create(recursive: true);
   await out.writeAsBytes(bytes!.buffer.asUint8List());
@@ -529,7 +534,7 @@ Future<void> _shot(WidgetTester tester, String folder, String name) async {
     final image = await boundary.toImage(pixelRatio: 2);
     final data = await image.toByteData(format: ui.ImageByteFormat.png);
     final file = File(
-      '/opt/cursor/artifacts/screenshots/v2140/$folder/$name.png',
+      '/opt/cursor/artifacts/screenshots/v2150/$folder/$name.png',
     );
     await file.parent.create(recursive: true);
     await file.writeAsBytes(data!.buffer.asUint8List());

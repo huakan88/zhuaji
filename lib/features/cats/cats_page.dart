@@ -5,6 +5,8 @@ import 'package:go_router/go_router.dart';
 import '../../core/format.dart';
 import '../../core/theme/app_fonts.dart';
 import '../../core/theme/app_tokens.dart';
+import '../../core/haptics.dart';
+import '../../core/widgets/care_timeline.dart';
 import '../../core/widgets/common.dart';
 import '../../core/widgets/weight_trend.dart';
 import '../../domain/care/care_story.dart';
@@ -44,7 +46,10 @@ class CatsPage extends StatelessWidget {
                 children: [
                   for (final item in app.cats) ...[
                     GestureDetector(
-                      onTap: () => app.selectCat(item.id),
+                      onTap: () {
+                        pawTap();
+                        app.selectCat(item.id);
+                      },
                       child: SizedBox(
                         width: 64,
                         child: Column(
@@ -109,8 +114,27 @@ class CatsPage extends StatelessWidget {
                 path: cat.avatarPath,
                 title: cat.name,
                 subtitle: _meta(cat, app.now),
-                height: 280,
+                height: 220,
                 onTitleTap: () => context.push('/cat-form?id=${cat.id}'),
+              ),
+              const SizedBox(height: 12),
+              QuietCard(
+                onTap: () => context.push('/cat-form?id=${cat.id}'),
+                child: Column(
+                  children: [
+                    _ProfileLine(
+                      label: '品种',
+                      value: (cat.breed == null || cat.breed!.isEmpty)
+                          ? '还没写'
+                          : cat.breed!,
+                    ),
+                    Divider(height: 16, color: AppColors.of(context).line),
+                    _ProfileLine(
+                      label: '年龄',
+                      value: ageLabel(cat.birthday, app.now),
+                    ),
+                  ],
+                ),
               ),
               const SizedBox(height: 12),
               QuietCard(
@@ -157,7 +181,7 @@ class CatsPage extends StatelessWidget {
               const SizedBox(height: 24),
               const SectionLabel('最近'),
               const SizedBox(height: 8),
-              _RecentCare(events: events),
+              CareTimeline(events: events, empty: '记过的事会出现在这里'),
               const SizedBox(height: 16),
               OutlinedButton.icon(
                 onPressed: () async {
@@ -212,67 +236,33 @@ class CatsPage extends StatelessWidget {
   }
 }
 
-class _RecentCare extends StatelessWidget {
-  const _RecentCare({required this.events});
+class _ProfileLine extends StatelessWidget {
+  const _ProfileLine({required this.label, required this.value});
 
-  final List<CareEvent> events;
-
-  IconData _icon(CareKind kind) => switch (kind) {
-    CareKind.vaccine => Icons.vaccines_outlined,
-    CareKind.deworm => Icons.bug_report_outlined,
-    CareKind.visit => Icons.local_hospital_outlined,
-    CareKind.checkup => Icons.fact_check_outlined,
-    CareKind.weight => Icons.monitor_weight_outlined,
-  };
+  final String label;
+  final String value;
 
   @override
   Widget build(BuildContext context) {
-    if (events.isEmpty) {
-      return Text(
-        '记过的疫苗、驱虫和就医会出现在这里',
-        style: zhuaji.copyWith(
-          fontSize: 13,
-          color: AppColors.of(context).muted,
-        ),
-      );
-    }
-    return QuietCard(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-      child: Column(
-        children: [
-          for (var i = 0; i < events.length; i++) ...[
-            if (i > 0) Divider(height: 1, color: AppColors.of(context).line),
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 12),
-              child: Row(
-                children: [
-                  Icon(
-                    _icon(events[i].kind),
-                    size: 20,
-                    color: AppColors.of(context).ink,
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      '${events[i].title} · ${events[i].detail}',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: zhuaji.copyWith(fontSize: 15),
-                    ),
-                  ),
-                  Text(
-                    formatMonthDay(events[i].on),
-                    style: zhuaji.copyWith(
-                      fontSize: 12,
-                      color: AppColors.of(context).muted,
-                    ),
-                  ),
-                ],
-              ),
+    return Row(
+      children: [
+        SizedBox(
+          width: 48,
+          child: Text(
+            label,
+            style: zhuaji.copyWith(
+              fontSize: 13,
+              color: AppColors.of(context).muted,
             ),
-          ],
-        ],
-      ),
+          ),
+        ),
+        Expanded(
+          child: Text(
+            value,
+            style: zhuaji.copyWith(fontSize: 16, fontWeight: FontWeight.w700),
+          ),
+        ),
+      ],
     );
   }
 }

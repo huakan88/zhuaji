@@ -75,6 +75,10 @@ class _VaccinesPageState extends State<VaccinesPage> {
                     for (final label in _names)
                       ChoiceChip(
                         label: Text(label),
+                        labelPadding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 8,
+                        ),
                         selected: _name == label,
                         selectedColor: AppColors.of(context).brandTint,
                         onSelected: (_) => setState(() => _name = label),

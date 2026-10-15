@@ -2,6 +2,8 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 
+import '../haptics.dart';
+
 import '../../domain/dates.dart';
 import '../format.dart';
 import '../theme/app_fonts.dart';
@@ -143,7 +145,13 @@ class QuietCard extends StatelessWidget {
       child: Padding(padding: padding, child: child),
     );
     if (onTap == null) return card;
-    return GestureDetector(onTap: onTap, child: card);
+    return GestureDetector(
+      onTap: () {
+        pawTap();
+        onTap!();
+      },
+      child: card,
+    );
   }
 }
 
@@ -318,15 +326,57 @@ class _EmptyIllustration extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(Radii.xl),
-      child: const Image(
-        image: AssetImage('assets/cats/cat-icon.jpg'),
-        width: 96,
-        height: 96,
-        fit: BoxFit.cover,
-      ),
+    final colors = AppColors.of(context);
+    return CustomPaint(
+      size: const Size(96, 72),
+      painter: _RestPainter(fill: colors.brandTint, ink: colors.brand),
     );
+  }
+}
+
+/// Two hills and a small sun. No photo and no sample numbers.
+class _RestPainter extends CustomPainter {
+  const _RestPainter({required this.fill, required this.ink});
+
+  final Color fill;
+  final Color ink;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final ground = Paint()..color = fill;
+    final mark = Paint()
+      ..color = ink
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2;
+    canvas.drawCircle(
+      Offset(size.width * 0.72, size.height * 0.28),
+      10,
+      ground,
+    );
+    canvas.drawCircle(Offset(size.width * 0.72, size.height * 0.28), 10, mark);
+    final hill = Path()
+      ..moveTo(0, size.height)
+      ..quadraticBezierTo(
+        size.width * 0.28,
+        size.height * 0.15,
+        size.width * 0.55,
+        size.height * 0.72,
+      )
+      ..quadraticBezierTo(
+        size.width * 0.78,
+        size.height * 1.05,
+        size.width,
+        size.height * 0.55,
+      )
+      ..lineTo(size.width, size.height)
+      ..close();
+    canvas.drawPath(hill, ground);
+    canvas.drawPath(hill, mark);
+  }
+
+  @override
+  bool shouldRepaint(covariant _RestPainter oldDelegate) {
+    return oldDelegate.fill != fill || oldDelegate.ink != ink;
   }
 }
 

@@ -131,28 +131,56 @@ class _Hit extends StatelessWidget {
           _Photo(url: record.imageUrl!),
           const SizedBox(height: 16),
         ],
-        if (record.brand.isNotEmpty)
-          Text(
-            record.brand,
-            style: zhuaji.copyWith(
-              fontSize: 13,
-              color: AppColors.of(context).muted,
-            ),
-          ),
-        Text(
-          record.name,
-          style: zhuaji.copyWith(fontSize: 22, fontWeight: FontWeight.w700),
-        ),
-        if (record.quantity.isNotEmpty) ...[
-          const SizedBox(height: 4),
-          Text(record.quantity, style: zhuaji.copyWith(fontSize: 15)),
-        ],
-        const SizedBox(height: 4),
-        Text(
-          code,
-          style: zhuaji.copyWith(
-            fontSize: 12,
-            color: AppColors.of(context).muted,
+        QuietCard(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (record.brand.isNotEmpty) ...[
+                Text(
+                  '品牌',
+                  style: zhuaji.copyWith(
+                    fontSize: 12,
+                    color: AppColors.of(context).muted,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  record.brand,
+                  style: zhuaji.copyWith(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 12),
+              ],
+              Text(
+                record.name,
+                style: zhuaji.copyWith(
+                  fontSize: 22,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              if (record.quantity.isNotEmpty) ...[
+                const SizedBox(height: 12),
+                Text(
+                  '规格',
+                  style: zhuaji.copyWith(
+                    fontSize: 12,
+                    color: AppColors.of(context).muted,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(record.quantity, style: zhuaji.copyWith(fontSize: 16)),
+              ],
+              const SizedBox(height: 12),
+              Text(
+                code,
+                style: zhuaji.copyWith(
+                  fontSize: 12,
+                  color: AppColors.of(context).muted,
+                ),
+              ),
+            ],
           ),
         ),
         if (record.ingredients.isNotEmpty) ...[
