@@ -195,6 +195,7 @@ void main() {
   testWidgets('privacy policy explains bluetooth', (tester) async {
     await open(tester);
     await tapText(tester, '隐私政策');
+    await revealText(tester, '蓝牙');
     expect(find.text('蓝牙'), findsOneWidget);
     expect(find.textContaining('不用蓝牙定位'), findsOneWidget);
     await close(tester);

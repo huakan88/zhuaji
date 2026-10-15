@@ -27,6 +27,7 @@ import 'services/widget_bridge.dart';
 import 'features/pantry/bag_page.dart';
 import 'features/pantry/catalog_page.dart';
 import 'features/pantry/confirm_page.dart';
+import 'features/pantry/lookup_page.dart';
 import 'features/pantry/food_form_page.dart';
 import 'features/pantry/pantry_page.dart';
 import 'features/pantry/recipes_page.dart';
@@ -65,11 +66,11 @@ bool routeSelectsScan(String route) {
   return routeSelectsScan(nested);
 }
 
-/// External entries. A scan target selects 粮仓 first, then the camera, so
-/// closing the camera lands on the pantry.
+/// External entries. A scan target selects 今天 first, then the camera, so
+/// closing the camera lands on the page that holds the scan button.
 void openAppRoute(GoRouter router, String route) {
   if (routeSelectsScan(route)) {
-    router.go('/pantry');
+    router.go('/home');
     router.push('/scan');
     return;
   }
@@ -125,10 +126,16 @@ class _ZhuajiAppState extends State<ZhuajiApp> {
       ),
       GoRoute(path: '/scan', builder: (_, _) => const ScanPage()),
       GoRoute(
+        path: '/lookup',
+        builder: (context, state) =>
+            LookupPage(code: state.uri.queryParameters['code'] ?? ''),
+      ),
+      GoRoute(
         path: '/confirm',
         builder: (context, state) => ConfirmPage(
           code: state.uri.queryParameters['code'] ?? '',
           productId: int.tryParse(state.uri.queryParameters['product'] ?? ''),
+          blank: state.uri.queryParameters['blank'] == '1',
         ),
       ),
       GoRoute(

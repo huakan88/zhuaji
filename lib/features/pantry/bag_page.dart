@@ -7,6 +7,7 @@ import '../../core/theme/app_tokens.dart';
 import '../../core/widgets/common.dart';
 import '../../domain/dates.dart';
 import '../../domain/food/stock.dart';
+import '../../domain/models.dart';
 import '../../state/app_controller.dart';
 
 class BagPage extends StatelessWidget {
@@ -55,6 +56,19 @@ class BagPage extends StatelessWidget {
             entry.product.brand,
             style: zhuaji.copyWith(color: AppColors.of(context).muted),
           ),
+          if (_lookupCode(app, entry) != null) ...[
+            const SizedBox(height: 8),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: TextButton(
+                onPressed: () {
+                  final code = _lookupCode(app, entry)!;
+                  context.push('/lookup?code=${Uri.encodeComponent(code)}');
+                },
+                child: const Text('配料和成分'),
+              ),
+            ),
+          ],
           const SizedBox(height: 16),
           _line(
             '生产',
@@ -134,4 +148,12 @@ class BagPage extends StatelessWidget {
       ),
     );
   }
+}
+
+String? _lookupCode(AppController app, PantryEntry entry) {
+  final code = entry.product.barcode;
+  if (code == null || code.isEmpty) return null;
+  final record = app.cachedBarcode(code);
+  if (record == null || !record.found) return null;
+  return code;
 }

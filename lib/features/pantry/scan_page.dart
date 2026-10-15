@@ -7,15 +7,20 @@ import 'package:mobile_scanner/mobile_scanner.dart';
 import '../../core/theme/app_fonts.dart';
 import '../../core/theme/app_tokens.dart';
 import '../../core/widgets/common.dart';
+import '../../domain/food/barcode_lookup.dart';
 import '../../state/app_controller.dart';
 
 /// Where a finished scan should go. A code already in the pantry opens that
-/// bag. Anything else, including a blank "pick a brand", opens confirm.
+/// bag. An EAN or UPC opens the product lookup. Anything else, including a
+/// blank "pick a brand", opens confirm.
 String scanDestination(AppController app, String raw) {
   final value = raw.trim();
   if (value.isEmpty) return '/confirm';
   final bag = app.bagForBarcode(value);
   if (bag != null) return '/bag?id=${bag.item.id}';
+  if (isRetailBarcode(value)) {
+    return '/lookup?code=${Uri.encodeComponent(value)}';
+  }
   return '/confirm?code=${Uri.encodeComponent(value)}';
 }
 

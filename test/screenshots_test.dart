@@ -13,6 +13,7 @@ import 'package:maokangji/services/coat_recognizer.dart';
 import 'package:maokangji/domain/scale/scale_parser.dart';
 import 'package:maokangji/services/notification_service.dart';
 import 'package:maokangji/services/scale_service.dart';
+import 'package:maokangji/domain/food/barcode_lookup.dart';
 import 'package:maokangji/domain/models.dart';
 import 'package:maokangji/core/theme/app_tokens.dart';
 import 'package:maokangji/state/app_controller.dart';
@@ -67,6 +68,26 @@ Future<void> _capture(
   );
   await controller.init();
   await controller.setThemeMode(mode);
+  const royalImage = '/tmp/opff-royal.jpg';
+  await tester.runAsync(() => _primeFileImage(royalImage));
+  await controller.saveBarcodeRecord(
+    BarcodeRecord(
+      code: '3182550799669',
+      found: true,
+      brand: 'Royal Canin',
+      name: 'Neutered Satiety Balance',
+      quantity: '12 kg',
+      ingredients: 'Protéines de volailles déshydratées, maïs, fibres végétales, blé, gluten de maïs, gluten de blé, hydrolysat de protéines animales, graisses animales, sels minéraux, pulpe de chicorée, huile de poisson',
+      nutrients: const [
+        BarcodeNutrient(label: '粗蛋白', text: '35 %'),
+        BarcodeNutrient(label: '粗脂肪', text: '10 %'),
+        BarcodeNutrient(label: '粗纤维', text: '9.2 %'),
+        BarcodeNutrient(label: '粗灰分', text: '9.3 %'),
+      ],
+      source: 'openpetfoodfacts',
+      imageUrl: File(royalImage).existsSync() ? royalImage : null,
+    ),
+  );
   final cat = controller.active!;
   final customId = await controller.saveFood(
     const FoodDraft(
@@ -118,6 +139,22 @@ Future<void> _capture(
   );
   await _frames(tester);
   await _shot(tester, folder, 'today');
+  await _shot(tester, folder, 'today-top');
+
+  await enter(tester, find.byType(TextField), '猫');
+  await _frames(tester);
+  await _shot(tester, folder, 'search');
+  await enter(tester, find.byType(TextField), '');
+  await _frames(tester);
+
+  unawaited(
+    GoRouter.of(tester.element(find.byType(Scaffold).last))
+        .push('/lookup?code=3182550799669'),
+  );
+  await _frames(tester);
+  await _shot(tester, folder, 'lookup');
+  await tester.tap(find.byTooltip('返回'));
+  await _frames(tester);
 
   await _tapOnScreen(tester, '未来 30 天');
   await _frames(tester);
@@ -300,6 +337,8 @@ Future<void> _capture(
 Future<void> _compare() async {
   const names = [
     'today',
+    'search',
+    'lookup',
     'health',
     'scan',
     'pantry',
@@ -313,7 +352,7 @@ Future<void> _compare() async {
   for (final name in names) {
     for (final folder in ['light', 'dark']) {
       final file = File(
-        '/opt/cursor/artifacts/screenshots/v2110/$folder/$name.png',
+        '/opt/cursor/artifacts/screenshots/v2120/$folder/$name.png',
       );
       if (!file.existsSync()) return;
       final data = await file.readAsBytes();
@@ -340,7 +379,7 @@ Future<void> _compare() async {
   final composed = await picture.toImage(width * 2, height * names.length);
   final bytes = await composed.toByteData(format: ui.ImageByteFormat.png);
   final out = File(
-    '/opt/cursor/artifacts/screenshots/v2110/compare-light-dark.png',
+    '/opt/cursor/artifacts/screenshots/v2120/compare-light-dark.png',
   );
   await out.parent.create(recursive: true);
   await out.writeAsBytes(bytes!.buffer.asUint8List());
@@ -385,6 +424,25 @@ Future<void> _tapOnScreen(WidgetTester tester, String text) async {
   await tester.tapAt(target);
 }
 
+Future<void> _primeFileImage(String path) async {
+  final file = File(path);
+  if (!file.existsSync()) return;
+  final provider = FileImage(file);
+  final key = await provider.obtainKey(
+    const ImageConfiguration(devicePixelRatio: 1),
+  );
+  if (PaintingBinding.instance.imageCache.containsKey(key)) return;
+  final bytes = await file.readAsBytes();
+  final codec = await ui.instantiateImageCodec(bytes);
+  final frame = await codec.getNextFrame();
+  PaintingBinding.instance.imageCache.putIfAbsent(
+    key,
+    () => OneFrameImageStreamCompleter(
+      Future<ImageInfo>.value(ImageInfo(image: frame.image)),
+    ),
+  );
+}
+
 Future<void> _frames(WidgetTester tester) async {
   await tester.pump();
   await tester.pump(const Duration(milliseconds: 400));
@@ -402,7 +460,7 @@ Future<void> _shot(WidgetTester tester, String folder, String name) async {
     final image = await boundary.toImage(pixelRatio: 2);
     final data = await image.toByteData(format: ui.ImageByteFormat.png);
     final file = File(
-      '/opt/cursor/artifacts/screenshots/v2110/$folder/$name.png',
+      '/opt/cursor/artifacts/screenshots/v2120/$folder/$name.png',
     );
     await file.parent.create(recursive: true);
     await file.writeAsBytes(data!.buffer.asUint8List());
