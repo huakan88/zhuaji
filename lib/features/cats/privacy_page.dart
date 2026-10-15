@@ -67,7 +67,7 @@ class PrivacyPage extends StatelessWidget {
         padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
         children: [
           Text(
-            '肉垫本 PawPad · 2.15.0 · 2026 年 10 月更新',
+            '肉垫本 PawPad · 2.16.0 · 2026 年 10 月更新',
             style: zhuaji.copyWith(
               fontSize: 13,
               color: AppColors.of(context).muted,
