@@ -35,7 +35,17 @@ class _LookupPageState extends State<LookupPage> {
   Future<void> _load({bool refresh = false}) async {
     if (refresh && mounted) setState(() => _loading = true);
     final app = AppScope.of<AppController>(context);
-    final record = await app.resolveBarcode(widget.code, refresh: refresh);
+    final BarcodeRecord record;
+    try {
+      record = await app.resolveBarcode(widget.code, refresh: refresh);
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _record = BarcodeRecord.offline(widget.code);
+        _loading = false;
+      });
+      return;
+    }
     if (!mounted) return;
     setState(() {
       _record = record;

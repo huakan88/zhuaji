@@ -24,6 +24,16 @@ String scanDestination(AppController app, String raw) {
   return '/confirm?code=${Uri.encodeComponent(value)}';
 }
 
+/// What to say when the camera cannot start. The buttons under the
+/// viewfinder stay usable either way.
+String scanCameraMessage(MobileScannerErrorCode? code) {
+  return switch (code) {
+    MobileScannerErrorCode.permissionDenied => '没有相机权限。可以在系统设置里打开，也可以选品牌或拍包装。',
+    MobileScannerErrorCode.unsupported => '这台手机扫不了码。可以选品牌，或拍包装。',
+    _ => '相机没开',
+  };
+}
+
 /// Formats the camera is asked to read. EAN and UPC are the barcodes on
 /// bags; DataBar, DataMatrix and QR cover GS1 (including Digital Link).
 const scanFormats = <BarcodeFormat>[
@@ -145,7 +155,17 @@ class _ScanPageState extends State<ScanPage> {
     final camera = _camera ??= MobileScannerController(formats: scanFormats);
     return MobileScanner(
       controller: camera,
-      errorBuilder: (context, error) => fallback,
+      placeholderBuilder: (context) => const SizedBox.expand(),
+      errorBuilder: (context, error) => Center(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 32),
+          child: Text(
+            scanCameraMessage(error.errorCode),
+            textAlign: TextAlign.center,
+            style: zhuaji.copyWith(color: AppColors.of(context).onScrim),
+          ),
+        ),
+      ),
       onDetect: (capture) {
         final raw = capture.barcodes
             .map((code) => code.rawValue)
