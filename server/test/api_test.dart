@@ -175,13 +175,40 @@ void main() {
     expect(fixed['updatedAt'], '2026-10-15T00:00:00.000Z');
     expect(fixed.containsKey('cat'), isFalse);
 
+    final tie = await call(api, 'PUT', '/v1/shared-barcodes/6958862134620', {
+      'brand': '并列',
+      'name': '字典序更小',
+      'spec': '2千克',
+      'contributorId': 'dev-a',
+      'updatedAt': '2026-10-15T00:00:00.000Z',
+    });
+    expect(jsonDecode(tie.body)['applied'], isFalse);
+    expect(jsonDecode(tie.body)['name'], '三文鱼双拼全价全期猫粮');
+    expect(jsonDecode(tie.body)['ingredients'], '三文鱼');
+    final laterId = await call(
+      api,
+      'PUT',
+      '/v1/shared-barcodes/6958862134620',
+      {
+        'brand': '并列',
+        'name': '字典序更大',
+        'spec': '2千克',
+        'contributorId': 'dev-d',
+        'updatedAt': '2026-10-15T00:00:00.000Z',
+      },
+    );
+    expect(jsonDecode(laterId.body)['applied'], isTrue);
+    expect(jsonDecode(laterId.body)['contributorId'], 'dev-d');
+    expect(jsonDecode(laterId.body)['createdAt'], '2026-10-01T00:00:00.000Z');
+
     final read = await call(
       api,
       'GET',
       '/v1/shared-barcodes/6958862134620',
       null,
     );
-    expect(jsonDecode(read.body)['ingredients'], '三文鱼');
+    expect(jsonDecode(read.body)['name'], '字典序更大');
+    expect(jsonDecode(read.body)['ingredients'], '');
 
     final junk = await call(api, 'PUT', '/v1/shared-barcodes/abc', {
       'brand': '麦富迪',
