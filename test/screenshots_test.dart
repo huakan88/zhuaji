@@ -14,8 +14,10 @@ import 'package:maokangji/domain/scale/scale_parser.dart';
 import 'package:maokangji/services/notification_service.dart';
 import 'package:maokangji/services/scale_service.dart';
 import 'package:maokangji/domain/models.dart';
+import 'package:maokangji/core/theme/app_tokens.dart';
 import 'package:maokangji/state/app_controller.dart';
 
+import 'app_harness.dart';
 import 'cjk_font.dart';
 
 class _ShotScale implements ScaleSource {
@@ -46,234 +48,291 @@ void main() {
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
-
-    final controller = AppController(
-      repo: DriftCareRepository(AppDatabase.memory()),
-      notifications: NoopNotificationService(),
-      recognizer: const MockCoatBreedRecognizer(),
-      clock: () => DateTime(2026, 10, 12, 10),
-    );
-    await controller.init();
-    final cat = controller.active!;
-    final customId = await controller.saveFood(
-      const FoodDraft(
-        brand: '山野',
-        name: '冻干双拼',
-        spec: '1.5kg',
-        foodForm: FoodForm.freezeDried,
-        storageMethod: '阴凉干燥，封好袋口。',
-        afterOpenDays: 30,
-        flavor: '鸡肉',
-        isCustom: true,
-      ),
-      barcode: '6901111222233',
-    );
-    await controller.savePantry(
-      PantryDraft(
-        productId: customId,
-        dateSource: DateSource.manual,
-        openedAt: DateTime(2026, 9, 30),
-        expiryDate: DateTime(2027, 6, 1),
-        afterOpenDays: 0,
-        dailyGrams: 80,
-      ),
-    );
-    await controller.saveLab(
-      LabDraft(
-        catId: cat.id,
-        kind: LabKind.cbc,
-        takenOn: DateTime(2026, 9, 1),
-        photos: const [],
-      ),
-      values: const [LabValue(code: 'WBC', value: 10, unit: '10^9/L')],
-    );
-    await controller.saveLab(
-      LabDraft(
-        catId: cat.id,
-        kind: LabKind.cbc,
-        takenOn: DateTime(2026, 10, 12),
-        photos: const [],
-      ),
-      values: const [
-        LabValue(code: 'WBC', value: 18.2, unit: '10^9/L'),
-        LabValue(code: 'PLT', value: 88, unit: '10^9/L'),
-      ],
-    );
-    final scale = _ShotScale();
-    await tester.pumpWidget(
-      ZhuajiApp(controller: controller, scaleSource: () => scale),
-    );
-    await _frames(tester);
-    await _shot(tester, 'today');
-
-    await _tapOnScreen(tester, '未来 30 天');
-    await _frames(tester);
-    await _shot(tester, 'calendar');
-    await _tapOnScreen(tester, '18');
-    await _frames(tester);
-    await _shot(tester, 'calendar-day');
-    await tester.tap(find.byTooltip('返回'));
-    await _frames(tester);
-
-    await _tapOnScreen(tester, '猫三联');
-    await _frames(tester);
-    await _frames(tester);
-    await _shot(tester, 'today-undo');
-    tester.widget<SnackBarAction>(find.byType(SnackBarAction)).onPressed();
-    await _frames(tester);
-    ScaffoldMessenger.of(tester.element(find.byType(Scaffold).last))
-        .clearSnackBars();
-    await _frames(tester);
-
-    await _tapOnScreen(tester, '健康');
-    await _frames(tester);
-    await _shot(tester, 'health');
-
-    await _tapOnScreen(tester, '疫苗');
-    await _frames(tester);
-    await _shot(tester, 'vaccine');
-    await _tapOnScreen(tester, '拍贴纸');
-    await _frames(tester);
-    await _shot(tester, 'sticker');
-    unawaited(
-      GoRouter.of(tester.element(find.byType(Scaffold).last)).push(
-        '/sticker?demo=1',
-      ),
-    );
-    await _frames(tester);
-    await _shot(tester, 'sticker-confirm');
-    await tester.tap(find.byTooltip('返回'));
-    await _frames(tester);
-    await tester.tap(find.byTooltip('返回'));
-    await _frames(tester);
-    await tester.tap(find.byTooltip('返回'));
-    await _frames(tester);
-
-    await _tapOnScreen(tester, '驱虫');
-    await _frames(tester);
-    await _shot(tester, 'deworm');
-    await tester.tap(find.byTooltip('返回'));
-    await _frames(tester);
-
-    await _tapOnScreen(tester, '就医');
-    await _frames(tester);
-    await _shot(tester, 'visit');
-    await tester.tap(find.byTooltip('返回'));
-    await _frames(tester);
-
-    await _tapOnScreen(tester, '体重');
-    await _frames(tester);
-    await _shot(tester, 'weight');
-
-    await _tapOnScreen(tester, '用蓝牙秤（抱猫称）');
-    await _frames(tester);
-    scale.send(61.2, stable: false);
-    await _frames(tester);
-    await _shot(tester, 'scale-owner');
-    scale.send(62.40);
-    await _frames(tester);
-    scale.send(65.9, stable: false);
-    await _frames(tester);
-    await _shot(tester, 'scale-together');
-    scale.send(66.75);
-    await _frames(tester);
-    await _shot(tester, 'scale-result');
-    await _tapOnScreen(tester, '用这个');
-    await _frames(tester);
-    await _shot(tester, 'weight-from-scale');
-
-    ScaffoldMessenger.of(tester.element(find.byType(Scaffold).last))
-        .clearSnackBars();
-    await _frames(tester);
-    scale.status = ScaleStatus.off;
-    await _tapOnScreen(tester, '用蓝牙秤（抱猫称）');
-    await _frames(tester);
-    await _shot(tester, 'scale-failed');
-    await _tapOnScreen(tester, '隐私政策');
-    await _frames(tester);
-    await _shot(tester, 'privacy');
-    await tester.tap(find.byTooltip('返回'));
-    await _frames(tester);
-    await _tapOnScreen(tester, '手动输入');
-    await _frames(tester);
-    await tester.tap(find.byTooltip('返回'));
-    await _frames(tester);
-    ScaffoldMessenger.of(tester.element(find.byType(Scaffold).last))
-        .clearSnackBars();
-    await _frames(tester);
-
-    await _tapOnScreen(tester, '扫粮');
-    await _frames(tester);
-    await _shot(tester, 'scan');
-    await _tapOnScreen(tester, '选品牌');
-    await _frames(tester);
-    await _shot(tester, 'scan-result');
-    await tester.tap(find.byTooltip('返回'));
-    await _frames(tester);
-
-    const code = '6909999000031';
-    final router = GoRouter.of(tester.element(find.byType(Scaffold).last));
-    unawaited(router.push('/confirm?code=$code'));
-    await _frames(tester);
-    await _shot(tester, 'barcode-new');
-    await _tapOnScreen(tester, '记下');
-    await _frames(tester);
-    unawaited(router.push('/confirm?code=$code'));
-    await _frames(tester);
-    await _shot(tester, 'barcode-known');
-    await tester.tap(find.byTooltip('返回'));
-    await _frames(tester);
-
-    await _tapOnScreen(tester, '粮仓');
-    await _frames(tester);
-    await _shot(tester, 'pantry');
-    await _tapOnScreen(tester, '冻干双拼');
-    await _frames(tester);
-    await _shot(tester, 'bag-stock');
-    await tester.tap(find.byTooltip('返回'));
-    await _frames(tester);
-
-    await _tapOnScreen(tester, '图鉴');
-    await _frames(tester);
-    await _shot(tester, 'catalog');
-    await _tapOnScreen(tester, '山野 冻干双拼');
-    await _frames(tester);
-    await _shot(tester, 'custom-food');
-    await tester.tap(find.byTooltip('返回'));
-    await _frames(tester);
-    await tester.tap(find.byTooltip('返回'));
-    await _frames(tester);
-
-    await _tapOnScreen(tester, '健康');
-    await _frames(tester);
-    await _tapOnScreen(tester, '化验');
-    await _frames(tester);
-    await _shot(tester, 'labs');
-    await _tapOnScreen(tester, '2026年10月12日 · 血常规');
-    await _frames(tester);
-    await _shot(tester, 'lab-sheet');
-    await tester.tap(find.byTooltip('返回'));
-    await _frames(tester);
-    await tester.tap(find.byTooltip('返回'));
-    await _frames(tester);
-
-    await _tapOnScreen(tester, '猫咪');
-    await _frames(tester);
-    await _shot(tester, 'cat');
-
-    final story = find.text('最近').evaluate().where((e) => !_hidden(e));
-    await tester.ensureVisible(find.byWidget(story.first.widget));
-    await tester.drag(
-      find.byWidget(story.first.widget),
-      const Offset(0, -260),
-      warnIfMissed: false,
-    );
-    await _frames(tester);
-    await _shot(tester, 'cat-story');
-
-    await tester.pumpWidget(const SizedBox());
-    await _frames(tester);
+    await _capture(tester, 'light', ZhuajiThemeMode.light);
+    await _capture(tester, 'dark', ZhuajiThemeMode.dark);
+    await tester.runAsync(_compare);
   });
+}
+
+Future<void> _capture(
+  WidgetTester tester,
+  String folder,
+  ZhuajiThemeMode mode,
+) async {
+  final controller = AppController(
+    repo: DriftCareRepository(AppDatabase.memory()),
+    notifications: NoopNotificationService(),
+    recognizer: const MockCoatBreedRecognizer(),
+    clock: () => DateTime(2026, 10, 12, 10),
+  );
+  await controller.init();
+  await controller.setThemeMode(mode);
+  final cat = controller.active!;
+  final customId = await controller.saveFood(
+    const FoodDraft(
+      brand: '山野',
+      name: '冻干双拼',
+      spec: '1.5kg',
+      foodForm: FoodForm.freezeDried,
+      storageMethod: '阴凉干燥，封好袋口。',
+      afterOpenDays: 30,
+      flavor: '鸡肉',
+      isCustom: true,
+    ),
+    barcode: '6901111222233',
+  );
+  await controller.savePantry(
+    PantryDraft(
+      productId: customId,
+      dateSource: DateSource.manual,
+      openedAt: DateTime(2026, 9, 30),
+      expiryDate: DateTime(2027, 6, 1),
+      afterOpenDays: 0,
+      dailyGrams: 80,
+    ),
+  );
+  await controller.saveLab(
+    LabDraft(
+      catId: cat.id,
+      kind: LabKind.cbc,
+      takenOn: DateTime(2026, 9, 1),
+      photos: const [],
+    ),
+    values: const [LabValue(code: 'WBC', value: 10, unit: '10^9/L')],
+  );
+  await controller.saveLab(
+    LabDraft(
+      catId: cat.id,
+      kind: LabKind.cbc,
+      takenOn: DateTime(2026, 10, 12),
+      photos: const [],
+    ),
+    values: const [
+      LabValue(code: 'WBC', value: 18.2, unit: '10^9/L'),
+      LabValue(code: 'PLT', value: 88, unit: '10^9/L'),
+    ],
+  );
+  final scale = _ShotScale();
+  await tester.pumpWidget(
+    ZhuajiApp(controller: controller, scaleSource: () => scale),
+  );
+  await _frames(tester);
+  await _shot(tester, folder, 'today');
+
+  await _tapOnScreen(tester, '未来 30 天');
+  await _frames(tester);
+  await _shot(tester, folder, 'calendar');
+  await _tapOnScreen(tester, '18');
+  await _frames(tester);
+  await _shot(tester, folder, 'calendar-day');
+  await tester.tap(find.byTooltip('返回'));
+  await _frames(tester);
+
+  await _tapOnScreen(tester, '猫三联');
+  await _frames(tester);
+  await _frames(tester);
+  await _shot(tester, folder, 'today-undo');
+  tester.widget<SnackBarAction>(find.byType(SnackBarAction)).onPressed();
+  await _frames(tester);
+  ScaffoldMessenger.of(tester.element(find.byType(Scaffold).last))
+      .clearSnackBars();
+  await _frames(tester);
+
+  await _tapOnScreen(tester, '健康');
+  await _frames(tester);
+  await _shot(tester, folder, 'health');
+
+  await _tapOnScreen(tester, '疫苗');
+  await _frames(tester);
+  await _shot(tester, folder, 'vaccine');
+  await _tapOnScreen(tester, '拍贴纸');
+  await _frames(tester);
+  await _shot(tester, folder, 'sticker');
+  unawaited(
+    GoRouter.of(tester.element(find.byType(Scaffold).last))
+        .push('/sticker?demo=1'),
+  );
+  await _frames(tester);
+  await _shot(tester, folder, 'sticker-confirm');
+  await tester.tap(find.byTooltip('返回'));
+  await _frames(tester);
+  await tester.tap(find.byTooltip('返回'));
+  await _frames(tester);
+  await tester.tap(find.byTooltip('返回'));
+  await _frames(tester);
+
+  await _tapOnScreen(tester, '驱虫');
+  await _frames(tester);
+  await _shot(tester, folder, 'deworm');
+  await tester.tap(find.byTooltip('返回'));
+  await _frames(tester);
+
+  await _tapOnScreen(tester, '就医');
+  await _frames(tester);
+  await _shot(tester, folder, 'visit');
+  await tester.tap(find.byTooltip('返回'));
+  await _frames(tester);
+
+  await _tapOnScreen(tester, '体重');
+  await _frames(tester);
+  await _shot(tester, folder, 'weight');
+
+  await _tapOnScreen(tester, '用蓝牙秤（抱猫称）');
+  await _frames(tester);
+  scale.send(61.2, stable: false);
+  await _frames(tester);
+  await _shot(tester, folder, 'scale-owner');
+  scale.send(62.40);
+  await _frames(tester);
+  scale.send(65.9, stable: false);
+  await _frames(tester);
+  await _shot(tester, folder, 'scale-together');
+  scale.send(66.75);
+  await _frames(tester);
+  await _shot(tester, folder, 'scale-result');
+  await _tapOnScreen(tester, '用这个');
+  await _frames(tester);
+  await _shot(tester, folder, 'weight-from-scale');
+
+  ScaffoldMessenger.of(tester.element(find.byType(Scaffold).last))
+      .clearSnackBars();
+  await _frames(tester);
+  scale.status = ScaleStatus.off;
+  await _tapOnScreen(tester, '用蓝牙秤（抱猫称）');
+  await _frames(tester);
+  await _shot(tester, folder, 'scale-failed');
+  await _tapOnScreen(tester, '隐私政策');
+  await _frames(tester);
+  await _shot(tester, folder, 'privacy');
+  await tester.tap(find.byTooltip('返回'));
+  await _frames(tester);
+  await _tapOnScreen(tester, '手动输入');
+  await _frames(tester);
+  await tester.tap(find.byTooltip('返回'));
+  await _frames(tester);
+  ScaffoldMessenger.of(tester.element(find.byType(Scaffold).last))
+      .clearSnackBars();
+  await _frames(tester);
+
+  await _tapOnScreen(tester, '扫粮');
+  await _frames(tester);
+  await _shot(tester, folder, 'scan');
+  await _tapOnScreen(tester, '选品牌');
+  await _frames(tester);
+  await _shot(tester, folder, 'scan-result');
+  await tester.tap(find.byTooltip('返回'));
+  await _frames(tester);
+
+  const code = '6909999000031';
+  final router = GoRouter.of(tester.element(find.byType(Scaffold).last));
+  unawaited(router.push('/confirm?code=$code'));
+  await _frames(tester);
+  await _shot(tester, folder, 'barcode-new');
+  await _tapOnScreen(tester, '记下');
+  await _frames(tester);
+  unawaited(router.push('/confirm?code=$code'));
+  await _frames(tester);
+  await _shot(tester, folder, 'barcode-known');
+  await tester.tap(find.byTooltip('返回'));
+  await _frames(tester);
+
+  await _tapOnScreen(tester, '粮仓');
+  await _frames(tester);
+  await _shot(tester, folder, 'pantry');
+  await _tapOnScreen(tester, '冻干双拼');
+  await _frames(tester);
+  await _shot(tester, folder, 'bag-stock');
+  await tester.tap(find.byTooltip('返回'));
+  await _frames(tester);
+
+  await _tapOnScreen(tester, '图鉴');
+  await _frames(tester);
+  await _shot(tester, folder, 'catalog');
+  await _tapOnScreen(tester, '山野 冻干双拼');
+  await _frames(tester);
+  await _shot(tester, folder, 'custom-food');
+  await tester.tap(find.byTooltip('返回'));
+  await _frames(tester);
+  await tester.tap(find.byTooltip('返回'));
+  await _frames(tester);
+
+  await _tapOnScreen(tester, '健康');
+  await _frames(tester);
+  await _tapOnScreen(tester, '化验');
+  await _frames(tester);
+  await _shot(tester, folder, 'labs');
+  await _tapOnScreen(tester, '2026年10月12日 · 血常规');
+  await _frames(tester);
+  await _shot(tester, folder, 'lab-sheet');
+  await tester.tap(find.byTooltip('返回'));
+  await _frames(tester);
+  await tester.tap(find.byTooltip('返回'));
+  await _frames(tester);
+
+  await _tapOnScreen(tester, '猫咪');
+  await _frames(tester);
+  await _shot(tester, folder, 'cat');
+
+  await revealText(tester, '最近');
+  final story = find.text('最近').evaluate().where((e) => !_hidden(e));
+  await tester.ensureVisible(find.byWidget(story.first.widget));
+  await tester.drag(
+    find.byWidget(story.first.widget),
+    const Offset(0, -260),
+    warnIfMissed: false,
+  );
+  await _frames(tester);
+  await _shot(tester, folder, 'cat-story');
+
+  await tester.pumpWidget(const SizedBox());
+  await _frames(tester);
+}
+
+Future<void> _compare() async {
+  const names = [
+    'today',
+    'health',
+    'scan',
+    'pantry',
+    'cat',
+    'calendar',
+    'labs',
+  ];
+  final images = <ui.Image>[];
+  for (final name in names) {
+    for (final folder in ['light', 'dark']) {
+      final file = File(
+        '/opt/cursor/artifacts/screenshots/v290/$folder/$name.png',
+      );
+      if (!file.existsSync()) return;
+      final data = await file.readAsBytes();
+      final codec = await ui.instantiateImageCodec(data);
+      final frame = await codec.getNextFrame();
+      images.add(frame.image);
+    }
+  }
+  if (images.length != names.length * 2) return;
+  final width = images.first.width;
+  final height = images.first.height;
+  final recorder = ui.PictureRecorder();
+  final canvas = Canvas(recorder);
+  canvas.drawRect(
+    Rect.fromLTWH(0, 0, width * 2, height * names.length.toDouble()),
+    Paint()..color = const Color(0xFF000000),
+  );
+  for (var i = 0; i < images.length; i++) {
+    final column = i.isEven ? 0.0 : width.toDouble();
+    final row = (i ~/ 2) * height.toDouble();
+    canvas.drawImage(images[i], Offset(column, row), Paint());
+  }
+  final picture = recorder.endRecording();
+  final composed = await picture.toImage(width * 2, height * names.length);
+  final bytes = await composed.toByteData(format: ui.ImageByteFormat.png);
+  final out = File(
+    '/opt/cursor/artifacts/screenshots/v290/compare-light-dark.png',
+  );
+  await out.parent.create(recursive: true);
+  await out.writeAsBytes(bytes!.buffer.asUint8List());
 }
 
 bool _hidden(Element element) {
@@ -324,14 +383,16 @@ Future<void> _frames(WidgetTester tester) async {
   await tester.pump();
 }
 
-Future<void> _shot(WidgetTester tester, String name) async {
+Future<void> _shot(WidgetTester tester, String folder, String name) async {
   await tester.runAsync(() async {
     final boundary = tester.renderObject<RenderRepaintBoundary>(
       find.byKey(const Key('shot')),
     );
     final image = await boundary.toImage(pixelRatio: 2);
     final data = await image.toByteData(format: ui.ImageByteFormat.png);
-    final file = File('/opt/cursor/artifacts/screenshots/v280/$name.png');
+    final file = File(
+      '/opt/cursor/artifacts/screenshots/v290/$folder/$name.png',
+    );
     await file.parent.create(recursive: true);
     await file.writeAsBytes(data!.buffer.asUint8List());
   });

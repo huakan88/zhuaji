@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 
 import '../core/format.dart';
+import '../core/theme/app_tokens.dart';
 import '../domain/care/agenda.dart';
 import '../domain/care/easy_log.dart';
 import '../domain/dates.dart';
@@ -54,6 +55,7 @@ class AppController extends ChangeNotifier {
 
   /// When false, the Android widget stays blank of names and todos.
   bool widgetEnabled = true;
+  ZhuajiThemeMode themeMode = ZhuajiThemeMode.system;
 
   /// Barcodes the catalog did not know, mapped to the product the user chose.
   Map<String, int> barcodeMemory = {};
@@ -663,6 +665,7 @@ class AppController extends ChangeNotifier {
     pantryAcks = pantryRaw.split(',').where((item) => item.isNotEmpty).toSet();
     stockSnooze = _decodeSnooze(await repo.setting('stockSnooze'));
     widgetEnabled = (await repo.setting('widgetEnabled') ?? '1') != '0';
+    themeMode = ZhuajiThemeMode.fromStorage(await repo.setting('themeMode'));
     barcodeMemory = _decodeMemory(await repo.setting('barcodeMemory'));
     ownerWeightKg = double.tryParse(await repo.setting('ownerWeightKg') ?? '');
   }
@@ -713,6 +716,13 @@ class AppController extends ChangeNotifier {
   Future<void> setWidgetEnabled(bool value) async {
     widgetEnabled = value;
     await repo.setSetting('widgetEnabled', value ? '1' : '0');
+    await _publishWidget();
+    notifyListeners();
+  }
+
+  Future<void> setThemeMode(ZhuajiThemeMode value) async {
+    themeMode = value;
+    await repo.setSetting('themeMode', value.storage);
     await _publishWidget();
     notifyListeners();
   }
@@ -947,7 +957,7 @@ class AppController extends ChangeNotifier {
             nextLine: '打开爪记查看',
             route: '/calendar',
           );
-    await WidgetBridge.publish(copy.toJson());
+    await WidgetBridge.publish(copy.toJson(appearance: themeMode.storage));
   }
 
   StockInput? _stockInput(PantryEntry entry) {
@@ -1075,9 +1085,7 @@ class AppController extends ChangeNotifier {
               recheck: true,
             ),
       ],
-      stocks: [
-        for (final entry in pantry) ?_stockInput(entry),
-      ],
+      stocks: [for (final entry in pantry) ?_stockInput(entry)],
     );
   }
 

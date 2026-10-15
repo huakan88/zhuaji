@@ -18,14 +18,12 @@ const privacySections = [
         '只在你点「扫粮」、拍包装、拍化验单、拍疫苗贴纸或给猫拍照时使用。'
         '扫码、认包装、认化验单和认贴纸都在手机上完成，照片不上传。',
   ),
-  (
-    title: '通知',
-    body: '用来提醒疫苗、驱虫、体检、粮食到期和补货。点通知上的「已完成」只会在手机里记一笔。',
-  ),
+  (title: '通知', body: '用来提醒疫苗、驱虫、体检、粮食到期和补货。点通知上的「已完成」只会在手机里记一笔。'),
   (
     title: '桌面小组件',
     body:
-        'Android 可以加「今天的事」。上面是今天要办的，下面是下一个提醒，点一下打开对应的页。'
+        'Android 可以加「今天的事」。iPhone 要等安装包里带上小组件之后才能加。'
+        '上面是今天要办的，下面是下一个提醒，点一下打开对应的页。'
         '只在你添加小组件时出现在桌面。日历页可以改成不显示待办。不上传。',
   ),
   (
@@ -47,14 +45,17 @@ class PrivacyPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: AppColors.of(context).background,
       appBar: zhuajiBar('隐私政策'),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
         children: [
           Text(
             '爪记 2.8 · 2026 年 10 月更新',
-            style: zhuaji.copyWith(fontSize: 13, color: AppColors.muted),
+            style: zhuaji.copyWith(
+              fontSize: 13,
+              color: AppColors.of(context).muted,
+            ),
           ),
           const SizedBox(height: 16),
           for (final section in privacySections) ...[

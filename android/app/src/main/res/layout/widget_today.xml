@@ -8,10 +8,11 @@
     android:padding="12dp">
 
     <TextView
+        android:id="@+id/widget_brand"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="爪记"
-        android:textColor="#8A8682"
+        android:textColor="@color/widget_muted"
         android:textSize="11sp" />
 
     <TextView
@@ -22,7 +23,7 @@
         android:ellipsize="end"
         android:maxLines="4"
         android:text="今天没什么要办"
-        android:textColor="#1F1E1C"
+        android:textColor="@color/widget_ink"
         android:textSize="14sp" />
 
     <TextView
@@ -33,6 +34,6 @@
         android:ellipsize="end"
         android:maxLines="2"
         android:text="下一个：还没有"
-        android:textColor="#8A8682"
+        android:textColor="@color/widget_muted"
         android:textSize="12sp" />
 </LinearLayout>

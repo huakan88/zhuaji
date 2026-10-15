@@ -31,7 +31,7 @@ class CatsPage extends StatelessWidget {
             now: app.now,
           );
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: AppColors.of(context).background,
       appBar: zhuajiBar('猫咪'),
       body: FadeIn(
         child: ListView(
@@ -82,6 +82,21 @@ class CatsPage extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 20),
+            const SectionLabel('外观'),
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                for (final mode in ZhuajiThemeMode.values)
+                  ChoiceChip(
+                    label: Text(mode.label),
+                    selected: app.themeMode == mode,
+                    onSelected: (_) => app.setThemeMode(mode),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 20),
             if (cat == null)
               EmptyHint(
                 title: '还没猫',
@@ -111,7 +126,7 @@ class CatsPage extends StatelessWidget {
                             '体重',
                             style: zhuaji.copyWith(
                               fontSize: 12,
-                              color: AppColors.muted,
+                              color: AppColors.of(context).muted,
                             ),
                           ),
                           const SizedBox(height: 2),
@@ -119,7 +134,7 @@ class CatsPage extends StatelessWidget {
                             '体重在健康里改',
                             style: zhuaji.copyWith(
                               fontSize: 12,
-                              color: AppColors.muted,
+                              color: AppColors.of(context).muted,
                             ),
                           ),
                         ],
@@ -215,7 +230,10 @@ class _RecentCare extends StatelessWidget {
     if (events.isEmpty) {
       return Text(
         '记过的疫苗、驱虫和就医会出现在这里',
-        style: zhuaji.copyWith(fontSize: 13, color: AppColors.muted),
+        style: zhuaji.copyWith(
+          fontSize: 13,
+          color: AppColors.of(context).muted,
+        ),
       );
     }
     return QuietCard(
@@ -223,12 +241,16 @@ class _RecentCare extends StatelessWidget {
       child: Column(
         children: [
           for (var i = 0; i < events.length; i++) ...[
-            if (i > 0) const Divider(height: 1, color: AppColors.line),
+            if (i > 0) Divider(height: 1, color: AppColors.of(context).line),
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 12),
               child: Row(
                 children: [
-                  Icon(_icon(events[i].kind), size: 20, color: AppColors.ink),
+                  Icon(
+                    _icon(events[i].kind),
+                    size: 20,
+                    color: AppColors.of(context).ink,
+                  ),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
@@ -242,7 +264,7 @@ class _RecentCare extends StatelessWidget {
                     formatMonthDay(events[i].on),
                     style: zhuaji.copyWith(
                       fontSize: 12,
-                      color: AppColors.muted,
+                      color: AppColors.of(context).muted,
                     ),
                   ),
                 ],

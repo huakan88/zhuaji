@@ -28,13 +28,10 @@ class _CalendarPageState extends State<CalendarPage> {
       for (var i = 0; i < agendaSpanDays; i++) start.add(Duration(days: i)),
     ];
     final leading = start.weekday - 1;
-    final cells = <DateTime?>[
-      for (var i = 0; i < leading; i++) null,
-      ...days,
-    ];
+    final cells = <DateTime?>[for (var i = 0; i < leading; i++) null, ...days];
     final onDay = agendaOn(items, selected);
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: AppColors.of(context).background,
       appBar: zhuajiBar('未来 30 天'),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
@@ -48,7 +45,7 @@ class _CalendarPageState extends State<CalendarPage> {
                       label,
                       style: zhuaji.copyWith(
                         fontSize: 12,
-                        color: AppColors.muted,
+                        color: AppColors.of(context).muted,
                       ),
                     ),
                   ),
@@ -64,14 +61,15 @@ class _CalendarPageState extends State<CalendarPage> {
             crossAxisSpacing: 6,
             childAspectRatio: 0.85,
             children: [
-              for (final day in cells) _DayCell(
-                day: day,
-                count: day == null ? 0 : agendaOn(items, day).length,
-                selected: day != null && dateOnly(day) == selected,
-                onTap: day == null
-                    ? null
-                    : () => setState(() => _selected = day),
-              ),
+              for (final day in cells)
+                _DayCell(
+                  day: day,
+                  count: day == null ? 0 : agendaOn(items, day).length,
+                  selected: day != null && dateOnly(day) == selected,
+                  onTap: day == null
+                      ? null
+                      : () => setState(() => _selected = day),
+                ),
             ],
           ),
           const SizedBox(height: 20),
@@ -86,8 +84,12 @@ class _CalendarPageState extends State<CalendarPage> {
             ],
           const SizedBox(height: 20),
           Text(
-            'Android 桌面可以加「今天的事」小组件，点一下进对应的页。',
-            style: zhuaji.copyWith(fontSize: 13, color: AppColors.muted, height: 1.4),
+            'Android 现在可以在桌面加「今天的事」，点一下进对应的页。iPhone 要等安装包里带上小组件后才会出现。',
+            style: zhuaji.copyWith(
+              fontSize: 13,
+              color: AppColors.of(context).muted,
+              height: 1.4,
+            ),
           ),
           const SizedBox(height: 8),
           Wrap(
@@ -96,13 +98,13 @@ class _CalendarPageState extends State<CalendarPage> {
               ChoiceChip(
                 label: const Text('小组件显示待办'),
                 selected: app.widgetEnabled,
-                selectedColor: AppColors.tintCoral,
+                selectedColor: AppColors.of(context).brandTint,
                 onSelected: (_) => app.setWidgetEnabled(true),
               ),
               ChoiceChip(
                 label: const Text('小组件不显示'),
                 selected: !app.widgetEnabled,
-                selectedColor: AppColors.tintCoral,
+                selectedColor: AppColors.of(context).brandTint,
                 onSelected: (_) => app.setWidgetEnabled(false),
               ),
             ],
@@ -131,7 +133,9 @@ class _DayCell extends StatelessWidget {
     final value = day;
     if (value == null) return const SizedBox.shrink();
     return Material(
-      color: selected ? AppColors.tintCoral : AppColors.card,
+      color: selected
+          ? AppColors.of(context).brandTint
+          : AppColors.of(context).card,
       borderRadius: BorderRadius.circular(10),
       child: InkWell(
         onTap: onTap,
@@ -140,7 +144,9 @@ class _DayCell extends StatelessWidget {
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(10),
             border: Border.all(
-              color: selected ? AppColors.coralDeep : AppColors.line,
+              color: selected
+                  ? AppColors.of(context).brandDeep
+                  : AppColors.of(context).line,
             ),
           ),
           child: Column(
@@ -158,7 +164,9 @@ class _DayCell extends StatelessWidget {
                 width: 5,
                 height: 5,
                 decoration: BoxDecoration(
-                  color: count > 0 ? AppColors.coralDeep : Colors.transparent,
+                  color: count > 0
+                      ? AppColors.of(context).brandDeep
+                      : AppColors.clear,
                   shape: BoxShape.circle,
                 ),
               ),
@@ -198,7 +206,10 @@ class _AgendaRow extends StatelessWidget {
                   item.detail,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: zhuaji.copyWith(fontSize: 12, color: AppColors.muted),
+                  style: zhuaji.copyWith(
+                    fontSize: 12,
+                    color: AppColors.of(context).muted,
+                  ),
                 ),
               ],
             ),

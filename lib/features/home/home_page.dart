@@ -18,7 +18,7 @@ class HomePage extends StatelessWidget {
     final cat = app.active;
     final todos = _todos(context, app, cat);
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: AppColors.of(context).background,
       appBar: zhuajiBar('今天'),
       body: FadeIn(
         child: ListView(
@@ -57,7 +57,7 @@ class HomePage extends StatelessWidget {
                           '疫苗、驱虫、体检、粮和复诊',
                           style: zhuaji.copyWith(
                             fontSize: 12,
-                            color: AppColors.muted,
+                            color: AppColors.of(context).muted,
                           ),
                         ),
                       ],
@@ -252,10 +252,14 @@ class _CatPill extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.fromLTRB(4, 4, 14, 4),
         decoration: BoxDecoration(
-          color: selected ? AppColors.tintCoral : AppColors.card,
+          color: selected
+              ? AppColors.of(context).brandTint
+              : AppColors.of(context).card,
           borderRadius: BorderRadius.circular(999),
           border: Border.all(
-            color: selected ? AppColors.coralDeep : AppColors.line,
+            color: selected
+                ? AppColors.of(context).brandDeep
+                : AppColors.of(context).line,
           ),
         ),
         child: Row(
@@ -278,7 +282,9 @@ class _CatPill extends StatelessWidget {
               count == 0 ? '没事' : '$count 件',
               style: zhuaji.copyWith(
                 fontSize: 12,
-                color: count == 0 ? AppColors.muted : AppColors.coralDeep,
+                color: count == 0
+                    ? AppColors.of(context).muted
+                    : AppColors.of(context).brandDeep,
               ),
             ),
           ],
@@ -341,7 +347,7 @@ class _TodoRowState extends State<_TodoRow> {
                     overflow: TextOverflow.ellipsis,
                     style: zhuaji.copyWith(
                       fontSize: 12,
-                      color: AppColors.muted,
+                      color: AppColors.of(context).muted,
                     ),
                   ),
                 ],
@@ -353,11 +359,11 @@ class _TodoRowState extends State<_TodoRow> {
               alignment: Alignment.center,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                border: Border.all(color: AppColors.coral),
+                border: Border.all(color: AppColors.of(context).brand),
               ),
-              child: const Icon(
+              child: Icon(
                 Icons.check,
-                color: AppColors.coralDeep,
+                color: AppColors.of(context).brandDeep,
                 size: 16,
               ),
             ),

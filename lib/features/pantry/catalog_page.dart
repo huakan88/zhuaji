@@ -29,7 +29,7 @@ class _CatalogPageState extends State<CatalogPage> {
     final app = AppScope.of<AppController>(context);
     final foods = filterFoods(app.products, _query.text);
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: AppColors.of(context).background,
       appBar: zhuajiBar('图鉴'),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
@@ -43,7 +43,10 @@ class _CatalogPageState extends State<CatalogPage> {
           const SizedBox(height: 8),
           Text(
             '自己加的猫粮也在这里',
-            style: zhuaji.copyWith(fontSize: 12, color: AppColors.muted),
+            style: zhuaji.copyWith(
+              fontSize: 12,
+              color: AppColors.of(context).muted,
+            ),
           ),
           const SizedBox(height: 12),
           if (foods.isEmpty)
@@ -86,14 +89,17 @@ class _CatalogPageState extends State<CatalogPage> {
                             ].join(' · '),
                             style: zhuaji.copyWith(
                               fontSize: 12,
-                              color: AppColors.muted,
+                              color: AppColors.of(context).muted,
                             ),
                           ),
                         ],
                       ),
                     ),
                     if (item.isCustom)
-                      const Icon(Icons.chevron_right, color: AppColors.muted),
+                      Icon(
+                        Icons.chevron_right,
+                        color: AppColors.of(context).muted,
+                      ),
                   ],
                 ),
               ),

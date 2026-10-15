@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:maokangji/data/db/app_database.dart';
@@ -139,6 +140,18 @@ void main() {
     await tapText(tester, '重称自己');
     expect(find.text('先自己站上去'), findsOneWidget);
     await close(tester);
+  });
+
+  testWidgets('bluetooth off on iOS points at Control Center', (tester) async {
+    debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
+    try {
+      scale.status = ScaleStatus.off;
+      await open(tester);
+      expect(find.text('请先在控制中心打开蓝牙，再回来重试'), findsOneWidget);
+      await close(tester);
+    } finally {
+      debugDefaultTargetPlatformOverride = null;
+    }
   });
 
   testWidgets('bluetooth off: say so, manual entry still works', (

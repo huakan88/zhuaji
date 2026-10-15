@@ -9,11 +9,26 @@
 	<key>CFBundleDisplayName</key>
 	<string>爪记</string>
 	<key>NSCameraUsageDescription</key>
-	<string>爪记需要使用相机扫描猫粮条码、拍摄包装日期，以及为猫咪拍摄头像和体态照片。</string>
+	<string>爪记需要使用相机扫描猫粮条码，拍摄包装、化验单和疫苗贴纸，以及为猫咪拍摄头像和体态照片。</string>
 	<key>NSBluetoothAlwaysUsageDescription</key>
-	<string>爪记用蓝牙读取体重秤上的数字，用来记录猫咪体重。不会用来定位。</string>
+	<string>爪记用蓝牙读取体重秤上的数字，用来记录猫咪体重。只在打开蓝牙秤时使用，不会用来定位，也不会在后台扫描。</string>
+	<key>NSBluetoothPeripheralUsageDescription</key>
+	<string>爪记用蓝牙读取体重秤上的数字，用来记录猫咪体重。只在打开蓝牙秤时使用，不会用来定位，也不会在后台扫描。</string>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>爪记需要从相册选择猫咪照片或包装日期照片。</string>
+	<string>爪记需要从相册选择猫咪照片、包装照片或化验单。</string>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>com.maokangji.maokangji</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>zhuaji</string>
+			</array>
+		</dict>
+	</array>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>

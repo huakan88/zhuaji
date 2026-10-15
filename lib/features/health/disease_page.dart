@@ -35,7 +35,7 @@ class _DiseaseLibraryPageState extends State<DiseaseLibraryPage> {
     final flag = disease.redFlags.isEmpty ? '' : disease.redFlags.first;
     final diet = _oneLine(disease.diet);
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: AppColors.of(context).background,
       appBar: zhuajiBar('看病'),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
@@ -48,7 +48,7 @@ class _DiseaseLibraryPageState extends State<DiseaseLibraryPage> {
                 ChoiceChip(
                   label: Text(item.name),
                   selected: item.id == disease.id,
-                  selectedColor: AppColors.tintCoral,
+                  selectedColor: AppColors.of(context).brandTint,
                   onSelected: (_) => setState(() => _selected = item.id),
                 ),
             ],

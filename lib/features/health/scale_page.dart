@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -61,7 +62,10 @@ class _ScalePageState extends State<ScalePage> {
       _fail(switch (status) {
         ScaleStatus.unsupported => '这台手机不支持蓝牙秤',
         ScaleStatus.denied => '没有蓝牙权限，可以在系统设置里打开',
-        _ => '蓝牙没打开',
+        _ =>
+          defaultTargetPlatform == TargetPlatform.iOS
+              ? '请先在控制中心打开蓝牙，再回来重试'
+              : '蓝牙没打开',
       });
       return;
     }
@@ -142,14 +146,17 @@ class _ScalePageState extends State<ScalePage> {
     final app = AppScope.of<AppController>(context);
     final cat = app.active;
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: AppColors.of(context).background,
       appBar: zhuajiBar('蓝牙秤'),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
         children: [
           Text(
             '抱猫称：先称自己，再抱着${cat?.name ?? '猫'}称，差就是猫的体重。',
-            style: zhuaji.copyWith(fontSize: 14, color: AppColors.muted),
+            style: zhuaji.copyWith(
+              fontSize: 14,
+              color: AppColors.of(context).muted,
+            ),
           ),
           const SizedBox(height: 16),
           _Steps(step: _step, owner: _owner),
@@ -159,7 +166,10 @@ class _ScalePageState extends State<ScalePage> {
             const SizedBox(height: 12),
             Text(
               _hint!,
-              style: zhuaji.copyWith(fontSize: 13, color: AppColors.coralDeep),
+              style: zhuaji.copyWith(
+                fontSize: 13,
+                color: AppColors.of(context).brandDeep,
+              ),
             ),
           ],
           const SizedBox(height: 24),
@@ -169,7 +179,7 @@ class _ScalePageState extends State<ScalePage> {
             style: zhuaji.copyWith(
               fontSize: 12,
               height: 1.4,
-              color: AppColors.muted,
+              color: AppColors.of(context).muted,
             ),
           ),
           Align(
@@ -244,7 +254,7 @@ class _ScalePageState extends State<ScalePage> {
                 Expanded(
                   child: Text(
                     '自己 ${_owner!.toStringAsFixed(2)} kg',
-                    style: zhuaji.copyWith(color: AppColors.muted),
+                    style: zhuaji.copyWith(color: AppColors.of(context).muted),
                   ),
                 ),
                 TextButton(
@@ -269,7 +279,10 @@ class _ScalePageState extends State<ScalePage> {
             const SizedBox(height: 4),
             Text(
               '抱猫 ${(_owner! + _cat!).toStringAsFixed(2)} - 自己 ${_owner!.toStringAsFixed(2)}',
-              style: zhuaji.copyWith(fontSize: 13, color: AppColors.muted),
+              style: zhuaji.copyWith(
+                fontSize: 13,
+                color: AppColors.of(context).muted,
+              ),
             ),
             const SizedBox(height: 12),
             TextButton(
@@ -322,16 +335,24 @@ class _Dot extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
-        color: done ? AppColors.tintCoral : AppColors.card,
+        color: done
+            ? AppColors.of(context).brandTint
+            : AppColors.of(context).card,
         borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: done ? AppColors.coralDeep : AppColors.line),
+        border: Border.all(
+          color: done
+              ? AppColors.of(context).brandDeep
+              : AppColors.of(context).line,
+        ),
       ),
       child: Row(
         children: [
           Icon(
             done ? Icons.check_circle : Icons.circle_outlined,
             size: 18,
-            color: done ? AppColors.coralDeep : AppColors.muted,
+            color: done
+                ? AppColors.of(context).brandDeep
+                : AppColors.of(context).muted,
           ),
           const SizedBox(width: 6),
           Text(
@@ -362,7 +383,9 @@ class _Live extends StatelessWidget {
           style: zhuaji.copyWith(
             fontSize: 40,
             fontWeight: FontWeight.w700,
-            color: value == null ? AppColors.line : AppColors.ink,
+            color: value == null
+                ? AppColors.of(context).line
+                : AppColors.of(context).ink,
           ),
         ),
         const SizedBox(height: 4),
@@ -372,7 +395,10 @@ class _Live extends StatelessWidget {
               : value.stable
               ? '稳了'
               : '站稳别动，数字不跳了就自动记下',
-          style: zhuaji.copyWith(fontSize: 13, color: AppColors.muted),
+          style: zhuaji.copyWith(
+            fontSize: 13,
+            color: AppColors.of(context).muted,
+          ),
         ),
       ],
     );
@@ -405,14 +431,17 @@ class _Center extends StatelessWidget {
               child: CircularProgressIndicator(strokeWidth: 2.5),
             )
           else if (icon != null)
-            Icon(icon, size: 32, color: AppColors.coralDeep),
+            Icon(icon, size: 32, color: AppColors.of(context).brandDeep),
           const SizedBox(height: 12),
           Text(title, style: zhuaji.copyWith(fontWeight: FontWeight.w700)),
           const SizedBox(height: 4),
           Text(
             body,
             textAlign: TextAlign.center,
-            style: zhuaji.copyWith(fontSize: 13, color: AppColors.muted),
+            style: zhuaji.copyWith(
+              fontSize: 13,
+              color: AppColors.of(context).muted,
+            ),
           ),
         ],
       ),

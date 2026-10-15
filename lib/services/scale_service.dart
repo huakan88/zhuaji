@@ -37,6 +37,8 @@ class BleScaleSource implements ScaleSource {
       if (state == BluetoothAdapterState.unauthorized) {
         return ScaleStatus.denied;
       }
+      // iOS cannot turn the radio on from an app. The page tells the user
+      // to open Control Center. Android can ask the system to turn it on.
       if (state != BluetoothAdapterState.on &&
           defaultTargetPlatform == TargetPlatform.android) {
         try {

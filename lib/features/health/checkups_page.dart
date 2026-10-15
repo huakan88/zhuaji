@@ -27,7 +27,7 @@ class _CheckupsPageState extends State<CheckupsPage> {
     final cat = app.active;
     if (cat == null) {
       return Scaffold(
-        backgroundColor: AppColors.background,
+        backgroundColor: AppColors.of(context).background,
         appBar: zhuajiBar('体检'),
         body: const Center(child: Text('先选择一只猫')),
       );
@@ -46,7 +46,7 @@ class _CheckupsPageState extends State<CheckupsPage> {
     }
     selected ??= plan.items.isEmpty ? null : plan.items.first;
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: AppColors.of(context).background,
       appBar: zhuajiBar('体检'),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
@@ -64,7 +64,7 @@ class _CheckupsPageState extends State<CheckupsPage> {
                 ChoiceChip(
                   label: Text(advice.item.name),
                   selected: advice.item.id == selected?.item.id,
-                  selectedColor: AppColors.tintCoral,
+                  selectedColor: AppColors.of(context).brandTint,
                   onSelected: (_) => setState(() => _selected = advice.item.id),
                 ),
             ],
@@ -73,7 +73,10 @@ class _CheckupsPageState extends State<CheckupsPage> {
             const SizedBox(height: 12),
             Text(
               selected.plan.frequency,
-              style: zhuaji.copyWith(color: AppColors.muted, height: 1.35),
+              style: zhuaji.copyWith(
+                color: AppColors.of(context).muted,
+                height: 1.35,
+              ),
             ),
             if (suggestedLabKind(selected.item.id) != null) ...[
               const SizedBox(height: 8),
@@ -81,7 +84,7 @@ class _CheckupsPageState extends State<CheckupsPage> {
                 '做完后去存化验单',
                 style: zhuaji.copyWith(
                   fontSize: 13,
-                  color: AppColors.coralDeep,
+                  color: AppColors.of(context).brandDeep,
                 ),
               ),
             ],

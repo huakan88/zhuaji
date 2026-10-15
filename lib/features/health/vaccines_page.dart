@@ -30,7 +30,7 @@ class _VaccinesPageState extends State<VaccinesPage> {
     final cat = app.active;
     if (cat == null) {
       return Scaffold(
-        backgroundColor: AppColors.background,
+        backgroundColor: AppColors.of(context).background,
         appBar: zhuajiBar('疫苗'),
         body: const Center(child: Text('先选择一只猫')),
       );
@@ -44,13 +44,16 @@ class _VaccinesPageState extends State<VaccinesPage> {
         return left.compareTo(right);
       });
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: AppColors.of(context).background,
       appBar: zhuajiBar('疫苗'),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
         children: [
           if (shots.isEmpty)
-            Text('还没记', style: zhuaji.copyWith(color: AppColors.muted))
+            Text(
+              '还没记',
+              style: zhuaji.copyWith(color: AppColors.of(context).muted),
+            )
           else
             for (final shot in shots.take(3)) _Record(shot: shot),
           const SizedBox(height: 8),
@@ -73,7 +76,7 @@ class _VaccinesPageState extends State<VaccinesPage> {
                       ChoiceChip(
                         label: Text(label),
                         selected: _name == label,
-                        selectedColor: AppColors.tintCoral,
+                        selectedColor: AppColors.of(context).brandTint,
                         onSelected: (_) => setState(() => _name = label),
                       ),
                   ],
@@ -86,7 +89,10 @@ class _VaccinesPageState extends State<VaccinesPage> {
                 ),
                 Text(
                   '下次 ${formatDate(next)}',
-                  style: zhuaji.copyWith(fontSize: 13, color: AppColors.muted),
+                  style: zhuaji.copyWith(
+                    fontSize: 13,
+                    color: AppColors.of(context).muted,
+                  ),
                 ),
               ],
             ),
@@ -159,7 +165,7 @@ class _Record extends StatelessWidget {
                   Text(
                     due == null ? '下次还没定' : '下次 ${countdownOf(due, app.now)}',
                     style: zhuaji.copyWith(
-                      color: AppColors.muted,
+                      color: AppColors.of(context).muted,
                       fontSize: 12,
                     ),
                   ),

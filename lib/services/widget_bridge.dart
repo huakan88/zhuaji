@@ -3,8 +3,9 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 
-/// Android home-screen widget. Tests and iOS have no implementation;
-/// a missing channel is ignored so the rest of the app still runs.
+/// Home-screen widget. Android updates the launcher widget directly.
+/// iOS stores the same JSON for `ios/TodayWidget` and opens `zhuaji://` routes.
+/// Tests, and a build that has not registered the channel, ignore the miss.
 class WidgetBridge {
   const WidgetBridge();
 

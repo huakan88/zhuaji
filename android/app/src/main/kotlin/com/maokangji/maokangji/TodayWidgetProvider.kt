@@ -6,6 +6,7 @@ import android.appwidget.AppWidgetProvider
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
+import android.content.res.Configuration
 import android.widget.RemoteViews
 import org.json.JSONObject
 
@@ -41,6 +42,7 @@ class TodayWidgetProvider : AppWidgetProvider() {
             val views = RemoteViews(context.packageName, R.layout.widget_today)
             views.setTextViewText(R.id.widget_today, payload.today)
             views.setTextViewText(R.id.widget_next, payload.next)
+            applyForcedColors(context, views, payload.appearance)
             val intent = Intent(context, MainActivity::class.java).apply {
                 flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP
                 putExtra(EXTRA_ROUTE, payload.route)
@@ -57,7 +59,7 @@ class TodayWidgetProvider : AppWidgetProvider() {
 
         private fun parse(raw: String?): Payload {
             if (raw.isNullOrBlank()) {
-                return Payload("今天没什么要办", "下一个：还没有", "/calendar")
+                return Payload("今天没什么要办", "下一个：还没有", "/calendar", "system")
             }
             return try {
                 val json = JSONObject(raw)
@@ -72,12 +74,42 @@ class TodayWidgetProvider : AppWidgetProvider() {
                 val body = if (lines.isEmpty()) "今天没什么要办" else lines.joinToString("\n")
                 val next = json.optString("next").ifBlank { "还没有" }
                 val route = json.optString("route").ifBlank { "/calendar" }
-                Payload(body, "下一个：$next", route)
+                val appearance = json.optString("appearance").ifBlank { "system" }
+                Payload(body, "下一个：$next", route, appearance)
             } catch (_: Exception) {
-                Payload("今天没什么要办", "下一个：还没有", "/calendar")
+                Payload("今天没什么要办", "下一个：还没有", "/calendar", "system")
             }
+        }
+
+        private fun applyForcedColors(context: Context, views: RemoteViews, appearance: String) {
+            val forcedNight = when (appearance) {
+                "dark" -> true
+                "light" -> false
+                else -> return
+            }
+            val systemNight = (context.resources.configuration.uiMode and
+                Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES
+            if (forcedNight == systemNight) return
+            val config = Configuration(context.resources.configuration)
+            val night = if (forcedNight) {
+                Configuration.UI_MODE_NIGHT_YES
+            } else {
+                Configuration.UI_MODE_NIGHT_NO
+            }
+            config.uiMode = (config.uiMode and Configuration.UI_MODE_NIGHT_MASK.inv()) or night
+            val themed = context.createConfigurationContext(config)
+            fun color(id: Int) = themed.getColor(id)
+            views.setInt(R.id.widget_root, "setBackgroundColor", color(R.color.widget_paper))
+            views.setTextColor(R.id.widget_brand, color(R.color.widget_muted))
+            views.setTextColor(R.id.widget_today, color(R.color.widget_ink))
+            views.setTextColor(R.id.widget_next, color(R.color.widget_muted))
         }
     }
 }
 
-private data class Payload(val today: String, val next: String, val route: String)
+private data class Payload(
+    val today: String,
+    val next: String,
+    val route: String,
+    val appearance: String,
+)

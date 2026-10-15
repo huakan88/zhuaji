@@ -41,7 +41,7 @@ class BagPage extends StatelessWidget {
               ? storage.split('。').first
               : '${storage.split('。').first}。');
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: AppColors.of(context).background,
       appBar: zhuajiBar('这袋粮'),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
@@ -53,7 +53,7 @@ class BagPage extends StatelessWidget {
           const SizedBox(height: 4),
           Text(
             entry.product.brand,
-            style: zhuaji.copyWith(color: AppColors.muted),
+            style: zhuaji.copyWith(color: AppColors.of(context).muted),
           ),
           const SizedBox(height: 16),
           _line(
@@ -72,10 +72,7 @@ class BagPage extends StatelessWidget {
           _line('还能吃', useBy == null ? '看包装' : '到 ${formatDate(useBy)}'),
           _line('余量', stockHint(estimate)),
           const SizedBox(height: 8),
-          Text(
-            '每天喂多少',
-            style: zhuaji.copyWith(fontWeight: FontWeight.w700),
-          ),
+          Text('每天喂多少', style: zhuaji.copyWith(fontWeight: FontWeight.w700)),
           const SizedBox(height: 8),
           Wrap(
             spacing: 8,
@@ -85,7 +82,7 @@ class BagPage extends StatelessWidget {
                 ChoiceChip(
                   label: Text('$grams 克'),
                   selected: entry.item.dailyGrams == grams.toDouble(),
-                  selectedColor: AppColors.tintCoral,
+                  selectedColor: AppColors.of(context).brandTint,
                   onSelected: (_) => app.setDailyGrams(entry, grams.toDouble()),
                 ),
             ],

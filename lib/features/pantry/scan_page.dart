@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 
 import '../../core/theme/app_fonts.dart';
+import '../../core/theme/app_tokens.dart';
 
 /// Formats the camera is asked to read. EAN and UPC are the barcodes on
 /// bags; DataBar, DataMatrix and QR cover GS1 (including Digital Link).
@@ -41,7 +42,7 @@ class _ScanPageState extends State<ScanPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: AppColors.of(context).scrim,
       body: Stack(
         children: [
           Positioned.fill(child: _cameraPane()),
@@ -51,7 +52,7 @@ class _ScanPageState extends State<ScanPage> {
               alignment: Alignment.topLeft,
               child: IconButton(
                 onPressed: () => context.pop(),
-                icon: const Icon(Icons.close, color: Colors.white),
+                icon: Icon(Icons.close, color: AppColors.of(context).onScrim),
               ),
             ),
           ),
@@ -66,7 +67,7 @@ class _ScanPageState extends State<ScanPage> {
                     Text(
                       '条形码、二维码都能扫',
                       style: zhuaji.copyWith(
-                        color: Colors.white,
+                        color: AppColors.of(context).onScrim,
                         fontSize: 16,
                         fontWeight: FontWeight.w700,
                       ),
@@ -75,7 +76,7 @@ class _ScanPageState extends State<ScanPage> {
                     Text(
                       'EAN、UPC、GS1 和二维码',
                       style: zhuaji.copyWith(
-                        color: Colors.white70,
+                        color: AppColors.of(context).onScrimMuted,
                         fontSize: 12,
                       ),
                     ),
@@ -91,8 +92,8 @@ class _ScanPageState extends State<ScanPage> {
                     OutlinedButton(
                       onPressed: () => context.push('/food?bag=1'),
                       style: OutlinedButton.styleFrom(
-                        foregroundColor: Colors.white,
-                        side: const BorderSide(color: Colors.white),
+                        foregroundColor: AppColors.of(context).onScrim,
+                        side: BorderSide(color: AppColors.of(context).onScrim),
                         minimumSize: const Size.fromHeight(48),
                       ),
                       child: const Text('自己添加'),
@@ -101,7 +102,9 @@ class _ScanPageState extends State<ScanPage> {
                       onPressed: () => _openConfirm(''),
                       child: Text(
                         '选品牌',
-                        style: zhuaji.copyWith(color: Colors.white),
+                        style: zhuaji.copyWith(
+                          color: AppColors.of(context).onScrim,
+                        ),
                       ),
                     ),
                   ],
@@ -116,7 +119,10 @@ class _ScanPageState extends State<ScanPage> {
 
   Widget _cameraPane() {
     final fallback = Center(
-      child: Text('相机没开', style: zhuaji.copyWith(color: Colors.white)),
+      child: Text(
+        '相机没开',
+        style: zhuaji.copyWith(color: AppColors.of(context).onScrim),
+      ),
     );
     if (Platform.environment['FLUTTER_TEST'] == 'true') return fallback;
     final camera = _camera ??= MobileScannerController(formats: scanFormats);
@@ -157,7 +163,7 @@ class _Viewfinder extends StatelessWidget {
         height: 220,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(28),
-          border: Border.all(color: Colors.white, width: 1.5),
+          border: Border.all(color: AppColors.of(context).onScrim, width: 1.5),
         ),
       ),
     );
