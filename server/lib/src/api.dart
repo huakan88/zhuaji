@@ -5,6 +5,7 @@ import 'package:shelf_router/shelf_router.dart';
 import 'package:zhuaji_sync/zhuaji_sync.dart';
 
 import 'jwt.dart';
+import 'shared_barcode.dart';
 import 'store.dart';
 
 const entities = {'cats', 'weights', 'vaccines', 'deworms', 'visits', 'pantry'};
@@ -24,6 +25,7 @@ Handler buildApi(
   required String jwtSecret,
   bool devAuth = true,
   bool wechatMock = false,
+  String shareKey = '',
 }) {
   final router = Router();
 
@@ -145,6 +147,30 @@ Handler buildApi(
     });
   });
 
+  router.get('/v1/shared-barcodes/<code>', (
+    Request request,
+    String code,
+  ) async {
+    final row = await store.sharedBarcode(code);
+    if (row == null) return jsonError(404, 'not_found');
+    return jsonOk(row.toJson());
+  });
+
+  router.put('/v1/shared-barcodes/<code>', (
+    Request request,
+    String code,
+  ) async {
+    final body = await readJson(request);
+    final pathKey = SharedBarcode.canonical(code);
+    body['barcode'] = code;
+    final incoming = SharedBarcode.parse(body);
+    if (incoming == null || pathKey.isEmpty || incoming.barcode != pathKey) {
+      return jsonError(400, 'barcode_invalid');
+    }
+    final saved = await store.saveSharedBarcode(incoming);
+    return jsonOk({...saved.row.toJson(), 'applied': saved.applied});
+  });
+
   router.post('/v1/devices/push', (Request request) async {
     final userId = request.context['userId']! as String;
     final body = await readJson(request);
@@ -168,7 +194,7 @@ Handler buildApi(
       .addMiddleware(_cors)
       .addMiddleware(
         (inner) =>
-            (request) => _guard(inner, request, jwtSecret),
+            (request) => _guard(inner, request, jwtSecret, shareKey),
       )
       .addHandler(router.call);
   return pipeline;
@@ -220,17 +246,29 @@ SyncRecord? _recordFrom(Map<String, Object?> raw, String fallbackDevice) {
   );
 }
 
-Future<Response> _guard(Handler inner, Request request, String secret) async {
+Future<Response> _guard(
+  Handler inner,
+  Request request,
+  String secret,
+  String shareKey,
+) async {
   final path = request.url.path;
   if (path == 'healthz' || path.startsWith('v1/auth/')) {
+    return inner(request);
+  }
+  if (path.startsWith('v1/shared-barcodes')) {
+    if (shareKey.isEmpty) return inner(request);
+    final header = request.headers['authorization'] ?? '';
+    if (header != 'Bearer $shareKey') return jsonError(401, 'unauthorized');
     return inner(request);
   }
   final header = request.headers['authorization'] ?? '';
   if (!header.startsWith('Bearer ')) return jsonError(401, 'unauthorized');
   final claims = verifyJwt(header.substring(7), secret);
   final userId = claims?['sub'];
-  if (userId is! String || userId.isEmpty)
+  if (userId is! String || userId.isEmpty) {
     return jsonError(401, 'unauthorized');
+  }
   return inner(request.change(context: {'userId': userId}));
 }
 
@@ -247,7 +285,7 @@ Middleware get _cors => (inner) {
 const _corsHeaders = {
   'access-control-allow-origin': '*',
   'access-control-allow-headers': 'authorization, content-type, x-device-id',
-  'access-control-allow-methods': 'GET, POST, OPTIONS',
+  'access-control-allow-methods': 'GET, POST, PUT, OPTIONS',
 };
 
 Future<Map<String, Object?>> readJson(Request request) async {

@@ -127,6 +127,93 @@ void main() {
     expect(unknown.statusCode, 400);
   });
 
+  test('a newer barcode correction replaces the older one', () async {
+    final created = await call(
+      api,
+      'PUT',
+      '/v1/shared-barcodes/6958862134620',
+      {
+        'brand': '麦富迪',
+        'name': '三文鱼双拼',
+        'spec': '2千克',
+        'ingredients': '',
+        'contributorId': 'dev-a',
+        'createdAt': '2026-10-01T00:00:00.000Z',
+        'updatedAt': '2026-10-01T00:00:00.000Z',
+      },
+    );
+    expect(created.statusCode, 200);
+    expect(jsonDecode(created.body)['applied'], isTrue);
+
+    final older = await call(api, 'PUT', '/v1/shared-barcodes/6958862134620', {
+      'brand': '错品牌',
+      'name': '旧名字',
+      'spec': '1千克',
+      'contributorId': 'dev-b',
+      'updatedAt': '2026-09-01T00:00:00.000Z',
+    });
+    expect(older.statusCode, 200);
+    final kept = jsonDecode(older.body) as Map<String, Object?>;
+    expect(kept['applied'], isFalse);
+    expect(kept['brand'], '麦富迪');
+    expect(kept['createdAt'], '2026-10-01T00:00:00.000Z');
+
+    final newer = await call(api, 'PUT', '/v1/shared-barcodes/06958862134620', {
+      'brand': '麦富迪',
+      'name': '三文鱼双拼全价全期猫粮',
+      'spec': '2千克',
+      'ingredients': '三文鱼',
+      'contributorId': 'dev-c',
+      'createdAt': '2026-10-20T00:00:00.000Z',
+      'updatedAt': '2026-10-15T00:00:00.000Z',
+    });
+    expect(newer.statusCode, 200);
+    final fixed = jsonDecode(newer.body) as Map<String, Object?>;
+    expect(fixed['applied'], isTrue);
+    expect(fixed['name'], '三文鱼双拼全价全期猫粮');
+    expect(fixed['createdAt'], '2026-10-01T00:00:00.000Z');
+    expect(fixed['updatedAt'], '2026-10-15T00:00:00.000Z');
+    expect(fixed.containsKey('cat'), isFalse);
+
+    final read = await call(
+      api,
+      'GET',
+      '/v1/shared-barcodes/6958862134620',
+      null,
+    );
+    expect(jsonDecode(read.body)['ingredients'], '三文鱼');
+
+    final junk = await call(api, 'PUT', '/v1/shared-barcodes/abc', {
+      'brand': '麦富迪',
+      'name': '三文鱼',
+      'spec': '2千克',
+      'contributorId': 'dev-a',
+      'updatedAt': '2026-10-15T00:00:00.000Z',
+    });
+    expect(junk.statusCode, 400);
+
+    final locked = buildApi(
+      MemoryStore(),
+      jwtSecret: secret,
+      shareKey: 'share-secret',
+    );
+    final denied = await call(
+      locked,
+      'GET',
+      '/v1/shared-barcodes/6958862134620',
+      null,
+    );
+    expect(denied.statusCode, 401);
+    final allowed = await call(
+      locked,
+      'GET',
+      '/v1/shared-barcodes/6958862134620',
+      null,
+      token: 'share-secret',
+    );
+    expect(allowed.statusCode, 404);
+  });
+
   test('wechat stays a reserved endpoint until mock is on', () async {
     final closed = buildApi(MemoryStore(), jwtSecret: secret);
     final blocked = await call(closed, 'POST', '/v1/auth/wechat', {

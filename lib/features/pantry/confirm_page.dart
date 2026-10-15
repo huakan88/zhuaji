@@ -332,6 +332,16 @@ class _ConfirmPageState extends State<ConfirmPage> {
       if (code.isNotEmpty && app.findBarcode(code)?.id != product.id) {
         await app.rememberBarcode(code, product.id);
       }
+      if (code.isNotEmpty) {
+        await app.rememberUserBarcode(
+          code: code,
+          brand: product.brand,
+          name: product.name,
+          spec: product.spec,
+          imageUrl: product.photoPath,
+          ask: () => confirmBarcodeShare(context),
+        );
+      }
       await app.savePantry(
         PantryDraft(
           productId: product.id,
