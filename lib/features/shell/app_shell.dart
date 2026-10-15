@@ -25,20 +25,6 @@ class _AppShellState extends State<AppShell> {
     });
   }
 
-  int _branchFor(int slot) => switch (slot) {
-    0 => 0,
-    1 => 1,
-    3 => 2,
-    _ => 3,
-  };
-
-  int _slotFor(int branch) => switch (branch) {
-    0 => 0,
-    1 => 1,
-    2 => 3,
-    _ => 4,
-  };
-
   @override
   Widget build(BuildContext context) {
     final app = AppScope.of<AppController>(context);
@@ -62,14 +48,8 @@ class _AppShellState extends State<AppShell> {
           : widget.shell,
       bottomNavigationBar: showBar
           ? _TabBar(
-              slot: _slotFor(widget.shell.currentIndex),
-              onSlot: (slot) {
-                if (slot == 2) {
-                  context.push('/scan');
-                  return;
-                }
-                widget.shell.goBranch(_branchFor(slot));
-              },
+              index: widget.shell.currentIndex,
+              onTap: widget.shell.goBranch,
             )
           : null,
     );
@@ -77,10 +57,10 @@ class _AppShellState extends State<AppShell> {
 }
 
 class _TabBar extends StatelessWidget {
-  const _TabBar({required this.slot, required this.onSlot});
+  const _TabBar({required this.index, required this.onTap});
 
-  final int slot;
-  final ValueChanged<int> onSlot;
+  final int index;
+  final ValueChanged<int> onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -92,15 +72,13 @@ class _TabBar extends StatelessWidget {
       child: SafeArea(
         top: false,
         child: SizedBox(
-          height: 72,
+          height: 64,
           child: Row(
-            crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               _item(context, 0, Icons.today_outlined, '今天'),
               _item(context, 1, Icons.favorite_border, '健康'),
-              _scan(context),
-              _item(context, 3, Icons.inventory_2_outlined, '粮仓'),
-              _item(context, 4, Icons.pets_outlined, '猫咪'),
+              _item(context, 2, Icons.inventory_2_outlined, '粮仓'),
+              _item(context, 3, Icons.pets_outlined, '猫咪'),
             ],
           ),
         ),
@@ -108,18 +86,18 @@ class _TabBar extends StatelessWidget {
     );
   }
 
-  Widget _item(BuildContext context, int index, IconData icon, String label) {
-    final selected = slot == index;
+  Widget _item(BuildContext context, int slot, IconData icon, String label) {
+    final selected = index == slot;
     final color = selected
         ? AppColors.of(context).brandDeep
         : AppColors.of(context).muted;
     return Expanded(
       child: InkWell(
-        onTap: () => onSlot(index),
+        onTap: () => onTap(slot),
         child: Padding(
-          padding: const EdgeInsets.only(bottom: 8),
+          padding: const EdgeInsets.only(bottom: 6, top: 8),
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.end,
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Icon(icon, color: color, size: 22),
               const SizedBox(height: 2),
@@ -133,55 +111,6 @@ class _TabBar extends StatelessWidget {
               ),
             ],
           ),
-        ),
-      ),
-    );
-  }
-
-  Widget _scan(BuildContext context) {
-    return Expanded(
-      child: GestureDetector(
-        onTap: () => onSlot(2),
-        child: Padding(
-          padding: const EdgeInsets.only(bottom: 4),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              const _ScanMark(),
-              const SizedBox(height: 2),
-              Text(
-                '扫粮',
-                style: zhuaji.copyWith(
-                  fontSize: 11,
-                  color: AppColors.of(context).brandDeep,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _ScanMark extends StatelessWidget {
-  const _ScanMark();
-
-  @override
-  Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: AppColors.of(context).brand,
-        shape: BoxShape.circle,
-      ),
-      child: SizedBox(
-        width: 48,
-        height: 48,
-        child: Icon(
-          Icons.qr_code_scanner,
-          color: AppColors.of(context).onBrand,
-          size: 22,
         ),
       ),
     );

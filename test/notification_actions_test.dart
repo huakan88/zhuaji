@@ -129,5 +129,8 @@ void main() {
     expect(shortcutRoute('deworm'), '/deworms');
     expect(shortcutRoute('scan'), '/scan');
     expect(shortcutRoute('nope'), isNull);
+    expect(routeSelectsScan('/scan'), isTrue);
+    expect(routeSelectsScan('zhuaji://open?route=/scan'), isTrue);
+    expect(routeSelectsScan('/weight'), isFalse);
   });
 }
