@@ -79,15 +79,18 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
           const _SafetyBanner(),
           const SizedBox(height: 16),
           Text(card.summary, style: zhuaji.copyWith(fontSize: 16, height: 1.4)),
-          const SizedBox(height: 12),
-          _EnergyBlock(app: app),
+          if (card.kind != FreshKind.safety &&
+              card.kind != FreshKind.avoid) ...[
+            const SizedBox(height: 12),
+            _EnergyBlock(app: app),
+          ],
           for (final paragraph in card.paragraphs) ...[
             const SizedBox(height: 12),
             Text(paragraph, style: zhuaji.copyWith(height: 1.45)),
           ],
           if (card.lines.isNotEmpty) ...[
             const SizedBox(height: 16),
-            const SectionLabel('写明的克数或禁忌'),
+            SectionLabel(card.kind == FreshKind.avoid ? '不要进碗' : '克数'),
             const SizedBox(height: 8),
             for (final line in card.lines)
               Padding(
