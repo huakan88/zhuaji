@@ -15,7 +15,7 @@ const privacySections = [
   (
     title: '相机和相册',
     body:
-        '只在你点「扫粮」、拍包装、拍化验单、拍疫苗贴纸或给猫拍照时使用。'
+        '只在你打开粮仓里的相机、拍包装、拍化验单、拍疫苗贴纸或给猫拍照时使用。'
         '扫码、认包装、认化验单和认贴纸都在手机上完成，照片不上传。',
   ),
   (title: '通知', body: '用来提醒疫苗、驱虫、体检、粮食到期和补货。点通知上的「已完成」只会在手机里记一笔。'),
@@ -51,7 +51,7 @@ class PrivacyPage extends StatelessWidget {
         padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
         children: [
           Text(
-            '肉垫本 PawPad · 2.10.1 · 2026 年 10 月更新',
+            '肉垫本 PawPad · 2.11.0 · 2026 年 10 月更新',
             style: zhuaji.copyWith(
               fontSize: 13,
               color: AppColors.of(context).muted,

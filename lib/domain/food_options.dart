@@ -21,11 +21,16 @@ const foodSpecs = ['70g', '85g', '100g', '500g', '1.5kg', '2kg', '5kg', '10kg'];
 
 /// Catalog search. Custom foods live in the same list, so a query matches them
 /// the same way it matches the built-in rows.
-List<FoodProduct> filterFoods(List<FoodProduct> products, String query) {
+bool foodMatchesQuery(FoodProduct item, String query) {
   final q = query.trim().toLowerCase();
+  if (q.isEmpty) return true;
+  return _haystack(item).contains(q);
+}
+
+List<FoodProduct> filterFoods(List<FoodProduct> products, String query) {
   final matched = [
     for (final item in products)
-      if (q.isEmpty || _haystack(item).contains(q)) item,
+      if (foodMatchesQuery(item, query)) item,
   ];
   matched.sort((a, b) {
     if (a.isCustom != b.isCustom) return a.isCustom ? -1 : 1;

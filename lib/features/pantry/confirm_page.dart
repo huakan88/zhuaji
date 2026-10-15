@@ -11,9 +11,12 @@ import '../../state/app_controller.dart';
 import '../records/record_sheets.dart';
 
 class ConfirmPage extends StatefulWidget {
-  const ConfirmPage({required this.code, super.key});
+  const ConfirmPage({required this.code, this.productId, super.key});
 
   final String code;
+
+  /// Set when the person picked this food from search instead of a scan.
+  final int? productId;
 
   @override
   State<ConfirmPage> createState() => _ConfirmPageState();
@@ -39,6 +42,9 @@ class _ConfirmPageState extends State<ConfirmPage> {
     final app = AppScope.of<AppController>(context);
     final today = dateOnly(app.now);
     final known = widget.code.isEmpty ? null : app.findBarcode(widget.code);
+    final pinned = widget.productId == null
+        ? null
+        : app.productById(widget.productId!);
     final parsed = const Gs1Parser().parse(widget.code);
     _fromCode = parsed.recognized;
     _production =
@@ -46,7 +52,7 @@ class _ConfirmPageState extends State<ConfirmPage> {
     _expiry = parsed.suggestedExpiry ?? today.add(const Duration(days: 365));
     _opened = today;
     _batch = parsed.batch;
-    _apply(known ?? _fallback(app));
+    _apply(pinned ?? known ?? _fallback(app));
     _ready = true;
   }
 
@@ -90,6 +96,8 @@ class _ConfirmPageState extends State<ConfirmPage> {
     ];
     final known = widget.code.isEmpty ? null : app.findBarcode(widget.code);
     final matched = known != null && !_rechoose;
+    final fromSearch = widget.productId != null && !_rechoose && !matched;
+    final locked = matched || fromSearch;
     final days = {7, 30, 42, _days}.toList()..sort();
     return Scaffold(
       backgroundColor: AppColors.of(context).background,
@@ -166,7 +174,7 @@ class _ConfirmPageState extends State<ConfirmPage> {
             },
             child: const Text('自己添加'),
           ),
-          if (!matched && brands.isNotEmpty) ...[
+          if (!locked && brands.isNotEmpty) ...[
             const SizedBox(height: 20),
             const SectionLabel('品牌'),
             const SizedBox(height: 8),

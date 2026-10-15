@@ -28,13 +28,13 @@ void main() {
     await database.close();
   });
 
-  testWidgets('five tabs, and leaving a form comes back', (tester) async {
+  testWidgets('four tabs, and leaving a form comes back', (tester) async {
     await boot(tester, controller);
     expect(find.text('今天'), findsWidgets);
     expect(find.text('健康'), findsWidgets);
-    expect(find.text('扫粮'), findsWidgets);
     expect(find.text('粮仓'), findsWidgets);
     expect(find.text('猫咪'), findsWidgets);
+    expect(find.text('扫粮'), findsNothing);
     expect(find.text('我的'), findsNothing);
 
     await tapText(tester, '健康');

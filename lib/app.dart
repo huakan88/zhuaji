@@ -53,6 +53,29 @@ String? shortcutRoute(String type) {
   return null;
 }
 
+/// True when a shortcut, notification payload or `zhuaji://` route should
+/// open the camera. The path may arrive as `/scan` or nested in `route`.
+bool routeSelectsScan(String route) {
+  final trimmed = route.trim();
+  final uri = Uri.tryParse(trimmed);
+  if (uri == null) return trimmed == '/scan';
+  if (uri.path == '/scan') return true;
+  final nested = uri.queryParameters['route'];
+  if (nested == null || nested == trimmed) return false;
+  return routeSelectsScan(nested);
+}
+
+/// External entries. A scan target selects 粮仓 first, then the camera, so
+/// closing the camera lands on the pantry.
+void openAppRoute(GoRouter router, String route) {
+  if (routeSelectsScan(route)) {
+    router.go('/pantry');
+    router.push('/scan');
+    return;
+  }
+  router.push(route);
+}
+
 class ZhuajiApp extends StatefulWidget {
   const ZhuajiApp({
     required this.controller,
@@ -103,8 +126,10 @@ class _ZhuajiAppState extends State<ZhuajiApp> {
       GoRoute(path: '/scan', builder: (_, _) => const ScanPage()),
       GoRoute(
         path: '/confirm',
-        builder: (context, state) =>
-            ConfirmPage(code: state.uri.queryParameters['code'] ?? ''),
+        builder: (context, state) => ConfirmPage(
+          code: state.uri.queryParameters['code'] ?? '',
+          productId: int.tryParse(state.uri.queryParameters['product'] ?? ''),
+        ),
       ),
       GoRoute(
         path: '/bag',
@@ -193,13 +218,13 @@ class _ZhuajiAppState extends State<ZhuajiApp> {
   void initState() {
     super.initState();
     _shortcuts();
-    WidgetBridge.listen((route) => _router.push(route));
+    WidgetBridge.listen((route) => openAppRoute(_router, route));
     _openWidgetRoute();
   }
 
   Future<void> _openWidgetRoute() async {
     final route = await WidgetBridge.takeRoute();
-    if (route != null) _router.push(route);
+    if (route != null) openAppRoute(_router, route);
   }
 
   Future<void> _shortcuts() async {
@@ -207,7 +232,7 @@ class _ZhuajiAppState extends State<ZhuajiApp> {
     try {
       await actions.initialize((type) {
         final route = shortcutRoute(type);
-        if (route != null) _router.push(route);
+        if (route != null) openAppRoute(_router, route);
       });
       await actions.setShortcutItems([
         for (final item in appShortcuts)
