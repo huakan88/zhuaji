@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -44,7 +43,7 @@ Future<BarcodeResponse> liveBarcodeFetch(BarcodeCall call) async {
         .join()
         .timeout(call.timeout);
     return BarcodeResponse(response.statusCode, body);
-  } on TimeoutException {
+  } catch (_) {
     return const BarcodeResponse(0, '');
   } finally {
     client.close(force: true);

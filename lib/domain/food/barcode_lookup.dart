@@ -276,7 +276,9 @@ Future<BarcodeRecord> lookupBarcode(
   BarcodeKeys keys = const BarcodeKeys(),
 }) async {
   final requested = code.trim();
+  if (requested.isEmpty) return BarcodeRecord.miss(code);
   final candidates = barcodeCandidates(requested);
+  if (candidates.isEmpty) return BarcodeRecord.miss(requested);
   final started = DateTime.now();
   var definitive = false;
   var degraded = false;
@@ -291,22 +293,30 @@ Future<BarcodeRecord> lookupBarcode(
     final left = lookupBudget - elapsed;
     if (left < timeout) timeout = left;
     if (timeout < const Duration(milliseconds: 250)) return null;
+    final BarcodeResponse response;
     try {
-      final response = await fetch(
-        BarcodeCall(call.uri, headers: call.headers, timeout: timeout),
-      ).timeout(timeout, onTimeout: () => const BarcodeResponse(0, ''));
-      if (response.status <= 0 || response.status >= 500) {
-        degraded = true;
-        return null;
-      }
-      final reply = interpret(response.status, response.body);
-      if (reply.record != null) return reply.record;
-      if (reply.miss) definitive = true;
-      return null;
+      response =
+          await fetch(
+                BarcodeCall(call.uri, headers: call.headers, timeout: timeout),
+              )
+              .then<BarcodeResponse>(
+                (value) => value,
+                onError: (Object _, StackTrace _) =>
+                    const BarcodeResponse(0, ''),
+              )
+              .timeout(timeout, onTimeout: () => const BarcodeResponse(0, ''));
     } catch (_) {
       degraded = true;
       return null;
     }
+    if (response.status <= 0 || response.status >= 500) {
+      degraded = true;
+      return null;
+    }
+    final reply = interpret(response.status, response.body);
+    if (reply.record != null) return reply.record;
+    if (reply.miss) definitive = true;
+    return null;
   }
 
   Future<BarcodeRecord?> walk(
