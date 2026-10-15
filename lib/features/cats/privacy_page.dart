@@ -15,8 +15,17 @@ const privacySections = [
   (
     title: '相机和相册',
     body:
-        '只在你打开粮仓里的相机、拍包装、拍化验单、拍疫苗贴纸或给猫拍照时使用。'
+        '只在你打开今天或粮仓里的相机、拍包装、拍化验单、拍疫苗贴纸或给猫拍照时使用。'
         '扫码、认包装、认化验单和认贴纸都在手机上完成，照片不上传。',
+  ),
+  (
+    title: '条码查询',
+    body:
+        '扫到 EAN 或 UPC 时，会把这串数字发给公开商品库'
+        '（Open Pet Food Facts、Open Food Facts、Open Products Facts、UPCitemdb）'
+        '查询品牌、名称、规格、配料和成分。查到的结果存在这台手机里。'
+        '照片和猫咪资料不会一起发出去。这些库经常没有国产粮，'
+        '查不到时可以拍包装或点选品牌，记在手机里。',
   ),
   (title: '通知', body: '用来提醒疫苗、驱虫、体检、粮食到期和补货。点通知上的「已完成」只会在手机里记一笔。'),
   (
@@ -51,7 +60,7 @@ class PrivacyPage extends StatelessWidget {
         padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
         children: [
           Text(
-            '肉垫本 PawPad · 2.11.0 · 2026 年 10 月更新',
+            '肉垫本 PawPad · 2.12.0 · 2026 年 10 月更新',
             style: zhuaji.copyWith(
               fontSize: 13,
               color: AppColors.of(context).muted,

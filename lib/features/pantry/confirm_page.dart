@@ -11,12 +11,20 @@ import '../../state/app_controller.dart';
 import '../records/record_sheets.dart';
 
 class ConfirmPage extends StatefulWidget {
-  const ConfirmPage({required this.code, this.productId, super.key});
+  const ConfirmPage({
+    required this.code,
+    this.productId,
+    this.blank = false,
+    super.key,
+  });
 
   final String code;
 
   /// Set when the person picked this food from search instead of a scan.
   final int? productId;
+
+  /// A retail code the public databases did not know. Do not invent a product.
+  final bool blank;
 
   @override
   State<ConfirmPage> createState() => _ConfirmPageState();
@@ -52,7 +60,11 @@ class _ConfirmPageState extends State<ConfirmPage> {
     _expiry = parsed.suggestedExpiry ?? today.add(const Duration(days: 365));
     _opened = today;
     _batch = parsed.batch;
-    _apply(pinned ?? known ?? _fallback(app));
+    if (widget.blank && pinned == null && known == null) {
+      _product = null;
+    } else {
+      _apply(pinned ?? known ?? _fallback(app));
+    }
     _ready = true;
   }
 

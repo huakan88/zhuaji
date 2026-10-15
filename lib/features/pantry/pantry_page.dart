@@ -10,6 +10,7 @@ import '../../domain/food/stock.dart';
 import '../../domain/food_options.dart';
 import '../../domain/models.dart';
 import '../../state/app_controller.dart';
+import '../shell/scan_button.dart';
 
 class PantryPage extends StatefulWidget {
   const PantryPage({super.key});
@@ -71,19 +72,7 @@ class _PantryPageState extends State<PantryPage> {
                   ),
                 ),
                 const SizedBox(width: 8),
-                IconButton(
-                  tooltip: '扫码',
-                  onPressed: () => context.push('/scan'),
-                  style: IconButton.styleFrom(
-                    backgroundColor: AppColors.of(context).brand,
-                    foregroundColor: AppColors.of(context).onBrand,
-                    fixedSize: const Size(48, 48),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(Radii.m),
-                    ),
-                  ),
-                  icon: const Icon(Icons.photo_camera_outlined, size: 22),
-                ),
+                const ScanCameraButton(),
               ],
             ),
             const SizedBox(height: 8),
