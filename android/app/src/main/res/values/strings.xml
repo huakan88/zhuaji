@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">肉垫本</string>
+    <string name="widget_description">今天的事和下一个提醒</string>
 </resources>
