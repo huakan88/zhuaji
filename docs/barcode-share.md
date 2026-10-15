@@ -9,7 +9,7 @@
 3. 内置常见猫粮表
 4. 公开商品库（缓存，然后 Open Pet Food Facts、Open Food Facts、Open Products Facts、ProductGuru、UPCitemdb）
 
-没配 `BARCODE_SHARE_URL` 时第 2 步跳过，应用照常打开，不会因为连不上服务器而崩溃。
+没配 `BARCODE_SHARE_URL` 时第 2 步跳过，应用照常打开，不会因为连不上服务器而崩溃。共享库超时、返回打不开或一条坏数据时，也继续查内置表和公开库；已经缓存的共享结果只在这次请求失败时顶上，服务器明确说没有这条时不再用旧缓存挡住内置表。
 
 ## 上传什么
 

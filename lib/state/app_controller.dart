@@ -739,6 +739,9 @@ class AppController extends ChangeNotifier {
   /// URL can still answer lookups, and does not ask to publish.
   bool get shareEnabled => share.enabled;
 
+  /// How long a shared-library lookup may block the rest of the chain.
+  Duration shareLookupTimeout = const Duration(seconds: 4);
+
   BarcodeShareClient? get _shares {
     if (shareClient != null) return shareClient;
     if (!share.enabled) return null;
@@ -812,11 +815,23 @@ class AppController extends ChangeNotifier {
     final client = _shares;
     if (client == null) return null;
     try {
-      final answer = await client.lookup(code);
+      final answer = await client
+          .lookup(code)
+          .timeout(
+            shareLookupTimeout,
+            onTimeout: () => const ShareAnswer(ShareStatus.failed),
+          );
       if (answer.status == ShareStatus.hit && answer.record != null) {
         barcodeCatalog[key] = answer.record!;
         await _storeCatalog();
         return answer.record;
+      }
+      if (answer.status == ShareStatus.miss) {
+        final cached = barcodeCatalog[key];
+        if (cached != null && cached.source == 'share') {
+          barcodeCatalog.remove(key);
+          await _storeCatalog();
+        }
       }
       if (answer.status == ShareStatus.failed) {
         final cached = barcodeCatalog[key];
@@ -1033,11 +1048,14 @@ class AppController extends ChangeNotifier {
     try {
       final decoded = jsonDecode(raw);
       if (decoded is! Map) return {};
-      return {
-        for (final entry in decoded.entries)
-          if (entry.value is Map)
-            '${entry.key}': BarcodeRecord.fromJson(entry.value as Map),
-      };
+      final out = <String, BarcodeRecord>{};
+      for (final entry in decoded.entries) {
+        if (entry.value is! Map) continue;
+        try {
+          out['${entry.key}'] = BarcodeRecord.fromJson(entry.value as Map);
+        } catch (_) {}
+      }
+      return out;
     } catch (_) {
       return {};
     }
