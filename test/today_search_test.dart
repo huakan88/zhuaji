@@ -96,11 +96,34 @@ void main() {
     expect(find.textContaining('Open Pet Food Facts'), findsOneWidget);
   });
 
+  testWidgets('a hit hides ingredients and analysis when the source has none', (
+    tester,
+  ) async {
+    await controller.saveBarcodeRecord(
+      const BarcodeRecord(
+        code: '3182550799669',
+        found: true,
+        brand: 'Royal Canin',
+        name: 'Neutered Satiety Balance',
+        quantity: '12 kg',
+        ingredients: '',
+        nutrients: [],
+        source: 'productguru',
+        sourceUrl: 'https://myproduct.guru/p/3182550799669',
+      ),
+    );
+    await boot(tester, controller, location: '/lookup?code=3182550799669');
+    expect(find.text('Royal Canin'), findsOneWidget);
+    expect(find.text('配料'), findsNothing);
+    expect(find.text('成分'), findsNothing);
+    expect(find.textContaining('Data: ProductGuru'), findsOneWidget);
+  });
+
   testWidgets('an unknown domestic code offers a photo or a brand', (
     tester,
   ) async {
-    controller.barcodeFetch = (uri) async {
-      if (uri.host.contains('upcitemdb')) {
+    controller.barcodeFetch = (call) async {
+      if (call.uri.host.contains('upcitemdb')) {
         return const BarcodeResponse(200, '{"code":"OK","total":0,"items":[]}');
       }
       return const BarcodeResponse(404, '{"status":0}');

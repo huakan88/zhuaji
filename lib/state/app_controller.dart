@@ -72,6 +72,9 @@ class AppController extends ChangeNotifier {
   /// Tests inject this. Production leaves it null and uses the live client.
   BarcodeFetch? barcodeFetch;
 
+  /// Empty unless the build or the environment has barcode API keys.
+  BarcodeKeys barcodeKeys = barcodeKeysFromEnvironment();
+
   /// The owner's own weight from the last 「抱猫称」, offered again next time.
   double? ownerWeightKg;
   String? permissionNote;
@@ -724,8 +727,9 @@ class AppController extends ChangeNotifier {
     final record = await lookupBarcode(
       code,
       fetch: barcodeFetch ?? defaultBarcodeFetch(),
+      keys: barcodeKeys,
     );
-    if (!record.offline) {
+    if (!record.offline && !record.incomplete) {
       barcodeCatalog[key] = record;
       await _storeCatalog();
     }

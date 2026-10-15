@@ -1,6 +1,6 @@
 # 肉垫本隐私政策
 
-适用版本：肉垫本（PawPad）2.12.0 · 2026 年 10 月更新
+适用版本：肉垫本（PawPad）2.13.0 · 2026 年 10 月更新
 
 应用内「蓝牙秤 → 隐私政策」显示的是同一份内容（`lib/features/cats/privacy_page.dart`），改动时两边一起改。
 
@@ -14,7 +14,7 @@
 
 ## 条码查询
 
-扫到 EAN 或 UPC 时，会把这串数字发给公开商品库（Open Pet Food Facts、Open Food Facts、Open Products Facts、UPCitemdb）查询品牌、名称、规格、配料和成分。查到的结果存在这台手机里。照片和猫咪资料不会一起发出去。这些库经常没有国产粮，查不到时可以拍包装或点选品牌，记在手机里。
+扫到 EAN 或 UPC 时，会把这串数字发给公开商品库（Open Pet Food Facts、Open Food Facts、Open Products Facts、ProductGuru、UPCitemdb）查询品牌、名称、规格、配料和成分。查到的结果存在这台手机里。照片和猫咪资料不会一起发出去。这些免密钥的库经常没有国产粮。构建时如果填了聚合数据、阿里云市场、顶想云、Go-UPC 或 EAN-Search 的密钥，条码数字也会发给对应服务；没有密钥就不会请求它们。查不到时可以拍包装或点选品牌，记在手机里。
 
 ## 通知
 

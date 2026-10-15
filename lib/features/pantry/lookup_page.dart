@@ -60,6 +60,7 @@ class _LookupPageState extends State<LookupPage> {
             )
           : _Miss(
               offline: record.offline,
+              incomplete: record.incomplete,
               onRetry: () => _load(refresh: true),
               code: widget.code,
             ),
@@ -144,25 +145,19 @@ class _Hit extends StatelessWidget {
             color: AppColors.of(context).muted,
           ),
         ),
-        const SizedBox(height: 20),
-        const SectionLabel('配料'),
-        const SizedBox(height: 8),
-        Text(
-          record.ingredients.isEmpty ? '这个来源没有写配料' : record.ingredients,
-          style: zhuaji.copyWith(fontSize: 14, height: 1.45),
-        ),
-        const SizedBox(height: 20),
-        const SectionLabel('成分'),
-        const SizedBox(height: 8),
-        if (record.nutrients.isEmpty)
+        if (record.ingredients.isNotEmpty) ...[
+          const SizedBox(height: 20),
+          const SectionLabel('配料'),
+          const SizedBox(height: 8),
           Text(
-            '这个来源没有写成分分析',
-            style: zhuaji.copyWith(
-              fontSize: 14,
-              color: AppColors.of(context).muted,
-            ),
-          )
-        else
+            record.ingredients,
+            style: zhuaji.copyWith(fontSize: 14, height: 1.45),
+          ),
+        ],
+        if (record.nutrients.isNotEmpty) ...[
+          const SizedBox(height: 20),
+          const SectionLabel('成分'),
+          const SizedBox(height: 8),
           for (final item in record.nutrients)
             Padding(
               padding: const EdgeInsets.only(bottom: 6),
@@ -176,6 +171,7 @@ class _Hit extends StatelessWidget {
                 ],
               ),
             ),
+        ],
         if (source.isNotEmpty) ...[
           const SizedBox(height: 12),
           Text(
@@ -186,6 +182,16 @@ class _Hit extends StatelessWidget {
               color: AppColors.of(context).muted,
             ),
           ),
+          if (record.source == 'productguru' &&
+              (record.sourceUrl ?? '').isNotEmpty)
+            Text(
+              'Data: ProductGuru  ${record.sourceUrl}',
+              style: zhuaji.copyWith(
+                fontSize: 12,
+                height: 1.4,
+                color: AppColors.of(context).muted,
+              ),
+            ),
         ],
         const SizedBox(height: 24),
         FilledButton(
@@ -207,11 +213,13 @@ class _Hit extends StatelessWidget {
 class _Miss extends StatelessWidget {
   const _Miss({
     required this.offline,
+    required this.incomplete,
     required this.onRetry,
     required this.code,
   });
 
   final bool offline;
+  final bool incomplete;
   final VoidCallback onRetry;
   final String code;
 
@@ -229,7 +237,9 @@ class _Miss extends StatelessWidget {
         Text(
           offline
               ? '可以再试一次。也可以拍包装上的字，或点选品牌，记下后下次扫到就能认出。'
-              : '进口粮多半能查到。国产粮经常不在这些库里。拍包装认品牌和配料，或点选品牌，结果会记在这台手机上。',
+              : incomplete
+              ? '已经回应的库里没有这款，还有库这次没连上。国产粮经常要拍包装。可以再查一次，或点选品牌，结果会记在这台手机上。'
+              : '进口粮多半能查到。国产粮经常不在这些免密钥的库里。拍包装认品牌和配料，或点选品牌，结果会记在这台手机上。',
           style: zhuaji.copyWith(
             fontSize: 14,
             height: 1.45,
