@@ -27,7 +27,10 @@ class WeightTrend extends StatelessWidget {
     if (points.length < 2) {
       return Text(
         '再称一次就能看到走势',
-        style: zhuaji.copyWith(fontSize: 12, color: AppColors.muted),
+        style: zhuaji.copyWith(
+          fontSize: 12,
+          color: AppColors.of(context).muted,
+        ),
       );
     }
     return Column(
@@ -37,13 +40,18 @@ class WeightTrend extends StatelessWidget {
           height: height,
           width: double.infinity,
           child: CustomPaint(
-            painter: _TrendPainter([for (final item in points) item.weightKg]),
+            painter: _TrendPainter([
+              for (final item in points) item.weightKg,
+            ], AppColors.of(context)),
           ),
         ),
         const SizedBox(height: 6),
         Text(
           trendLabel(points),
-          style: zhuaji.copyWith(fontSize: 12, color: AppColors.muted),
+          style: zhuaji.copyWith(
+            fontSize: 12,
+            color: AppColors.of(context).muted,
+          ),
         ),
       ],
     );
@@ -72,9 +80,10 @@ String trendLabel(List<WeightRecord> points) {
 }
 
 class _TrendPainter extends CustomPainter {
-  _TrendPainter(this.values);
+  _TrendPainter(this.values, this.colors);
 
   final List<double> values;
+  final AppColors colors;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -96,7 +105,7 @@ class _TrendPainter extends CustomPainter {
     }
 
     final guide = Paint()
-      ..color = AppColors.line
+      ..color = colors.line
       ..strokeWidth = 1;
     canvas.drawLine(
       Offset(0, size.height - 0.5),
@@ -112,24 +121,25 @@ class _TrendPainter extends CustomPainter {
     canvas.drawPath(
       path,
       Paint()
-        ..color = AppColors.coralDeep
+        ..color = colors.brandDeep
         ..style = PaintingStyle.stroke
         ..strokeWidth = 2
         ..strokeCap = StrokeCap.round
         ..strokeJoin = StrokeJoin.round,
     );
 
-    final dot = Paint()..color = AppColors.coralDeep;
+    final dot = Paint()..color = colors.brandDeep;
     for (var i = 0; i < values.length - 1; i++) {
       canvas.drawCircle(at(i), 2, dot);
     }
     final last = at(values.length - 1);
-    canvas.drawCircle(last, 5, Paint()..color = AppColors.card);
+    canvas.drawCircle(last, 5, Paint()..color = colors.card);
     canvas.drawCircle(last, 4, dot);
   }
 
   @override
   bool shouldRepaint(_TrendPainter oldDelegate) =>
+      oldDelegate.colors != colors ||
       oldDelegate.values.length != values.length ||
       [
         for (var i = 0; i < values.length; i++)

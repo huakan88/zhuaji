@@ -179,6 +179,7 @@ void main() {
     await boot(tester, controller);
     await tapText(tester, '猫咪');
     expect(find.text('近 7 周 -0.27 kg'), findsOneWidget);
+    await revealText(tester, '最近');
     expect(find.text('最近'), findsOneWidget);
     expect(find.text('称重 · 4.35 kg'), findsOneWidget);
     await tapText(tester, '复制健康卡');

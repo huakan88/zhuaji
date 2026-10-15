@@ -40,10 +40,11 @@ class HomeWidgetCopy {
   final String nextLine;
   final String route;
 
-  Map<String, Object> toJson() => {
+  Map<String, Object> toJson({String appearance = 'system'}) => {
     'today': todayLines,
     'next': nextLine,
     'route': route,
+    'appearance': appearance,
   };
 }
 

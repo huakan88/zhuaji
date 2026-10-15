@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/timezone.dart' as tz;
 
+import '../core/theme/app_tokens.dart';
 import '../domain/reminders/reminder_planner.dart';
 
 /// Action id of the 「已完成」 button on due reminders.
@@ -179,6 +180,7 @@ class NotificationService implements ReminderNotifier {
         channelDescription: '爪记的$name',
         importance: Importance.defaultImportance,
         priority: Priority.defaultPriority,
+        color: AppColors.light.brand,
         actions: done
             ? const [
                 AndroidNotificationAction(

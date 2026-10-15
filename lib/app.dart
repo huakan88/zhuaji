@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:quick_actions/quick_actions.dart';
 
 import 'core/theme/app_theme.dart';
+import 'core/theme/app_tokens.dart';
 import 'core/widgets/common.dart';
 import 'features/cats/cat_form_page.dart';
 import 'features/cats/cats_page.dart';
@@ -216,24 +217,29 @@ class _ZhuajiAppState extends State<ZhuajiApp> {
 
   @override
   Widget build(BuildContext context) {
-    return AppScope(
-      controller: widget.controller,
-      child: MaterialApp.router(
-        title: '爪记',
-        scaffoldMessengerKey: zhuajiMessenger,
-        debugShowCheckedModeBanner: false,
-        theme: buildAppTheme(),
-        locale: const Locale('zh', 'CN'),
-        supportedLocales: const [Locale('zh', 'CN'), Locale('en')],
-        localizationsDelegates: const [
-          GlobalMaterialLocalizations.delegate,
-          GlobalWidgetsLocalizations.delegate,
-          GlobalCupertinoLocalizations.delegate,
-        ],
-        routerConfig: _router,
-        builder: (context, child) => RepaintBoundary(
-          key: const Key('shot'),
-          child: child ?? const SizedBox.shrink(),
+    return ListenableBuilder(
+      listenable: widget.controller,
+      builder: (context, _) => AppScope(
+        controller: widget.controller,
+        child: MaterialApp.router(
+          title: '爪记',
+          scaffoldMessengerKey: zhuajiMessenger,
+          debugShowCheckedModeBanner: false,
+          theme: buildAppTheme(AppColors.light),
+          darkTheme: buildAppTheme(AppColors.dark),
+          themeMode: widget.controller.themeMode.material,
+          locale: const Locale('zh', 'CN'),
+          supportedLocales: const [Locale('zh', 'CN'), Locale('en')],
+          localizationsDelegates: const [
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+          routerConfig: _router,
+          builder: (context, child) => RepaintBoundary(
+            key: const Key('shot'),
+            child: child ?? const SizedBox.shrink(),
+          ),
         ),
       ),
     );

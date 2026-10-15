@@ -26,7 +26,7 @@ class HealthPage extends StatelessWidget {
       _Tile('化验', '血常规、生化', Icons.biotech_outlined, '/labs'),
     ];
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: AppColors.of(context).background,
       appBar: zhuajiBar('健康'),
       body: FadeIn(
         child: ListView(
@@ -53,7 +53,7 @@ class HealthPage extends StatelessWidget {
                           _meta(cat, app.now),
                           style: zhuaji.copyWith(
                             fontSize: 12,
-                            color: AppColors.muted,
+                            color: AppColors.of(context).muted,
                           ),
                         ),
                       ],
@@ -105,7 +105,7 @@ class HealthPage extends StatelessWidget {
                             textAlign: TextAlign.center,
                             style: zhuaji.copyWith(
                               fontSize: 11,
-                              color: AppColors.muted,
+                              color: AppColors.of(context).muted,
                               height: 1.2,
                             ),
                           ),

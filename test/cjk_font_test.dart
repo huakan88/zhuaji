@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:maokangji/core/theme/app_theme.dart';
+import 'package:maokangji/core/theme/app_tokens.dart';
 
 import 'cjk_font.dart';
 
@@ -18,7 +19,7 @@ void main() {
     await tester.runAsync(loadZhuajiFonts);
     await tester.pumpWidget(
       MaterialApp(
-        theme: buildAppTheme(),
+        theme: buildAppTheme(AppColors.light),
         home: const Scaffold(
           body: Center(
             child: RepaintBoundary(
@@ -60,7 +61,7 @@ void main() {
     ];
     await tester.pumpWidget(
       MaterialApp(
-        theme: buildAppTheme(),
+        theme: buildAppTheme(AppColors.light),
         home: Scaffold(
           body: Column(
             children: [

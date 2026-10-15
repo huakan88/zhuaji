@@ -58,7 +58,7 @@ class _LabFormPageState extends State<LabFormPage> {
     final cat = app.active;
     if (cat == null || _date == null) {
       return Scaffold(
-        backgroundColor: AppColors.background,
+        backgroundColor: AppColors.of(context).background,
         appBar: zhuajiBar('化验单'),
         body: const Center(child: Text('先选择一只猫')),
       );
@@ -70,7 +70,7 @@ class _LabFormPageState extends State<LabFormPage> {
         if (offer.contains(item.kind) && !known.contains(item.code)) item,
     ];
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: AppColors.of(context).background,
       appBar: zhuajiBar(widget.reportId == null ? '记化验单' : '这份化验'),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
@@ -83,7 +83,7 @@ class _LabFormPageState extends State<LabFormPage> {
                 ChoiceChip(
                   label: Text(labKindLabel(kind)),
                   selected: _kind == kind,
-                  selectedColor: AppColors.tintCoral,
+                  selectedColor: AppColors.of(context).brandTint,
                   onSelected: (_) => setState(() => _kind = kind),
                 ),
             ],
@@ -168,7 +168,11 @@ class _LabFormPageState extends State<LabFormPage> {
             const SizedBox(height: 12),
             Text(
               '尿检和影像先存原图。要补血常规或生化的数字，点上面的类型。',
-              style: zhuaji.copyWith(fontSize: 12, height: 1.4, color: AppColors.muted),
+              style: zhuaji.copyWith(
+                fontSize: 12,
+                height: 1.4,
+                color: AppColors.of(context).muted,
+              ),
             ),
           ],
           const SizedBox(height: 16),
@@ -177,13 +181,17 @@ class _LabFormPageState extends State<LabFormPage> {
             style: zhuaji.copyWith(
               fontSize: 13,
               fontWeight: FontWeight.w700,
-              color: AppColors.coralDeep,
+              color: AppColors.of(context).brandDeep,
             ),
           ),
           const SizedBox(height: 4),
           Text(
             labRangeSource,
-            style: zhuaji.copyWith(fontSize: 12, height: 1.4, color: AppColors.muted),
+            style: zhuaji.copyWith(
+              fontSize: 12,
+              height: 1.4,
+              color: AppColors.of(context).muted,
+            ),
           ),
         ],
       ),
@@ -222,9 +230,7 @@ class _LabFormPageState extends State<LabFormPage> {
   List<LabValue> _ordered() {
     final order = [for (final item in labCatalog) item.code];
     final copy = [..._values];
-    copy.sort(
-      (a, b) => order.indexOf(a.code).compareTo(order.indexOf(b.code)),
-    );
+    copy.sort((a, b) => order.indexOf(a.code).compareTo(order.indexOf(b.code)));
     return copy;
   }
 
@@ -340,10 +346,10 @@ class _LabFormPageState extends State<LabFormPage> {
     Navigator.of(context).push(
       MaterialPageRoute<void>(
         builder: (context) => Scaffold(
-          backgroundColor: Colors.black,
+          backgroundColor: AppColors.of(context).scrim,
           appBar: AppBar(
-            backgroundColor: Colors.black,
-            foregroundColor: Colors.white,
+            backgroundColor: AppColors.of(context).scrim,
+            foregroundColor: AppColors.of(context).onScrim,
             title: const Text('原图'),
           ),
           body: Center(
@@ -439,14 +445,18 @@ class _PhotoTile extends StatelessWidget {
             top: 4,
             child: GestureDetector(
               onTap: onRemove,
-              child: const DecoratedBox(
+              child: DecoratedBox(
                 decoration: BoxDecoration(
-                  color: Colors.black54,
+                  color: AppColors.of(context).scrimSoft,
                   shape: BoxShape.circle,
                 ),
                 child: Padding(
                   padding: EdgeInsets.all(4),
-                  child: Icon(Icons.close, size: 14, color: Colors.white),
+                  child: Icon(
+                    Icons.close,
+                    size: 14,
+                    color: AppColors.of(context).onScrim,
+                  ),
                 ),
               ),
             ),
@@ -473,10 +483,12 @@ class _ValueCard extends StatelessWidget {
     final reading = readLabValue(value);
     final analyte = reading?.analyte ?? analyteByCode(value.code);
     final flag = reading?.flag;
+    final colors = AppColors.of(context);
     final color = switch (flag) {
-      LabFlag.high || LabFlag.low => AppColors.danger,
-      LabFlag.normal => AppColors.olive,
-      null => AppColors.muted,
+      LabFlag.high => colors.danger,
+      LabFlag.low => colors.low,
+      LabFlag.normal => colors.olive,
+      null => colors.muted,
     };
     return QuietCard(
       onTap: onTap,
@@ -487,13 +499,18 @@ class _ValueCard extends StatelessWidget {
             children: [
               Expanded(
                 child: Text(
-                  analyte == null ? value.code : '${analyte.name} ${analyte.code}',
+                  analyte == null
+                      ? value.code
+                      : '${analyte.name} ${analyte.code}',
                   style: zhuaji.copyWith(fontWeight: FontWeight.w700),
                 ),
               ),
               Text(
                 reading?.flagLabel ?? '点一下改',
-                style: zhuaji.copyWith(color: color, fontWeight: FontWeight.w700),
+                style: zhuaji.copyWith(
+                  color: color,
+                  fontWeight: FontWeight.w700,
+                ),
               ),
             ],
           ),
@@ -508,7 +525,10 @@ class _ValueCard extends StatelessWidget {
             const SizedBox(height: 2),
             Text(
               '${reading.fromReport ? '按化验单' : '常用范围'} ${formatLabNumber(reading.low, analyte?.decimals ?? 1)}-${formatLabNumber(reading.high, analyte?.decimals ?? 1)} ${value.unit}',
-              style: zhuaji.copyWith(fontSize: 12, color: AppColors.muted),
+              style: zhuaji.copyWith(
+                fontSize: 12,
+                color: AppColors.of(context).muted,
+              ),
             ),
           ],
           if (history.length >= 2) ...[
@@ -517,12 +537,17 @@ class _ValueCard extends StatelessWidget {
               height: 36,
               width: double.infinity,
               child: CustomPaint(
-                painter: _SparkPainter([for (final point in history) point.value]),
+                painter: _SparkPainter([
+                  for (final point in history) point.value,
+                ], AppColors.of(context)),
               ),
             ),
             Text(
               '${formatMonthDay(history.first.date)}-${formatMonthDay(history.last.date)} 的变化',
-              style: zhuaji.copyWith(fontSize: 12, color: AppColors.muted),
+              style: zhuaji.copyWith(
+                fontSize: 12,
+                color: AppColors.of(context).muted,
+              ),
             ),
           ],
         ],
@@ -532,9 +557,10 @@ class _ValueCard extends StatelessWidget {
 }
 
 class _SparkPainter extends CustomPainter {
-  _SparkPainter(this.values);
+  _SparkPainter(this.values, this.colors);
 
   final List<double> values;
+  final AppColors colors;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -543,13 +569,14 @@ class _SparkPainter extends CustomPainter {
     final high = values.reduce(math.max);
     final span = high - low == 0 ? 1.0 : high - low;
     final paint = Paint()
-      ..color = AppColors.coralDeep
+      ..color = colors.brandDeep
       ..strokeWidth = 2
       ..style = PaintingStyle.stroke;
     final path = Path();
     for (var i = 0; i < values.length; i++) {
       final x = size.width * i / (values.length - 1);
-      final y = size.height - ((values[i] - low) / span) * (size.height - 4) - 2;
+      final y =
+          size.height - ((values[i] - low) / span) * (size.height - 4) - 2;
       if (i == 0) {
         path.moveTo(x, y);
       } else {
@@ -561,7 +588,7 @@ class _SparkPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant _SparkPainter oldDelegate) =>
-      oldDelegate.values != values;
+      oldDelegate.colors != colors || oldDelegate.values != values;
 }
 
 class LabEdit {
@@ -610,7 +637,10 @@ Future<LabEdit?> showLabEditor(
                 const SizedBox(height: 8),
                 Text(
                   '${formatLabNumber(shown, analyte.decimals)} ${unit.label}',
-                  style: zhuaji.copyWith(fontSize: 28, fontWeight: FontWeight.w700),
+                  style: zhuaji.copyWith(
+                    fontSize: 28,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
                 if (analyte.units.length > 1)
                   Wrap(
@@ -620,7 +650,7 @@ Future<LabEdit?> showLabEditor(
                         ChoiceChip(
                           label: Text(item.label),
                           selected: item.label == unit.label,
-                          selectedColor: AppColors.tintCoral,
+                          selectedColor: AppColors.of(context).brandTint,
                           onSelected: (_) => setSheet(() {
                             final base = shown * unit.toBase;
                             unit = item;
@@ -634,10 +664,22 @@ Future<LabEdit?> showLabEditor(
                   spacing: 8,
                   runSpacing: 8,
                   children: [
-                    OutlinedButton(onPressed: () => nudge(-10), child: const Text('少很多')),
-                    OutlinedButton(onPressed: () => nudge(-1), child: const Text('少一点')),
-                    OutlinedButton(onPressed: () => nudge(1), child: const Text('多一点')),
-                    OutlinedButton(onPressed: () => nudge(10), child: const Text('多很多')),
+                    OutlinedButton(
+                      onPressed: () => nudge(-10),
+                      child: const Text('少很多'),
+                    ),
+                    OutlinedButton(
+                      onPressed: () => nudge(-1),
+                      child: const Text('少一点'),
+                    ),
+                    OutlinedButton(
+                      onPressed: () => nudge(1),
+                      child: const Text('多一点'),
+                    ),
+                    OutlinedButton(
+                      onPressed: () => nudge(10),
+                      child: const Text('多很多'),
+                    ),
                   ],
                 ),
                 const SizedBox(height: 8),
@@ -664,7 +706,8 @@ Future<LabEdit?> showLabEditor(
                 ),
                 if (current != null)
                   TextButton(
-                    onPressed: () => Navigator.pop(context, const LabEdit.remove()),
+                    onPressed: () =>
+                        Navigator.pop(context, const LabEdit.remove()),
                     child: const Text('去掉这项'),
                   ),
               ],

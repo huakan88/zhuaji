@@ -29,7 +29,7 @@ class _VisitsPageState extends State<VisitsPage> {
     final cat = app.active;
     if (cat == null) {
       return Scaffold(
-        backgroundColor: AppColors.background,
+        backgroundColor: AppColors.of(context).background,
         appBar: zhuajiBar('就医'),
         body: const Center(child: Text('先选择一只猫')),
       );
@@ -39,13 +39,16 @@ class _VisitsPageState extends State<VisitsPage> {
     final clinics = app.knownClinics;
     final clinic = _clinic ??= clinics.isEmpty ? '' : clinics.first;
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: AppColors.of(context).background,
       appBar: zhuajiBar('就医'),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
         children: [
           if (visits.isEmpty)
-            Text('还没去过', style: zhuaji.copyWith(color: AppColors.muted))
+            Text(
+              '还没去过',
+              style: zhuaji.copyWith(color: AppColors.of(context).muted),
+            )
           else
             for (final visit in visits.take(3)) _Record(visit: visit),
           const SizedBox(height: 8),
@@ -57,7 +60,7 @@ class _VisitsPageState extends State<VisitsPage> {
                 ChoiceChip(
                   label: Text(label),
                   selected: _reason == label,
-                  selectedColor: AppColors.tintCoral,
+                  selectedColor: AppColors.of(context).brandTint,
                   onSelected: (_) => setState(() => _reason = label),
                 ),
             ],
@@ -72,7 +75,7 @@ class _VisitsPageState extends State<VisitsPage> {
                   ChoiceChip(
                     label: Text(name),
                     selected: clinic == name,
-                    selectedColor: AppColors.tintCoral,
+                    selectedColor: AppColors.of(context).brandTint,
                     onSelected: (on) =>
                         setState(() => _clinic = on ? name : ''),
                   ),
@@ -145,7 +148,10 @@ class _Record extends StatelessWidget {
                 when,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: zhuaji.copyWith(color: AppColors.muted, fontSize: 12),
+                style: zhuaji.copyWith(
+                  color: AppColors.of(context).muted,
+                  fontSize: 12,
+                ),
               ),
             ],
           ),

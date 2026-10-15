@@ -4,11 +4,11 @@
     android:viewportWidth="48"
     android:viewportHeight="48">
     <path
-        android:fillColor="#F8EBE6"
+        android:fillColor="@color/shortcut_fill"
         android:pathData="M24,0A24,24 0,1 1,24 48A24,24 0,1 1,24 0z" />
     <path
-        android:fillColor="#00000000"
-        android:strokeColor="#D48978"
+        android:fillColor="@android:color/transparent"
+        android:strokeColor="@color/shortcut_stroke"
         android:strokeWidth="2.5"
         android:strokeLineCap="round"
         android:strokeLineJoin="round"

@@ -51,7 +51,7 @@ class _StickerPageState extends State<StickerPage> {
     final cat = app.active;
     if (cat == null) {
       return Scaffold(
-        backgroundColor: AppColors.background,
+        backgroundColor: AppColors.of(context).background,
         appBar: zhuajiBar('疫苗贴纸'),
         body: const Center(child: Text('先选择一只猫')),
       );
@@ -64,15 +64,13 @@ class _StickerPageState extends State<StickerPage> {
     ];
     final next = nextVaccineDate(cat.birthday, given);
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: AppColors.of(context).background,
       appBar: zhuajiBar('疫苗贴纸'),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
         children: [
           Text(
-            _read
-                ? '认出来了，对一下再记下。不对就重拍。'
-                : '拍下贴纸上的字。名称、批号和日期会填在这里，确认后才保存。',
+            _read ? '认出来了，对一下再记下。不对就重拍。' : '拍下贴纸上的字。名称、批号和日期会填在这里，确认后才保存。',
             style: zhuaji.copyWith(height: 1.4),
           ),
           const SizedBox(height: 16),
@@ -88,7 +86,7 @@ class _StickerPageState extends State<StickerPage> {
                       ChoiceChip(
                         label: Text(label),
                         selected: name == label,
-                        selectedColor: AppColors.tintCoral,
+                        selectedColor: AppColors.of(context).brandTint,
                         onSelected: (_) => setState(() => _name = label),
                       ),
                   ],
@@ -106,7 +104,10 @@ class _StickerPageState extends State<StickerPage> {
                 const SizedBox(height: 6),
                 Text(
                   '下次 ${formatDate(next)}',
-                  style: zhuaji.copyWith(fontSize: 13, color: AppColors.muted),
+                  style: zhuaji.copyWith(
+                    fontSize: 13,
+                    color: AppColors.of(context).muted,
+                  ),
                 ),
               ],
             ),

@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:maokangji/core/theme/app_theme.dart';
+import 'package:maokangji/core/theme/app_tokens.dart';
 import 'package:maokangji/core/widgets/common.dart';
 
 void main() {
   testWidgets('disclaimer says the app is not a vet', (tester) async {
     await tester.pumpWidget(
       MaterialApp(
-        theme: buildAppTheme(),
+        theme: buildAppTheme(AppColors.light),
         home: const Scaffold(body: DisclaimerBanner()),
       ),
     );
@@ -19,7 +20,7 @@ void main() {
   ) async {
     await tester.pumpWidget(
       MaterialApp(
-        theme: buildAppTheme(),
+        theme: buildAppTheme(AppColors.light),
         home: Scaffold(
           body: FoodDateCard(
             brand: '皇家 Royal Canin',

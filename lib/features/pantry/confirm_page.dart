@@ -92,7 +92,7 @@ class _ConfirmPageState extends State<ConfirmPage> {
     final matched = known != null && !_rechoose;
     final days = {7, 30, 42, _days}.toList()..sort();
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: AppColors.of(context).background,
       appBar: zhuajiBar('确认'),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
@@ -108,15 +108,18 @@ class _ConfirmPageState extends State<ConfirmPage> {
                 : matched
                 ? '日期用滚轮改'
                 : '点品牌，日期用滚轮改',
-            style: zhuaji.copyWith(fontSize: 13, color: AppColors.muted),
+            style: zhuaji.copyWith(
+              fontSize: 13,
+              color: AppColors.of(context).muted,
+            ),
           ),
           if (matched)
             Row(
               children: [
-                const Icon(
+                Icon(
                   Icons.check_circle_outline,
                   size: 16,
-                  color: AppColors.coralDeep,
+                  color: AppColors.of(context).brandDeep,
                 ),
                 const SizedBox(width: 6),
                 Expanded(
@@ -124,7 +127,7 @@ class _ConfirmPageState extends State<ConfirmPage> {
                     '认得这个码',
                     style: zhuaji.copyWith(
                       fontSize: 13,
-                      color: AppColors.coralDeep,
+                      color: AppColors.of(context).brandDeep,
                     ),
                   ),
                 ),
@@ -139,7 +142,10 @@ class _ConfirmPageState extends State<ConfirmPage> {
               padding: const EdgeInsets.only(top: 4),
               child: Text(
                 '选好品牌记下后，下次扫这个码直接认出',
-                style: zhuaji.copyWith(fontSize: 13, color: AppColors.muted),
+                style: zhuaji.copyWith(
+                  fontSize: 13,
+                  color: AppColors.of(context).muted,
+                ),
               ),
             ),
           const SizedBox(height: 8),
@@ -151,9 +157,8 @@ class _ConfirmPageState extends State<ConfirmPage> {
                   : '?code=${Uri.encodeComponent(code)}';
               final id = await context.push<int>('/food$query');
               if (id == null || !context.mounted) return;
-              final chosen = AppScope.of<AppController>(
-                context,
-              ).productById(id);
+              final chosen = AppScope.of<AppController>(context)
+                  .productById(id);
               setState(() {
                 _rechoose = false;
                 _apply(chosen);
@@ -176,7 +181,7 @@ class _ConfirmPageState extends State<ConfirmPage> {
                       child: ChoiceChip(
                         label: Text(_shortBrand(brand)),
                         selected: brand == _product?.brand,
-                        selectedColor: AppColors.tintCoral,
+                        selectedColor: AppColors.of(context).brandTint,
                         onSelected: (_) {
                           FoodProduct? first;
                           for (final item in app.products) {
@@ -204,7 +209,7 @@ class _ConfirmPageState extends State<ConfirmPage> {
                         child: ChoiceChip(
                           label: Text(item.name),
                           selected: item.id == _product?.id,
-                          selectedColor: AppColors.tintCoral,
+                          selectedColor: AppColors.of(context).brandTint,
                           onSelected: (_) => setState(() => _apply(item)),
                         ),
                       ),
@@ -220,7 +225,7 @@ class _ConfirmPageState extends State<ConfirmPage> {
             style: zhuaji.copyWith(
               fontSize: 13,
               height: 1.35,
-              color: AppColors.muted,
+              color: AppColors.of(context).muted,
             ),
           ),
           const SizedBox(height: 20),
@@ -258,7 +263,7 @@ class _ConfirmPageState extends State<ConfirmPage> {
                 ChoiceChip(
                   label: Text('$day天'),
                   selected: _days == day,
-                  selectedColor: AppColors.tintCoral,
+                  selectedColor: AppColors.of(context).brandTint,
                   onSelected: (_) => setState(() => _days = day),
                 ),
             ],

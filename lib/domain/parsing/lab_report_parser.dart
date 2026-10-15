@@ -86,13 +86,16 @@ _AliasHit? _bestAlias(String row) {
   for (final (analyte, alias) in aliases) {
     final found = _indexOf(row, alias);
     if (found < 0) continue;
-    final end = found + ( _ascii(alias) ? alias.length : alias.length);
+    final end = found + (_ascii(alias) ? alias.length : alias.length);
     final span = _Span(found, found + alias.length);
-    if (occupied.any((item) => item.start < span.end && span.start < item.end)) {
+    if (occupied.any(
+      (item) => item.start < span.end && span.start < item.end,
+    )) {
       continue;
     }
     occupied.add(span);
-    if (found < bestStart || (found == bestStart && alias.length > bestLength)) {
+    if (found < bestStart ||
+        (found == bestStart && alias.length > bestLength)) {
       bestStart = found;
       bestLength = alias.length;
       best = _AliasHit(analyte, end);
@@ -119,7 +122,9 @@ int _indexOf(String row, String alias) {
 
 bool _boundary(String row, String needle, int index) {
   if (!_ascii(needle)) return true;
-  if (index > 0 && RegExp(r'[A-Za-z0-9]').hasMatch(row[index - 1])) return false;
+  if (index > 0 && RegExp(r'[A-Za-z0-9]').hasMatch(row[index - 1])) {
+    return false;
+  }
   final end = index + needle.length;
   if (end < row.length && RegExp(r'[A-Za-z0-9]').hasMatch(row[end])) {
     return false;
@@ -133,7 +138,8 @@ bool _isPercent(String row, int aliasEnd) {
 }
 
 _Span? _range(String row) {
-  final match = RegExp(r'(\d+(?:\.\d+)?)\s*-\s*(\d+(?:\.\d+)?)').firstMatch(row);
+  final match = RegExp(r'(\d+(?:\.\d+)?)\s*-\s*(\d+(?:\.\d+)?)')
+      .firstMatch(row);
   if (match == null) return null;
   final low = double.parse(match.group(1)!);
   final high = double.parse(match.group(2)!);
@@ -182,7 +188,9 @@ double? _resultNumber(String row, int aliasEnd, List<_Span> blocked) {
   double? after;
   double? before;
   for (final match in RegExp(r'\d+(?:\.\d+)?').allMatches(row)) {
-    if (blocked.any((span) => match.start < span.end && match.end > span.start)) {
+    if (blocked.any(
+      (span) => match.start < span.end && match.end > span.start,
+    )) {
       continue;
     }
     final value = double.parse(match.group(0)!);

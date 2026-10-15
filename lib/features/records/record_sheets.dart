@@ -91,14 +91,14 @@ class DateChips extends StatelessWidget {
                   ChoiceChip(
                     label: Text(quick[i]),
                     selected: isQuick && back == i,
-                    selectedColor: AppColors.tintCoral,
+                    selectedColor: AppColors.of(context).brandTint,
                     onSelected: (_) =>
                         onChanged(base.subtract(Duration(days: i))),
                   ),
                 ChoiceChip(
                   label: Text(isQuick ? '更早' : formatDate(picked)),
                   selected: !isQuick,
-                  selectedColor: AppColors.tintCoral,
+                  selectedColor: AppColors.of(context).brandTint,
                   onSelected: (_) async {
                     final value = await pickDateWheel(context, picked);
                     if (value == null) return;
@@ -147,7 +147,10 @@ class DateLine extends StatelessWidget {
                 style: zhuaji.copyWith(fontSize: 16),
               ),
             ),
-            Text('改', style: zhuaji.copyWith(color: AppColors.coralDeep)),
+            Text(
+              '改',
+              style: zhuaji.copyWith(color: AppColors.of(context).brandDeep),
+            ),
           ],
         ),
       ),
