@@ -1,6 +1,6 @@
 # Git 工作流
 
-爪记的私有 Origin 仓库是 [huakan88/zhuaji](https://cursor.com/codebase/huakan88/zhuaji)。
+肉垫本的私有 Origin 仓库是 [huakan88/zhuaji](https://cursor.com/codebase/huakan88/zhuaji)。
 
 ```bash
 git clone https://origin.cursor.com/git/huakan88/zhuaji.git
@@ -75,7 +75,7 @@ git config core.hooksPath tool/git-hooks
 ```bash
 git checkout main
 git pull origin main
-git tag -a v2.3.0 -m "爪记 2.3.0"
+git tag -a v2.3.0 -m "肉垫本 2.3.0"
 git push origin v2.3.0
 ```
 

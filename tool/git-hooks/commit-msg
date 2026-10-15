@@ -1,5 +1,5 @@
 #!/bin/sh
-# Conventional Commits for 爪记: feat|fix|docs|chore|refactor|test.
+# Conventional Commits for 肉垫本: feat|fix|docs|chore|refactor|test.
 # Enable with: git config core.hooksPath tool/git-hooks
 
 message=$(head -n 1 "$1")
