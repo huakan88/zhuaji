@@ -168,6 +168,97 @@ void main() {
       await database.close();
     },
   );
+
+  test('a failed submit stays queued until the server is ready', () async {
+    final database = AppDatabase.memory();
+    var now = DateTime.utc(2026, 10, 15, 8);
+    final controller = _controller(database, clock: () => now);
+    await controller.init();
+    final share = _FlakyShare();
+    controller.share = const BarcodeShare(baseUrl: 'https://share.example');
+    controller.shareClient = share;
+    await controller.rememberUserBarcode(
+      code: '6901234500004',
+      brand: '自记',
+      name: '离线',
+      spec: '2千克',
+      ask: () async => true,
+    );
+    expect(share.submitted, 1);
+    expect(controller.shareQueue, hasLength(1));
+    final stored = await controller.repo.setting('barcodeShareQueue');
+    expect(stored, contains('6901234500004'));
+    expect(stored, contains('自记'));
+    expect(stored, isNot(contains('橘座')));
+    expect(await controller.flushBarcodeShare(), 0);
+    expect(share.submitted, 1);
+
+    now = now.add(const Duration(seconds: 31));
+    share.fail = false;
+    expect(await controller.flushBarcodeShare(), 1);
+    expect(controller.shareQueue, isEmpty);
+    expect(share.rows['6901234500004']?.name, '离线');
+    expect(share.rows['6901234500004']?.contributorId, startsWith('dev-'));
+    await database.close();
+  });
+
+  test(
+    'a config that is not ready keeps the queue and does not submit',
+    () async {
+      final database = AppDatabase.memory();
+      final controller = _controller(database);
+      await controller.init();
+      final share = _FlakyShare()..ready = false;
+      controller.share = const BarcodeShare(baseUrl: 'https://share.example');
+      controller.shareClient = share;
+      await controller.rememberUserBarcode(
+        code: '6958862134620',
+        brand: '麦富迪',
+        name: '还没发出去',
+        spec: '2千克',
+        ask: () async => true,
+      );
+      expect(share.submitted, 0);
+      expect(controller.shareQueue, hasLength(1));
+      expect(await controller.flushBarcodeShare(), 0);
+      expect(share.submitted, 0);
+
+      share.ready = true;
+      share.fail = false;
+      final due = controller.shareQueue.single.nextAttemptAt!;
+      controller.shareQueue = [
+        SharePending(
+          code: controller.shareQueue.single.code,
+          brand: controller.shareQueue.single.brand,
+          name: controller.shareQueue.single.name,
+          spec: controller.shareQueue.single.spec,
+          ingredients: controller.shareQueue.single.ingredients,
+          contributorId: controller.shareQueue.single.contributorId,
+          createdAt: controller.shareQueue.single.createdAt,
+          updatedAt: controller.shareQueue.single.updatedAt,
+          nextAttemptAt: due.subtract(const Duration(minutes: 1)),
+        ),
+      ];
+      expect(await controller.flushBarcodeShare(), 1);
+      expect(share.rows['6958862134620']?.name, '还没发出去');
+      await database.close();
+    },
+  );
+
+  test('the config payload is the shared-barcode contract', () {
+    final parsed = ShareConfig.fromJson({
+      'contract': 'shared-barcodes',
+      'version': 1,
+      'enabled': true,
+    });
+    expect(parsed.ready, isTrue);
+    expect(
+      ShareConfig.fromJson({'contract': 'other', 'version': 1, 'enabled': true})
+          .ready,
+      isFalse,
+    );
+    expect(ShareConfig.offline.ready, isFalse);
+  });
 }
 
 AppController _controller(AppDatabase database, {DateTime Function()? clock}) {
@@ -201,6 +292,9 @@ BarcodeRecord _share(
 
 class _MemoryShare implements BarcodeShareClient {
   final rows = <String, BarcodeRecord>{};
+
+  @override
+  Future<ShareConfig> config() async => ShareConfig.speaking;
   var submitted = 0;
   var fail = false;
 
@@ -233,5 +327,30 @@ class _MemoryShare implements BarcodeShareClient {
     );
     rows[record.code] = next;
     return ShareAnswer(ShareStatus.hit, next);
+  }
+}
+
+class _FlakyShare implements BarcodeShareClient {
+  var fail = true;
+  var ready = true;
+  var submitted = 0;
+  final rows = <String, BarcodeRecord>{};
+
+  @override
+  Future<ShareConfig> config() async {
+    return ready ? ShareConfig.speaking : ShareConfig.offline;
+  }
+
+  @override
+  Future<ShareAnswer> lookup(String code) async {
+    return const ShareAnswer(ShareStatus.miss);
+  }
+
+  @override
+  Future<ShareAnswer> submit(BarcodeRecord record) async {
+    submitted += 1;
+    if (fail) return const ShareAnswer(ShareStatus.failed);
+    rows[record.code] = record;
+    return ShareAnswer(ShareStatus.hit, record);
   }
 }

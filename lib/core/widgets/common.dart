@@ -216,12 +216,19 @@ class HeroCard extends StatelessWidget {
               children: [
                 GestureDetector(
                   onTap: onTitleTap,
-                  child: Text(
-                    title,
-                    style: zhuaji.copyWith(
-                      fontSize: 22,
-                      fontWeight: FontWeight.w700,
-                      height: 1.2,
+                  behavior: HitTestBehavior.opaque,
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(minHeight: 48),
+                    child: Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        title,
+                        style: zhuaji.copyWith(
+                          fontSize: 22,
+                          fontWeight: FontWeight.w700,
+                          height: 1.2,
+                        ),
+                      ),
                     ),
                   ),
                 ),
@@ -676,6 +683,7 @@ class FoodDateCard extends StatelessWidget {
 Future<bool> confirmBarcodeShare(BuildContext context) async {
   final result = await showDialog<bool>(
     context: context,
+    barrierDismissible: true,
     builder: (context) => AlertDialog(
       title: const Text('提交到共享库？'),
       content: const Text(
@@ -699,6 +707,7 @@ Future<bool> confirmBarcodeShare(BuildContext context) async {
 Future<bool> confirmDelete(BuildContext context, String title) async {
   final result = await showDialog<bool>(
     context: context,
+    barrierDismissible: true,
     builder: (context) => AlertDialog(
       title: Text(title),
       actions: [

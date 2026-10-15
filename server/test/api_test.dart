@@ -241,6 +241,26 @@ void main() {
     expect(allowed.statusCode, 404);
   });
 
+  test('barcode share config stays public', () async {
+    final open = await call(api, 'GET', '/v1/barcode-share', null);
+    expect(open.statusCode, 200);
+    final body = jsonDecode(open.body) as Map<String, Object?>;
+    expect(body['contract'], 'shared-barcodes');
+    expect(body['version'], 1);
+    expect(body['enabled'], isTrue);
+    expect(body['conflict'], 'updatedAt-then-contributorId');
+    expect(body.containsKey('cat'), isFalse);
+
+    final locked = buildApi(
+      MemoryStore(),
+      jwtSecret: secret,
+      shareKey: 'share-secret',
+    );
+    final still = await call(locked, 'GET', '/v1/barcode-share', null);
+    expect(still.statusCode, 200);
+    expect(jsonDecode(still.body)['contract'], 'shared-barcodes');
+  });
+
   test('wechat stays a reserved endpoint until mock is on', () async {
     final closed = buildApi(MemoryStore(), jwtSecret: secret);
     final blocked = await call(closed, 'POST', '/v1/auth/wechat', {

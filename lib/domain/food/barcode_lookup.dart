@@ -212,9 +212,40 @@ class BarcodeRecord {
   }
 }
 
-/// EAN-8, UPC-A, EAN-13 and GTIN-14. GS1 element strings stay on the date path.
-bool isRetailBarcode(String raw) {
+/// EAN-8, UPC-A, EAN-13 and GTIN-14 lengths, before the check digit is tested.
+bool isGtinLength(String raw) {
   return RegExp(r'^\d{8}$|^\d{12}$|^\d{13}$|^\d{14}$').hasMatch(raw.trim());
+}
+
+/// GS1 check digit. Weights alternate 3, 1 from the right of the data digits.
+int gtinCheckDigit(String raw) {
+  final digits = raw.replaceAll(RegExp(r'\D'), '');
+  if (digits.length < 2) return -1;
+  final body = digits.substring(0, digits.length - 1);
+  var sum = 0;
+  var weight = 3;
+  for (var i = body.length - 1; i >= 0; i--) {
+    final unit = body.codeUnitAt(i);
+    if (unit < 48 || unit > 57) return -1;
+    sum += (unit - 48) * weight;
+    weight = weight == 3 ? 1 : 3;
+  }
+  return (10 - (sum % 10)) % 10;
+}
+
+/// True when [raw] is an EAN-8, UPC-A, EAN-13 or GTIN-14 with a valid check digit.
+bool hasGtinChecksum(String raw) {
+  final digits = raw.trim();
+  if (!isGtinLength(digits)) return false;
+  final expected = gtinCheckDigit(digits);
+  final actual = digits.codeUnitAt(digits.length - 1) - 48;
+  return expected == actual;
+}
+
+/// EAN-8, UPC-A, EAN-13 and GTIN-14 that pass the check digit.
+/// GS1 element strings stay on the date path.
+bool isRetailBarcode(String raw) {
+  return hasGtinChecksum(raw);
 }
 
 /// The printed code, plus the 13-digit form of a 12-digit UPC (and the reverse).

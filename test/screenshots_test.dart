@@ -24,6 +24,9 @@ import 'cjk_font.dart';
 
 class _ShotShare implements BarcodeShareClient {
   @override
+  Future<ShareConfig> config() async => ShareConfig.speaking;
+
+  @override
   Future<ShareAnswer> lookup(String code) async {
     if (barcodeKey(code) != barcodeKey('6901234500004')) {
       return const ShareAnswer(ShareStatus.miss);

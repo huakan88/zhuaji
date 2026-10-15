@@ -85,6 +85,9 @@ class AppController extends ChangeNotifier {
   /// Local correction dates, keyed by [barcodeKey].
   Map<String, BarcodeRevision> barcodeRevisions = {};
 
+  /// Consented product corrections the share server has not accepted yet.
+  List<SharePending> shareQueue = [];
+
   /// The owner's own weight from the last 「抱猫称」, offered again next time.
   double? ownerWeightKg;
   String? permissionNote;
@@ -172,6 +175,7 @@ class AppController extends ChangeNotifier {
       await _read();
       await _reschedule();
       await _publishWidget();
+      await flushBarcodeShare();
     } catch (error) {
       this.error = '本地数据没有打开：$error';
     } finally {
@@ -893,24 +897,116 @@ class AppController extends ChangeNotifier {
             (imageUrl.startsWith('https://') || imageUrl.startsWith('http://'))
         ? imageUrl
         : null;
+    final record = BarcodeRecord(
+      code: code.trim(),
+      found: true,
+      brand: brand,
+      name: name,
+      quantity: spec,
+      ingredients: keptIngredients,
+      nutrients: const [],
+      source: 'user',
+      imageUrl: image,
+      createdAt: revision.createdAt,
+      updatedAt: revision.updatedAt,
+      contributorId: contributor,
+    );
+    final config = await _askConfig(client);
+    if (!config.ready) {
+      await _enqueueShare(record);
+      return;
+    }
+    ShareAnswer answer;
     try {
-      await client.submit(
-        BarcodeRecord(
-          code: code.trim(),
-          found: true,
-          brand: brand,
-          name: name,
-          quantity: spec,
-          ingredients: keptIngredients,
-          nutrients: const [],
-          source: 'user',
-          imageUrl: image,
-          createdAt: revision.createdAt,
-          updatedAt: revision.updatedAt,
-          contributorId: contributor,
-        ),
-      );
-    } catch (_) {}
+      answer = await client
+          .submit(record)
+          .timeout(
+            shareLookupTimeout,
+            onTimeout: () => const ShareAnswer(ShareStatus.failed),
+          );
+    } catch (_) {
+      answer = const ShareAnswer(ShareStatus.failed);
+    }
+    if (answer.status == ShareStatus.failed) {
+      await _enqueueShare(record);
+      return;
+    }
+    await _dropQueued(record.code);
+  }
+
+  Future<ShareConfig> _askConfig(BarcodeShareClient client) {
+    return client.config().timeout(
+      shareLookupTimeout,
+      onTimeout: () => ShareConfig.offline,
+    );
+  }
+
+  Future<void> _enqueueShare(BarcodeRecord record) async {
+    shareQueue = enqueueShare(
+      shareQueue,
+      SharePending.fromRecord(record, _clock()),
+    );
+    await _storeShareQueue();
+  }
+
+  Future<void> _dropQueued(String code) async {
+    final next = dropShare(shareQueue, code);
+    if (next.length == shareQueue.length) return;
+    shareQueue = next;
+    await _storeShareQueue();
+  }
+
+  Future<void> _storeShareQueue() {
+    return repo.setSetting('barcodeShareQueue', encodeShareQueue(shareQueue));
+  }
+
+  /// Sends queued corrections when the config endpoint says the server is ready.
+  /// Returns how many rows the server accepted this pass. Failures stay queued.
+  Future<int> flushBarcodeShare() async {
+    try {
+      return await _flushBarcodeShare();
+    } catch (error, stack) {
+      debugPrint('共享条码队列没有发出去：$error\n$stack');
+      return 0;
+    }
+  }
+
+  Future<int> _flushBarcodeShare() async {
+    if (shareQueue.isEmpty) return 0;
+    if (!shareEnabled && shareClient == null) return 0;
+    final client = _shares;
+    if (client == null) return 0;
+    final config = await _askConfig(client);
+    if (!config.ready) return 0;
+    final now = _clock().toUtc();
+    final left = <SharePending>[];
+    var sent = 0;
+    for (final item in shareQueue) {
+      final due = item.nextAttemptAt;
+      if (due != null && due.isAfter(now)) {
+        left.add(item);
+        continue;
+      }
+      ShareAnswer answer;
+      try {
+        answer = await client
+            .submit(item.toRecord())
+            .timeout(
+              shareLookupTimeout,
+              onTimeout: () => const ShareAnswer(ShareStatus.failed),
+            );
+      } catch (_) {
+        answer = const ShareAnswer(ShareStatus.failed);
+      }
+      if (answer.status == ShareStatus.failed) {
+        left.add(item.retryAt(now));
+      } else {
+        sent += 1;
+      }
+    }
+    shareQueue = left;
+    await _storeShareQueue();
+    return sent;
   }
 
   Future<String> _contributorId() async {
@@ -1024,6 +1120,7 @@ class AppController extends ChangeNotifier {
     barcodeMemory = _decodeMemory(await repo.setting('barcodeMemory'));
     barcodeCatalog = _decodeCatalog(await repo.setting('barcodeCatalog'));
     barcodeRevisions = _decodeRevisions(await repo.setting('barcodeRevisions'));
+    shareQueue = decodeShareQueue(await repo.setting('barcodeShareQueue'));
     recentSearches = _decodeSearches(await repo.setting('recentSearches'));
     ownerWeightKg = double.tryParse(await repo.setting('ownerWeightKg') ?? '');
   }

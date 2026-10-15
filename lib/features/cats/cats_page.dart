@@ -231,25 +231,28 @@ class _ProfileLine extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: [
-        SizedBox(
-          width: 48,
-          child: Text(
-            label,
-            style: zhuaji.copyWith(
-              fontSize: 13,
-              color: AppColors.of(context).muted,
+    return ConstrainedBox(
+      constraints: const BoxConstraints(minHeight: 48),
+      child: Row(
+        children: [
+          SizedBox(
+            width: 48,
+            child: Text(
+              label,
+              style: zhuaji.copyWith(
+                fontSize: 13,
+                color: AppColors.of(context).muted,
+              ),
             ),
           ),
-        ),
-        Expanded(
-          child: Text(
-            value,
-            style: zhuaji.copyWith(fontSize: 16, fontWeight: FontWeight.w700),
+          Expanded(
+            child: Text(
+              value,
+              style: zhuaji.copyWith(fontSize: 16, fontWeight: FontWeight.w700),
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }

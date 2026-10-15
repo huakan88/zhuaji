@@ -218,6 +218,9 @@ AppController _controller(AppDatabase database) {
 
 class _HangShare implements BarcodeShareClient {
   @override
+  Future<ShareConfig> config() async => ShareConfig.speaking;
+
+  @override
   Future<ShareAnswer> lookup(String code) => Completer<ShareAnswer>().future;
 
   @override
@@ -227,6 +230,9 @@ class _HangShare implements BarcodeShareClient {
 }
 
 class _MissShare implements BarcodeShareClient {
+  @override
+  Future<ShareConfig> config() async => ShareConfig.speaking;
+
   @override
   Future<ShareAnswer> lookup(String code) async {
     return const ShareAnswer(ShareStatus.miss);
