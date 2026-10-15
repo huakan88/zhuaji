@@ -5,7 +5,7 @@ import 'dart:io';
 import '../domain/food/barcode_lookup.dart';
 
 /// Identifies this app to Open Food Facts and the other public databases.
-const barcodeUserAgent = 'PawPad/2.13 (com.maokangji.maokangji)';
+const barcodeUserAgent = 'PawPad/2.14 (com.maokangji.maokangji)';
 
 const _juheKey = String.fromEnvironment('JUHE_BARCODE_KEY');
 const _aliyunAppCode = String.fromEnvironment('ALIYUN_BARCODE_APPCODE');
