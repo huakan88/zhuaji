@@ -1,10 +1,12 @@
 # Git 工作流
 
-肉垫本的私有 Origin 仓库是 [huakan88/zhuaji](https://cursor.com/codebase/huakan88/zhuaji)。
+肉垫本的主仓是 GitHub 私有仓库 [huakan88/zhuaji](https://github.com/huakan88/zhuaji)。提交、附注标签和安装包说明都以这个仓库为准。
 
 ```bash
-git clone https://origin.cursor.com/git/huakan88/zhuaji.git
+git clone https://github.com/huakan88/zhuaji.git
 ```
+
+克隆之后 `origin` 指向 GitHub。分支和附注标签都推到这个 remote。
 
 `main` 是可发布线，`develop` 是日常集成线。
 
@@ -83,6 +85,4 @@ git push origin v2.3.0
 
 ## 持续集成
 
-Origin 没有内置的流水线，CI 通过 Apps 里接入的 Depot 或 Buildkite 来跑。这两家会执行仓库里的 GitHub Actions 工作流，所以基础检查放在 `.github/workflows/ci.yml`：`flutter analyze` 和 `flutter test`，另外跑 `server/` 与 `packages/zhuaji_sync` 的 `dart test`。
-
-把仓库接到 Depot 或 Buildkite 之后，推送到 `main`、`develop`、`release/**` 或打开拉取请求时会跑这份工作流。这次没有连接任何 CI 账号，也没有把仓库改到 GitHub。CircleCI 读的是 `.circleci/config.yml`，需要的话再加，不在这一份里。
+基础检查在 `.github/workflows/ci.yml`：`flutter analyze` 和 `flutter test`，另外跑 `server/` 与 `packages/zhuaji_sync` 的 `dart test`。推送到 GitHub 的 `main`、`develop`、`release/**`，或打开拉取请求时会跑这份工作流。CircleCI 读的是 `.circleci/config.yml`，需要的话再加，不在这一份里。
