@@ -218,7 +218,9 @@ class HeroCard extends StatelessWidget {
                   onTap: onTitleTap,
                   behavior: HitTestBehavior.opaque,
                   child: ConstrainedBox(
-                    constraints: const BoxConstraints(minHeight: 48),
+                    constraints: BoxConstraints(
+                      minHeight: onTitleTap == null ? 0 : 48,
+                    ),
                     child: Align(
                       alignment: Alignment.centerLeft,
                       child: Text(
