@@ -1,16 +1,19 @@
 import 'package:flutter/material.dart';
 
+import '../theme/app_tokens.dart';
+
 /// A rounded paw print drawn in code, so the center button does not depend
 /// on the Material icon font.
 class PawIcon extends StatelessWidget {
-  const PawIcon({this.size = 24, this.color = Colors.white, super.key});
+  const PawIcon({this.size = 24, this.color, super.key});
 
   final double size;
-  final Color color;
+  final Color? color;
 
   @override
   Widget build(BuildContext context) {
-    return CustomPaint(size: Size.square(size), painter: _PawPainter(color));
+    final paint = color ?? AppColors.of(context).onBrand;
+    return CustomPaint(size: Size.square(size), painter: _PawPainter(paint));
   }
 }
 

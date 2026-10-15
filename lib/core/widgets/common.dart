@@ -25,25 +25,26 @@ class SoftCard extends StatelessWidget {
   const SoftCard({
     required this.child,
     this.padding = const EdgeInsets.all(Space.x4),
-    this.color = AppColors.card,
+    this.color,
     this.radius = Radii.l,
     super.key,
   });
 
   final Widget child;
   final EdgeInsets padding;
-  final Color color;
+  final Color? color;
   final double radius;
 
   @override
   Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
     return Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(radius),
-        border: Border.all(color: AppColors.line),
+        border: Border.all(color: colors.line),
       ),
       child: Material(
-        color: color,
+        color: color ?? colors.card,
         borderRadius: BorderRadius.circular(radius),
         clipBehavior: Clip.antiAlias,
         child: Padding(padding: padding, child: child),
@@ -53,30 +54,26 @@ class SoftCard extends StatelessWidget {
 }
 
 class TagChip extends StatelessWidget {
-  const TagChip({
-    required this.label,
-    this.tint = AppColors.tintCoral,
-    this.color = AppColors.ink,
-    super.key,
-  });
+  const TagChip({required this.label, this.tint, this.color, super.key});
 
   final String label;
-  final Color tint;
-  final Color color;
+  final Color? tint;
+  final Color? color;
 
   @override
   Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
-        color: tint,
+        color: tint ?? colors.brandTint,
         borderRadius: BorderRadius.circular(999),
       ),
       child: Text(
         label,
         style: zhuaji.copyWith(
           fontSize: 12,
-          color: color,
+          color: color ?? colors.ink,
           fontWeight: FontWeight.w700,
         ),
       ),
@@ -118,8 +115,6 @@ AppBar zhuajiBar(String title) {
   return AppBar(
     title: Text(title),
     toolbarHeight: 56,
-    backgroundColor: AppColors.background,
-    surfaceTintColor: Colors.transparent,
     elevation: 0,
     scrolledUnderElevation: 0,
   );
@@ -141,9 +136,9 @@ class QuietCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final card = DecoratedBox(
       decoration: BoxDecoration(
-        color: AppColors.card,
+        color: AppColors.of(context).card,
         borderRadius: BorderRadius.circular(Radii.l),
-        border: Border.all(color: AppColors.line),
+        border: Border.all(color: AppColors.of(context).line),
       ),
       child: Padding(padding: padding, child: child),
     );
@@ -166,7 +161,7 @@ class PhotoFrame extends StatelessWidget {
       clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(Radii.xl),
-        border: Border.all(color: AppColors.line),
+        border: Border.all(color: AppColors.of(context).line),
       ),
       child: CatImage(path: path),
     );
@@ -194,9 +189,9 @@ class HeroCard extends StatelessWidget {
     return Container(
       clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
-        color: AppColors.card,
+        color: AppColors.of(context).card,
         borderRadius: BorderRadius.circular(Radii.xl),
-        border: Border.all(color: AppColors.line),
+        border: Border.all(color: AppColors.of(context).line),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -228,7 +223,7 @@ class HeroCard extends StatelessWidget {
                     subtitle,
                     style: zhuaji.copyWith(
                       fontSize: 13,
-                      color: AppColors.muted,
+                      color: AppColors.of(context).muted,
                       height: 1.35,
                     ),
                   ),
@@ -253,7 +248,7 @@ class SectionLabel extends StatelessWidget {
       text,
       style: zhuaji.copyWith(
         fontSize: 12,
-        color: AppColors.muted,
+        color: AppColors.of(context).muted,
         height: 1.35,
       ),
     );
@@ -271,10 +266,10 @@ class IconWell extends StatelessWidget {
       width: 40,
       height: 40,
       decoration: BoxDecoration(
-        color: AppColors.cream,
+        color: AppColors.of(context).field,
         borderRadius: BorderRadius.circular(Radii.s),
       ),
-      child: Icon(icon, size: 22, color: AppColors.ink),
+      child: Icon(icon, size: 22, color: AppColors.of(context).ink),
     );
   }
 }
@@ -343,12 +338,15 @@ class DisclaimerBanner extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(Space.x4),
       decoration: BoxDecoration(
-        color: AppColors.tintGreen,
+        color: AppColors.of(context).tintOlive,
         borderRadius: BorderRadius.circular(Radii.l),
       ),
       child: Text(
         '仅供参考，请遵医嘱。',
-        style: zhuaji.copyWith(color: AppColors.muted, fontSize: 12),
+        style: zhuaji.copyWith(
+          color: AppColors.of(context).muted,
+          fontSize: 12,
+        ),
       ),
     );
   }
@@ -386,7 +384,10 @@ class EmptyHint extends StatelessWidget {
           Text(
             body,
             textAlign: TextAlign.center,
-            style: zhuaji.copyWith(color: AppColors.muted, height: 1.4),
+            style: zhuaji.copyWith(
+              color: AppColors.of(context).muted,
+              height: 1.4,
+            ),
           ),
           if (action != null) ...[
             const SizedBox(height: Space.x4),
@@ -408,9 +409,11 @@ class CatImage extends StatelessWidget {
   Widget build(BuildContext context) {
     final source = path;
     if (source == null || source.isEmpty) {
-      return const ColoredBox(
-        color: AppColors.cream,
-        child: Center(child: PawIcon(size: 42, color: AppColors.coralDeep)),
+      return ColoredBox(
+        color: AppColors.of(context).field,
+        child: Center(
+          child: PawIcon(size: 42, color: AppColors.of(context).brandDeep),
+        ),
       );
     }
     if (source.startsWith('asset:')) {
@@ -419,8 +422,8 @@ class CatImage extends StatelessWidget {
     return Image.file(
       File(source),
       fit: fit,
-      errorBuilder: (context, error, stack) => const ColoredBox(
-        color: AppColors.cream,
+      errorBuilder: (context, error, stack) => ColoredBox(
+        color: AppColors.of(context).field,
         child: Center(child: Icon(Icons.broken_image_outlined)),
       ),
     );
@@ -431,18 +434,19 @@ class CatAvatar extends StatelessWidget {
   const CatAvatar({
     required this.path,
     required this.size,
-    this.ring = AppColors.coral,
+    this.ring,
     this.selected = false,
     super.key,
   });
 
   final String? path;
   final double size;
-  final Color ring;
+  final Color? ring;
   final bool selected;
 
   @override
   Widget build(BuildContext context) {
+    final ringColor = ring ?? AppColors.of(context).brand;
     return Container(
       width: size,
       height: size,
@@ -450,7 +454,7 @@ class CatAvatar extends StatelessWidget {
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         border: Border.all(
-          color: selected ? ring : ring.withValues(alpha: 0.35),
+          color: selected ? ringColor : ringColor.withValues(alpha: 0.35),
           width: selected ? 3 : 1.5,
         ),
       ),
@@ -506,7 +510,10 @@ class FoodDateCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(brand, style: zhuaji.copyWith(color: AppColors.muted)),
+          Text(
+            brand,
+            style: zhuaji.copyWith(color: AppColors.of(context).muted),
+          ),
           const SizedBox(height: Space.x1),
           Text(
             name,
@@ -520,24 +527,29 @@ class FoodDateCard extends StatelessWidget {
             children: [
               TagChip(
                 label: form,
-                tint: AppColors.tintGreen,
-                color: AppColors.olive,
+                tint: AppColors.of(context).tintOlive,
+                color: AppColors.of(context).olive,
               ),
               if (spec.isNotEmpty) TagChip(label: spec),
               if (isSample)
-                const TagChip(
+                TagChip(
                   label: '示例数据',
-                  tint: AppColors.cream,
-                  color: AppColors.brown,
+                  tint: AppColors.of(context).field,
+                  color: AppColors.of(context).warm,
                 ),
               if (source != null)
-                TagChip(label: source!, tint: AppColors.cream),
+                TagChip(label: source!, tint: AppColors.of(context).field),
             ],
           ),
           const SizedBox(height: Space.x4),
           const Divider(),
-          _line('生产日期', production == null ? '未记录' : formatDate(production!)),
           _line(
+            context,
+            '生产日期',
+            production == null ? '未记录' : formatDate(production!),
+          ),
+          _line(
+            context,
             '保质期',
             expiry == null ? '未记录' : formatDate(expiry!),
             trailing: days == null
@@ -545,13 +557,15 @@ class FoodDateCard extends StatelessWidget {
                 : TagChip(
                     label: countdownLabel(days),
                     tint: days < 0 || days <= 7
-                        ? const Color(0xFFF8E4E0)
+                        ? AppColors.of(context).tintDanger
                         : days <= 30
-                        ? AppColors.tintCoral
-                        : AppColors.tintGreen,
+                        ? AppColors.of(context).tintWarning
+                        : AppColors.of(context).tintOlive,
                     color: days < 0 || days <= 7
-                        ? AppColors.danger
-                        : AppColors.ink,
+                        ? AppColors.of(context).danger
+                        : days <= 30
+                        ? AppColors.of(context).warning
+                        : AppColors.of(context).olive,
                   ),
           ),
           if (bestBeforeOnly)
@@ -559,12 +573,16 @@ class FoodDateCard extends StatelessWidget {
               padding: const EdgeInsets.only(bottom: Space.x2),
               child: Text(
                 '这是最佳赏味期，不等于坏掉的日子。',
-                style: zhuaji.copyWith(color: AppColors.brown, fontSize: 12),
+                style: zhuaji.copyWith(
+                  color: AppColors.of(context).warm,
+                  fontSize: 12,
+                ),
               ),
             ),
-          if (batch != null && batch!.isNotEmpty) _line('批号', batch!),
-          _line('储存', storage),
+          if (batch != null && batch!.isNotEmpty) _line(context, '批号', batch!),
+          _line(context, '储存', storage),
           _line(
+            context,
             '开封后',
             openDue == null
                 ? (afterOpenDays == null || afterOpenDays! <= 0
@@ -579,7 +597,12 @@ class FoodDateCard extends StatelessWidget {
     );
   }
 
-  Widget _line(String label, String value, {Widget? trailing}) {
+  Widget _line(
+    BuildContext context,
+    String label,
+    String value, {
+    Widget? trailing,
+  }) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 6),
       child: Row(
@@ -587,7 +610,10 @@ class FoodDateCard extends StatelessWidget {
         children: [
           SizedBox(
             width: 64,
-            child: Text(label, style: zhuaji.copyWith(color: AppColors.muted)),
+            child: Text(
+              label,
+              style: zhuaji.copyWith(color: AppColors.of(context).muted),
+            ),
           ),
           Expanded(child: Text(value, style: zhuaji.copyWith(height: 1.35))),
           if (trailing != null) ...[const SizedBox(width: 8), trailing],
@@ -631,7 +657,7 @@ void showUndo(
       duration: const Duration(seconds: 5),
       action: SnackBarAction(
         label: '撤销',
-        textColor: AppColors.tintCoral,
+        textColor: AppColors.of(context).snackAction,
         onPressed: () => onUndo(),
       ),
     ),

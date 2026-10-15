@@ -20,7 +20,7 @@ class LabsPage extends StatelessWidget {
     final reports = [...app.catLabs]
       ..sort((a, b) => b.takenOn.compareTo(a.takenOn));
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: AppColors.of(context).background,
       appBar: zhuajiBar('化验单'),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
@@ -30,7 +30,7 @@ class LabsPage extends StatelessWidget {
             style: zhuaji.copyWith(
               fontSize: 13,
               height: 1.4,
-              color: AppColors.muted,
+              color: AppColors.of(context).muted,
             ),
           ),
           const SizedBox(height: 12),
@@ -47,7 +47,9 @@ class LabsPage extends StatelessWidget {
                 onTap: () => context.push('/lab?id=${report.id}'),
                 child: Row(
                   children: [
-                    _Thumb(path: report.photos.isEmpty ? null : report.photos.first),
+                    _Thumb(
+                      path: report.photos.isEmpty ? null : report.photos.first,
+                    ),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Column(
@@ -65,7 +67,7 @@ class LabsPage extends StatelessWidget {
                             _summary(report),
                             style: zhuaji.copyWith(
                               fontSize: 12,
-                              color: AppColors.muted,
+                              color: AppColors.of(context).muted,
                             ),
                           ),
                         ],
@@ -110,9 +112,12 @@ class _Thumb extends StatelessWidget {
         height: 56,
         child: ready
             ? Image.file(file, fit: BoxFit.cover)
-            : const ColoredBox(
-                color: AppColors.cream,
-                child: Icon(Icons.image_outlined, color: AppColors.muted),
+            : ColoredBox(
+                color: AppColors.of(context).field,
+                child: Icon(
+                  Icons.image_outlined,
+                  color: AppColors.of(context).muted,
+                ),
               ),
       ),
     );
@@ -130,8 +135,5 @@ String _summary(LabReport report) {
   }
   if (report.values.isEmpty) return '${report.photos.length} 张原图';
   if (high == 0 && low == 0) return '读到的都在范围内';
-  return [
-    if (high > 0) '$high 项偏高',
-    if (low > 0) '$low 项偏低',
-  ].join('，');
+  return [if (high > 0) '$high 项偏高', if (low > 0) '$low 项偏低'].join('，');
 }

@@ -29,7 +29,7 @@ class _DewormsPageState extends State<DewormsPage> {
     final cat = app.active;
     if (cat == null) {
       return Scaffold(
-        backgroundColor: AppColors.background,
+        backgroundColor: AppColors.of(context).background,
         appBar: zhuajiBar('驱虫'),
         body: const Center(child: Text('先选择一只猫')),
       );
@@ -47,13 +47,16 @@ class _DewormsPageState extends State<DewormsPage> {
         return left.compareTo(right);
       });
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: AppColors.of(context).background,
       appBar: zhuajiBar('驱虫'),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
         children: [
           if (items.isEmpty)
-            Text('还没记', style: zhuaji.copyWith(color: AppColors.muted))
+            Text(
+              '还没记',
+              style: zhuaji.copyWith(color: AppColors.of(context).muted),
+            )
           else
             for (final item in items.take(3)) _Record(item: item),
           const SizedBox(height: 8),
@@ -63,13 +66,13 @@ class _DewormsPageState extends State<DewormsPage> {
               ChoiceChip(
                 label: const Text('体内'),
                 selected: kind == DewormKind.internal,
-                selectedColor: AppColors.tintCoral,
+                selectedColor: AppColors.of(context).brandTint,
                 onSelected: (_) => setState(() => _kind = DewormKind.internal),
               ),
               ChoiceChip(
                 label: const Text('体外'),
                 selected: kind == DewormKind.external,
-                selectedColor: AppColors.tintCoral,
+                selectedColor: AppColors.of(context).brandTint,
                 onSelected: (_) => setState(() => _kind = DewormKind.external),
               ),
             ],
@@ -82,7 +85,7 @@ class _DewormsPageState extends State<DewormsPage> {
                 ChoiceChip(
                   label: Text(label),
                   selected: product == label,
-                  selectedColor: AppColors.tintCoral,
+                  selectedColor: AppColors.of(context).brandTint,
                   onSelected: (_) => setState(() => _product = label),
                 ),
             ],
@@ -95,7 +98,7 @@ class _DewormsPageState extends State<DewormsPage> {
           ),
           Text(
             '下次 ${formatDate(next)}',
-            style: zhuaji.copyWith(color: AppColors.muted),
+            style: zhuaji.copyWith(color: AppColors.of(context).muted),
           ),
         ],
       ),
@@ -159,7 +162,10 @@ class _Record extends StatelessWidget {
                     : '${dewormLabel(item.kind)} · ${countdownOf(due, app.now)}',
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: zhuaji.copyWith(color: AppColors.muted, fontSize: 12),
+                style: zhuaji.copyWith(
+                  color: AppColors.of(context).muted,
+                  fontSize: 12,
+                ),
               ),
             ],
           ),

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="widget_paper">#F4F7F3</color>
+    <color name="widget_ink">#1A2A22</color>
+    <color name="widget_muted">#3E5348</color>
+    <color name="widget_line">#D5E3D8</color>
+    <color name="shortcut_fill">#E5F4EB</color>
+    <color name="shortcut_stroke">#1B5C3C</color>
+    <color name="launch_background">#F4F7F3</color>
+</resources>

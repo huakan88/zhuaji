@@ -23,7 +23,7 @@ class PantryPage extends StatelessWidget {
         return left.compareTo(right);
       });
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: AppColors.of(context).background,
       appBar: zhuajiBar('粮仓'),
       body: FadeIn(
         child: ListView(
@@ -51,7 +51,7 @@ class PantryPage extends StatelessWidget {
                           '搜已有的，也能看自己加的',
                           style: zhuaji.copyWith(
                             fontSize: 12,
-                            color: AppColors.muted,
+                            color: AppColors.of(context).muted,
                           ),
                         ),
                       ],
@@ -112,7 +112,10 @@ class _BagRow extends StatelessWidget {
                 const SizedBox(height: 2),
                 Text(
                   _stockLine(entry, app.now),
-                  style: zhuaji.copyWith(fontSize: 12, color: AppColors.muted),
+                  style: zhuaji.copyWith(
+                    fontSize: 12,
+                    color: AppColors.of(context).muted,
+                  ),
                 ),
               ],
             ),

@@ -99,7 +99,7 @@ class _FoodFormPageState extends State<FoodFormPage> {
       flavors.insert(0, _flavor);
     }
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: AppColors.of(context).background,
       appBar: zhuajiBar(editing ? '改这款' : '自己添加'),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
@@ -120,9 +120,7 @@ class _FoodFormPageState extends State<FoodFormPage> {
             children: [
               Expanded(
                 child: OutlinedButton(
-                  onPressed: _busy
-                      ? null
-                      : () => _readPack(ImageSource.camera),
+                  onPressed: _busy ? null : () => _readPack(ImageSource.camera),
                   child: const Text('拍包装正面'),
                 ),
               ),
@@ -140,7 +138,10 @@ class _FoodFormPageState extends State<FoodFormPage> {
           const SizedBox(height: 8),
           Text(
             '拍完会填上品牌和名称，核对一下就行',
-            style: zhuaji.copyWith(fontSize: 12, color: AppColors.muted),
+            style: zhuaji.copyWith(
+              fontSize: 12,
+              color: AppColors.of(context).muted,
+            ),
           ),
           const SizedBox(height: 12),
           TextField(
@@ -164,7 +165,7 @@ class _FoodFormPageState extends State<FoodFormPage> {
                 ChoiceChip(
                   label: Text(formLabel(form)),
                   selected: _form == form,
-                  selectedColor: AppColors.tintCoral,
+                  selectedColor: AppColors.of(context).brandTint,
                   onSelected: (_) => setState(() => _form = form),
                 ),
             ],
@@ -180,7 +181,7 @@ class _FoodFormPageState extends State<FoodFormPage> {
                 ChoiceChip(
                   label: Text(flavor),
                   selected: _flavor == flavor,
-                  selectedColor: AppColors.tintCoral,
+                  selectedColor: AppColors.of(context).brandTint,
                   onSelected: (_) => setState(() {
                     _flavor = _flavor == flavor ? '' : flavor;
                   }),
@@ -198,7 +199,7 @@ class _FoodFormPageState extends State<FoodFormPage> {
                 ChoiceChip(
                   label: Text(spec),
                   selected: _spec == spec,
-                  selectedColor: AppColors.tintCoral,
+                  selectedColor: AppColors.of(context).brandTint,
                   onSelected: (_) => setState(() {
                     _spec = _spec == spec ? '' : spec;
                   }),
@@ -290,7 +291,9 @@ class _FoodFormPageState extends State<FoodFormPage> {
   void _applyRead(String path, PackRead read) {
     setState(() {
       _photo = path;
-      if (read.brand != null && read.brand!.isNotEmpty) _brand.text = read.brand!;
+      if (read.brand != null && read.brand!.isNotEmpty) {
+        _brand.text = read.brand!;
+      }
       if (read.name != null && read.name!.isNotEmpty) _name.text = read.name!;
       if (read.flavor != null) _flavor = read.flavor!;
       if (read.form != null) _form = read.form!;

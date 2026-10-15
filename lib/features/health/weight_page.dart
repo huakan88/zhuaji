@@ -24,20 +24,23 @@ class _WeightPageState extends State<WeightPage> {
     final cat = app.active;
     if (cat == null) {
       return Scaffold(
-        backgroundColor: AppColors.background,
+        backgroundColor: AppColors.of(context).background,
         appBar: zhuajiBar('体重'),
         body: const Center(child: Text('先选择一只猫')),
       );
     }
     final kg = _kg ??= app.latestWeight?.weightKg ?? 4;
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: AppColors.of(context).background,
       appBar: zhuajiBar('体重'),
       body: SingleChildScrollView(
         padding: const EdgeInsets.fromLTRB(20, 24, 20, 24),
         child: Column(
           children: [
-            Text(cat.name, style: zhuaji.copyWith(color: AppColors.muted)),
+            Text(
+              cat.name,
+              style: zhuaji.copyWith(color: AppColors.of(context).muted),
+            ),
             const SizedBox(height: 12),
             Text(
               '${kg.toStringAsFixed(2)} kg',
@@ -46,7 +49,7 @@ class _WeightPageState extends State<WeightPage> {
             const SizedBox(height: 8),
             Text(
               '点一下，每次 0.05 kg',
-              style: zhuaji.copyWith(color: AppColors.muted),
+              style: zhuaji.copyWith(color: AppColors.of(context).muted),
             ),
             const SizedBox(height: 24),
             Row(

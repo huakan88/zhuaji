@@ -23,11 +23,18 @@ struct TodayEntry: TimelineEntry {
   let today: String
   let next: String
   let route: String
+  let appearance: String
 }
 
 struct TodayProvider: TimelineProvider {
   func placeholder(in context: Context) -> TodayEntry {
-    TodayEntry(date: Date(), today: "今天没什么要办", next: "还没有", route: "/calendar")
+    TodayEntry(
+      date: Date(),
+      today: "今天没什么要办",
+      next: "还没有",
+      route: "/calendar",
+      appearance: "system"
+    )
   }
 
   func getSnapshot(in context: Context, completion: @escaping (TodayEntry) -> Void) {
@@ -51,7 +58,8 @@ private func parse(_ raw: String?) -> TodayEntry {
     date: Date(),
     today: "今天没什么要办",
     next: "还没有",
-    route: "/calendar"
+    route: "/calendar",
+    appearance: "system"
   )
   guard
     let raw,
@@ -71,33 +79,48 @@ private func parse(_ raw: String?) -> TodayEntry {
   if !route.hasPrefix("/") || route.hasPrefix("//") || route.contains("://") {
     route = "/calendar"
   }
-  return TodayEntry(date: Date(), today: body, next: next, route: route)
+  let appearance = (json["appearance"] as? String) ?? "system"
+  let mode = appearance == "light" || appearance == "dark" ? appearance : "system"
+  return TodayEntry(date: Date(), today: body, next: next, route: route, appearance: mode)
+}
+
+private struct ForceScheme: ViewModifier {
+  let appearance: String
+
+  @ViewBuilder
+  func body(content: Content) -> some View {
+    switch appearance {
+    case "light":
+      content.environment(\.colorScheme, .light)
+    case "dark":
+      content.environment(\.colorScheme, .dark)
+    default:
+      content
+    }
+  }
 }
 
 struct TodayWidgetView: View {
   var entry: TodayEntry
 
-  private let paper = Color(red: 247 / 255, green: 245 / 255, blue: 242 / 255)
-  private let ink = Color(red: 31 / 255, green: 30 / 255, blue: 28 / 255)
-  private let muted = Color(red: 138 / 255, green: 134 / 255, blue: 130 / 255)
-
   var body: some View {
     VStack(alignment: .leading, spacing: 6) {
       Text("爪记")
         .font(.caption)
-        .foregroundColor(muted)
+        .foregroundColor(Color("WidgetMuted"))
       Text(entry.today)
         .font(.subheadline)
-        .foregroundColor(ink)
+        .foregroundColor(Color("WidgetInk"))
         .lineLimit(4)
       Text("下一个：\(entry.next)")
         .font(.caption)
-        .foregroundColor(muted)
+        .foregroundColor(Color("WidgetMuted"))
         .lineLimit(2)
     }
     .padding(12)
     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-    .widgetBackground(paper)
+    .widgetBackground(Color("WidgetPaper"))
+    .modifier(ForceScheme(appearance: entry.appearance))
     .widgetURL(link(entry.route))
   }
 

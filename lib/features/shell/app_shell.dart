@@ -44,11 +44,13 @@ class _AppShellState extends State<AppShell> {
     final app = AppScope.of<AppController>(context);
     final showBar = !app.loading && app.error == null;
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: AppColors.of(context).background,
       extendBody: true,
       body: app.loading
-          ? const Center(
-              child: CircularProgressIndicator(color: AppColors.coralDeep),
+          ? Center(
+              child: CircularProgressIndicator(
+                color: AppColors.of(context).brandDeep,
+              ),
             )
           : app.error != null
           ? EmptyHint(
@@ -83,9 +85,9 @@ class _TabBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DecoratedBox(
-      decoration: const BoxDecoration(
-        color: AppColors.card,
-        border: Border(top: BorderSide(color: AppColors.line)),
+      decoration: BoxDecoration(
+        color: AppColors.of(context).card,
+        border: Border(top: BorderSide(color: AppColors.of(context).line)),
       ),
       child: SafeArea(
         top: false,
@@ -94,11 +96,11 @@ class _TabBar extends StatelessWidget {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              _item(0, Icons.today_outlined, '今天'),
-              _item(1, Icons.favorite_border, '健康'),
-              _scan(),
-              _item(3, Icons.inventory_2_outlined, '粮仓'),
-              _item(4, Icons.pets_outlined, '猫咪'),
+              _item(context, 0, Icons.today_outlined, '今天'),
+              _item(context, 1, Icons.favorite_border, '健康'),
+              _scan(context),
+              _item(context, 3, Icons.inventory_2_outlined, '粮仓'),
+              _item(context, 4, Icons.pets_outlined, '猫咪'),
             ],
           ),
         ),
@@ -106,9 +108,11 @@ class _TabBar extends StatelessWidget {
     );
   }
 
-  Widget _item(int index, IconData icon, String label) {
+  Widget _item(BuildContext context, int index, IconData icon, String label) {
     final selected = slot == index;
-    final color = selected ? AppColors.coralDeep : AppColors.muted;
+    final color = selected
+        ? AppColors.of(context).brandDeep
+        : AppColors.of(context).muted;
     return Expanded(
       child: InkWell(
         onTap: () => onSlot(index),
@@ -134,7 +138,7 @@ class _TabBar extends StatelessWidget {
     );
   }
 
-  Widget _scan() {
+  Widget _scan(BuildContext context) {
     return Expanded(
       child: GestureDetector(
         onTap: () => onSlot(2),
@@ -149,7 +153,7 @@ class _TabBar extends StatelessWidget {
                 '扫粮',
                 style: zhuaji.copyWith(
                   fontSize: 11,
-                  color: AppColors.coralDeep,
+                  color: AppColors.of(context).brandDeep,
                   fontWeight: FontWeight.w700,
                 ),
               ),
@@ -166,12 +170,19 @@ class _ScanMark extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const DecoratedBox(
-      decoration: BoxDecoration(color: AppColors.coral, shape: BoxShape.circle),
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: AppColors.of(context).brand,
+        shape: BoxShape.circle,
+      ),
       child: SizedBox(
         width: 48,
         height: 48,
-        child: Icon(Icons.qr_code_scanner, color: Colors.white, size: 22),
+        child: Icon(
+          Icons.qr_code_scanner,
+          color: AppColors.of(context).onBrand,
+          size: 22,
+        ),
       ),
     );
   }
