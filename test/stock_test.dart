@@ -40,6 +40,96 @@ void main() {
     expect(stockHint(estimate), contains('该补货了'));
   });
 
+  test('bag status keeps the sooner of eating and expiry', () {
+    final full = estimateStock(
+      spec: '2kg',
+      dailyGrams: 50,
+      openedAt: null,
+      today: today,
+    );
+    expect(
+      bagStatus(
+        estimate: full,
+        expiry: DateTime(2027, 10, 12),
+        useBy: null,
+        today: today,
+        opened: true,
+      ),
+      '还能吃 40 天',
+    );
+    final low = estimateStock(
+      spec: '1.5kg',
+      dailyGrams: 80,
+      openedAt: DateTime(2026, 9, 30),
+      today: today,
+    );
+    expect(
+      bagStatus(
+        estimate: low,
+        expiry: DateTime(2027, 1, 1),
+        useBy: null,
+        today: today,
+        opened: true,
+      ),
+      '快吃完，还能吃 6 天',
+    );
+    expect(
+      bagStatus(
+        estimate: full,
+        expiry: DateTime(2026, 10, 15),
+        useBy: null,
+        today: today,
+        opened: true,
+      ),
+      '快到期，还剩 3 天',
+    );
+    expect(
+      bagStatus(
+        estimate: estimateStock(
+          spec: '2kg',
+          dailyGrams: null,
+          openedAt: null,
+          today: today,
+        ),
+        expiry: DateTime(2026, 10, 1),
+        useBy: null,
+        today: today,
+        opened: true,
+      ),
+      '已过期',
+    );
+    expect(
+      bagStatus(
+        estimate: estimateStock(
+          spec: '',
+          dailyGrams: null,
+          openedAt: null,
+          today: today,
+        ),
+        expiry: DateTime(2027, 4, 1),
+        useBy: null,
+        today: today,
+        opened: false,
+      ),
+      '没开封',
+    );
+    expect(
+      bagStatus(
+        estimate: estimateStock(
+          spec: '',
+          dailyGrams: null,
+          openedAt: null,
+          today: today,
+        ),
+        expiry: null,
+        useBy: null,
+        today: today,
+        opened: true,
+      ),
+      '日期还没填',
+    );
+  });
+
   test('asks for a daily amount before estimating', () {
     final estimate = estimateStock(
       spec: '2kg',
@@ -51,12 +141,7 @@ void main() {
     expect(stockHint(estimate), '点一下每天喂多少');
     expect(
       stockHint(
-        estimateStock(
-          spec: '',
-          dailyGrams: 40,
-          openedAt: null,
-          today: today,
-        ),
+        estimateStock(spec: '', dailyGrams: 40, openedAt: null, today: today),
       ),
       '包装上没有克数，没法估算',
     );

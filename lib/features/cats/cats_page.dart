@@ -119,56 +119,43 @@ class CatsPage extends StatelessWidget {
               ),
               const SizedBox(height: 12),
               QuietCard(
-                onTap: () => context.push('/cat-form?id=${cat.id}'),
                 child: Column(
                   children: [
-                    _ProfileLine(
-                      label: '品种',
-                      value: (cat.breed == null || cat.breed!.isEmpty)
-                          ? '还没写'
-                          : cat.breed!,
-                    ),
-                    Divider(height: 16, color: AppColors.of(context).line),
-                    _ProfileLine(
-                      label: '年龄',
-                      value: ageLabel(cat.birthday, app.now),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 12),
-              QuietCard(
-                child: Row(
-                  children: [
-                    const IconWell(icon: Icons.monitor_weight_outlined),
-                    const SizedBox(width: 12),
-                    Expanded(
+                    GestureDetector(
+                      onTap: () {
+                        pawTap();
+                        context.push('/cat-form?id=${cat.id}');
+                      },
                       child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            '体重',
-                            style: zhuaji.copyWith(
-                              fontSize: 12,
-                              color: AppColors.of(context).muted,
-                            ),
+                          _ProfileLine(
+                            label: '品种',
+                            value: (cat.breed == null || cat.breed!.isEmpty)
+                                ? '还没写'
+                                : cat.breed!,
                           ),
-                          const SizedBox(height: 2),
-                          Text(
-                            '体重在健康里改',
-                            style: zhuaji.copyWith(
-                              fontSize: 12,
-                              color: AppColors.of(context).muted,
-                            ),
+                          Divider(
+                            height: 16,
+                            color: AppColors.of(context).line,
+                          ),
+                          _ProfileLine(
+                            label: '年龄',
+                            value: ageLabel(cat.birthday, app.now),
                           ),
                         ],
                       ),
                     ),
-                    Text(
-                      kg == null ? '— kg' : '${kg.toStringAsFixed(2)} kg',
-                      style: zhuaji.copyWith(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w700,
+                    Divider(height: 16, color: AppColors.of(context).line),
+                    GestureDetector(
+                      onTap: () {
+                        pawTap();
+                        context.push('/weight');
+                      },
+                      child: _ProfileLine(
+                        label: '体重',
+                        value: kg == null
+                            ? '还没称'
+                            : '${kg.toStringAsFixed(2)} kg',
                       ),
                     ),
                   ],

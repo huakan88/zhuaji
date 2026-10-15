@@ -56,6 +56,19 @@ class BagPage extends StatelessWidget {
             entry.product.brand,
             style: zhuaji.copyWith(color: AppColors.of(context).muted),
           ),
+          const SizedBox(height: 12),
+          QuietCard(
+            child: Text(
+              bagStatus(
+                estimate: estimate,
+                expiry: entry.item.expiryDate,
+                useBy: useBy,
+                today: dateOnly(app.now),
+                opened: opened != null,
+              ),
+              style: zhuaji.copyWith(fontSize: 22, fontWeight: FontWeight.w700),
+            ),
+          ),
           if (_lookupCode(app, entry) != null) ...[
             const SizedBox(height: 8),
             Align(
