@@ -1,6 +1,6 @@
-# 爪记隐私政策
+# 肉垫本隐私政策
 
-适用版本：爪记 2.8 起 · 2026 年 10 月更新
+适用版本：肉垫本（PawPad）2.10.1 · 2026 年 10 月更新
 
 应用内「蓝牙秤 → 隐私政策」显示的是同一份内容（`lib/features/cats/privacy_page.dart`），改动时两边一起改。
 
@@ -26,7 +26,7 @@ Android 可以加「今天的事」。iPhone 要等安装包里带上小组件�
 
 - 不用蓝牙定位，不记录附近的其他设备，不连接秤以外的设备。
 - Android 12 及以上申请「附近的设备」（`BLUETOOTH_SCAN`，声明了 `neverForLocation`，以及 `BLUETOOTH_CONNECT`）。
-- Android 11 及更早的系统要求蓝牙扫描时给「位置」权限（`ACCESS_FINE_LOCATION`，只在这些旧系统上申请）。爪记不会读取或保存你的位置。
+- Android 11 及更早的系统要求蓝牙扫描时给「位置」权限（`ACCESS_FINE_LOCATION`，只在这些旧系统上申请）。肉垫本不会读取或保存你的位置。
 - iOS 申请「蓝牙」权限，用途同上。
 
 ## 你自己的体重

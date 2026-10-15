@@ -24,5 +24,5 @@ Future<void> main() async {
     InternetAddress.anyIPv4,
     port,
   );
-  stdout.writeln('爪记 API http://${server.address.host}:${server.port}');
+  stdout.writeln('肉垫本 API http://${server.address.host}:${server.port}');
 }
