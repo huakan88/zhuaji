@@ -379,6 +379,18 @@ class _FoodFormPageState extends State<FoodFormPage> {
           ),
         );
       }
+      final saved = app.productById(id);
+      final savedCode = code.isEmpty ? (existing?.barcode ?? '') : code;
+      if (saved != null && savedCode.isNotEmpty) {
+        await app.rememberUserBarcode(
+          code: savedCode,
+          brand: saved.brand,
+          name: saved.name,
+          spec: saved.spec,
+          imageUrl: saved.photoPath,
+          ask: () => confirmBarcodeShare(context),
+        );
+      }
       if (!mounted) return;
       context.pop(id);
     } finally {

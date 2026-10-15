@@ -86,6 +86,9 @@ class BarcodeRecord {
     this.kcalPer100g,
     this.offline = false,
     this.incomplete = false,
+    this.createdAt,
+    this.updatedAt,
+    this.contributorId = '',
   });
 
   final String code;
@@ -107,6 +110,15 @@ class BarcodeRecord {
   final String source;
   final double? kcalPer100g;
 
+  /// When this row was first written to the shared library or this phone.
+  final DateTime? createdAt;
+
+  /// When the fields were last corrected. A later value wins on the server.
+  final DateTime? updatedAt;
+
+  /// Anonymous device id. Never a person's name.
+  final String contributorId;
+
   String get sourceLabel => switch (source) {
     'openpetfoodfacts' => 'Open Pet Food Facts',
     'openfoodfacts' => 'Open Food Facts',
@@ -120,6 +132,7 @@ class BarcodeRecord {
     'eansearch' => 'EAN-Search',
     'local' => '本机常见猫粮',
     'user' => '你之前记下的',
+    'share' => '共享库',
     _ => '',
   };
 
@@ -164,6 +177,9 @@ class BarcodeRecord {
     'source': source,
     'kcalPer100g': kcalPer100g,
     'incomplete': incomplete,
+    'createdAt': createdAt?.toUtc().toIso8601String(),
+    'updatedAt': updatedAt?.toUtc().toIso8601String(),
+    'contributorId': contributorId,
   };
 
   factory BarcodeRecord.fromJson(Map<dynamic, dynamic> json) {
@@ -189,6 +205,9 @@ class BarcodeRecord {
       source: '${json['source'] ?? ''}',
       kcalPer100g: kcal is num ? kcal.toDouble() : null,
       incomplete: json['incomplete'] == true,
+      createdAt: DateTime.tryParse('${json['createdAt'] ?? ''}')?.toUtc(),
+      updatedAt: DateTime.tryParse('${json['updatedAt'] ?? ''}')?.toUtc(),
+      contributorId: '${json['contributorId'] ?? ''}',
     );
   }
 }
