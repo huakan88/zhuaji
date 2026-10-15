@@ -86,6 +86,7 @@ ThemeData buildAppTheme(AppColors colors) {
     textButtonTheme: TextButtonThemeData(
       style: TextButton.styleFrom(
         foregroundColor: colors.olive,
+        minimumSize: const Size(48, 48),
         textStyle: label,
       ),
     ),

@@ -14,6 +14,7 @@ Future<DateTime?> pickDateWheel(BuildContext context, DateTime initial) {
   var selected = DateTime(initial.year, initial.month, initial.day);
   return showModalBottomSheet<DateTime>(
     context: context,
+    isDismissible: true,
     builder: (context) => SafeArea(
       child: SizedBox(
         height: 320,
@@ -130,28 +131,31 @@ class DateLine extends StatelessWidget {
   Widget build(BuildContext context) {
     return InkWell(
       onTap: onTap,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 12),
-        child: Row(
-          children: [
-            SizedBox(
-              width: 48,
-              child: Text(
-                label,
-                style: zhuaji.copyWith(fontWeight: FontWeight.w700),
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(minHeight: 48),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          child: Row(
+            children: [
+              SizedBox(
+                width: 48,
+                child: Text(
+                  label,
+                  style: zhuaji.copyWith(fontWeight: FontWeight.w700),
+                ),
               ),
-            ),
-            Expanded(
-              child: Text(
-                formatDate(date),
-                style: zhuaji.copyWith(fontSize: 16),
+              Expanded(
+                child: Text(
+                  formatDate(date),
+                  style: zhuaji.copyWith(fontSize: 16),
+                ),
               ),
-            ),
-            Text(
-              '改',
-              style: zhuaji.copyWith(color: AppColors.of(context).brandDeep),
-            ),
-          ],
+              Text(
+                '改',
+                style: zhuaji.copyWith(color: AppColors.of(context).brandDeep),
+              ),
+            ],
+          ),
         ),
       ),
     );

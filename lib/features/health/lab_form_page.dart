@@ -441,23 +441,23 @@ class _PhotoTile extends StatelessWidget {
             ),
           ),
           Positioned(
-            right: 4,
-            top: 4,
-            child: GestureDetector(
-              onTap: onRemove,
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  color: AppColors.of(context).scrimSoft,
-                  shape: BoxShape.circle,
-                ),
-                child: Padding(
-                  padding: EdgeInsets.all(4),
-                  child: Icon(
-                    Icons.close,
-                    size: 14,
-                    color: AppColors.of(context).onScrim,
-                  ),
-                ),
+            right: 0,
+            top: 0,
+            width: 48,
+            height: 48,
+            child: IconButton(
+              tooltip: '去掉这张',
+              onPressed: onRemove,
+              padding: EdgeInsets.zero,
+              style: IconButton.styleFrom(
+                backgroundColor: AppColors.of(context).scrimSoft,
+                minimumSize: const Size(48, 48),
+                fixedSize: const Size(48, 48),
+              ),
+              icon: Icon(
+                Icons.close,
+                size: 18,
+                color: AppColors.of(context).onScrim,
               ),
             ),
           ),
@@ -611,6 +611,7 @@ Future<LabEdit?> showLabEditor(
       : current.value * analyte.unitFor(current.unit).toBase / unit.toBase;
   return showModalBottomSheet<LabEdit>(
     context: context,
+    isDismissible: true,
     builder: (context) => SafeArea(
       child: StatefulBuilder(
         builder: (context, setSheet) {

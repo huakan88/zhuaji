@@ -60,8 +60,8 @@ void main() {
       );
       expect(scanDestination(controller, '6901111222233'), '/bag?id=$bagId');
       expect(
-        scanDestination(controller, '6900000000000'),
-        '/lookup?code=6900000000000',
+        scanDestination(controller, '6900000000007'),
+        '/lookup?code=6900000000007',
       );
       expect(scanDestination(controller, '  '), '/confirm');
     },

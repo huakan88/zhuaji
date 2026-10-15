@@ -33,9 +33,7 @@ void main() {
         if (RegExp(r'(?<![\w.])Colors\.').hasMatch(text)) {
           bad.add('$path Colors.');
         }
-        if (RegExp(
-          r'''(?<![\w.])Color\s*\(\s*(?!["'])''',
-        ).hasMatch(text)) {
+        if (RegExp(r'''(?<![\w.])Color\s*\(\s*(?!["'])''').hasMatch(text)) {
           bad.add('$path Color(');
         }
         if (RegExp(r'#[0-9A-Fa-f]{3,8}\b').hasMatch(text)) {
@@ -103,6 +101,8 @@ void main() {
       ('light snack', AppColors.light.snackAction, AppColors.light.ink),
       ('dark snack', AppColors.dark.snackAction, AppColors.dark.ink),
       ('scrim text', AppColors.light.onScrim, AppColors.light.scrim),
+      ('scrim muted', AppColors.light.onScrimMuted, AppColors.light.scrim),
+      ('dark scrim muted', AppColors.dark.onScrimMuted, AppColors.dark.scrim),
     ];
     for (final (name, ink, ground) in pairs) {
       check(name, ink, ground);
