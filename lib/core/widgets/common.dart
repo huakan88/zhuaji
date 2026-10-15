@@ -623,6 +623,29 @@ class FoodDateCard extends StatelessWidget {
   }
 }
 
+Future<bool> confirmBarcodeShare(BuildContext context) async {
+  final result = await showDialog<bool>(
+    context: context,
+    builder: (context) => AlertDialog(
+      title: const Text('提交到共享库？'),
+      content: const Text(
+        '只提交这个条码的品牌、名称、规格和可选配料，给其他手机查询。不上传猫咪、健康记录和你的姓名。以后修正同一条码时，以较新的日期为准。',
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context, false),
+          child: const Text('只记在手机'),
+        ),
+        FilledButton(
+          onPressed: () => Navigator.pop(context, true),
+          child: const Text('提交'),
+        ),
+      ],
+    ),
+  );
+  return result ?? false;
+}
+
 Future<bool> confirmDelete(BuildContext context, String title) async {
   final result = await showDialog<bool>(
     context: context,

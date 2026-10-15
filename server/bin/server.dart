@@ -11,6 +11,7 @@ Future<void> main() async {
   final databaseUrl = Platform.environment['DATABASE_URL'];
   final devAuth = (Platform.environment['AUTH_DEV'] ?? '1') != '0';
   final wechatMock = Platform.environment['WECHAT_MOCK'] == '1';
+  final shareKey = Platform.environment['BARCODE_SHARE_KEY'] ?? '';
   final store = databaseUrl == null || databaseUrl.isEmpty
       ? MemoryStore()
       : await PostgresStore.open(databaseUrl);
@@ -20,6 +21,7 @@ Future<void> main() async {
       jwtSecret: secret,
       devAuth: devAuth,
       wechatMock: wechatMock,
+      shareKey: shareKey,
     ),
     InternetAddress.anyIPv4,
     port,

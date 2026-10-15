@@ -2,17 +2,20 @@
 
 肉垫本 2.14 按这个顺序认一个条码，认到名称或品牌就停。不新增数据表。
 
-1. 你拍包装或点选品牌后记下的猫粮（存在本机，优先于内置表）
-2. 本机常见猫粮 / 猫罐头表（66 条，见下）
-3. 本机缓存里的公开库结果（一次请求失败不会写成「没有这款」）
-4. [Open Pet Food Facts](https://world.openpetfoodfacts.org/api/v2/product/)
-5. [Open Food Facts](https://world.openfoodfacts.org/api/v2/product/)
-6. [Open Products Facts](https://world.openproductsfacts.org/api/v2/product/)
-7. [ProductGuru](https://myproduct.guru/lookup/)（免密钥，页面上保留 Data: ProductGuru）
-8. [UPCitemdb 试用接口](https://api.upcitemdb.com/prod/trial/lookup)
-9. 聚合数据、阿里云市场条码、顶想云、Go-UPC、EAN-Search（只在构建时带了密钥才调用）
+1. 你拍包装或点选品牌后记下的猫粮（存在本机，优先于共享库和内置表）
+2. 共享库里同一条码最新的一条（看 `updatedAt`，没配地址就跳过）
+3. 本机常见猫粮 / 猫罐头表（66 条，见下）
+4. 本机缓存里的公开库结果（一次请求失败不会写成「没有这款」）
+5. [Open Pet Food Facts](https://world.openpetfoodfacts.org/api/v2/product/)
+6. [Open Food Facts](https://world.openfoodfacts.org/api/v2/product/)
+7. [Open Products Facts](https://world.openproductsfacts.org/api/v2/product/)
+8. [ProductGuru](https://myproduct.guru/lookup/)（免密钥，页面上保留 Data: ProductGuru）
+9. [UPCitemdb 试用接口](https://api.upcitemdb.com/prod/trial/lookup)
+10. 聚合数据、阿里云市场条码、顶想云、Go-UPC、EAN-Search（只在构建时带了密钥才调用）
 
-69 开头并且配置了国内密钥时，第 9 步里的国内接口排在第 4 步前面。没有密钥就不会请求它们。这次没有申请任何付费 key。
+共享库的配置、修正日期和测试步骤见 [共享条码库](barcode-share.md)。
+
+69 开头并且配置了国内密钥时，第 10 步里的国内接口排在公开库前面。没有密钥就不会请求它们。这次没有申请任何付费 key。
 
 单次请求 4 秒，整次查询 12 秒。请求带 `User-Agent: PawPad/2.14 (com.maokangji.maokangji)`。没有登录，也没有逆向任何第三方 App。中国物品编码中心没有免密钥、可写进应用的公开 API，没有接入。
 

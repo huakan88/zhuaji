@@ -14,12 +14,43 @@ import 'package:maokangji/domain/scale/scale_parser.dart';
 import 'package:maokangji/services/notification_service.dart';
 import 'package:maokangji/services/scale_service.dart';
 import 'package:maokangji/domain/food/barcode_lookup.dart';
+import 'package:maokangji/services/barcode_share.dart';
 import 'package:maokangji/domain/models.dart';
 import 'package:maokangji/core/theme/app_tokens.dart';
 import 'package:maokangji/state/app_controller.dart';
 
 import 'app_harness.dart';
 import 'cjk_font.dart';
+
+class _ShotShare implements BarcodeShareClient {
+  @override
+  Future<ShareAnswer> lookup(String code) async {
+    if (barcodeKey(code) != barcodeKey('6901234500004')) {
+      return const ShareAnswer(ShareStatus.miss);
+    }
+    return ShareAnswer(
+      ShareStatus.hit,
+      BarcodeRecord(
+        code: '6901234500004',
+        found: true,
+        brand: '麦富迪',
+        name: '修正后的双拼粮',
+        quantity: '2千克',
+        ingredients: '',
+        nutrients: const [],
+        source: 'share',
+        createdAt: DateTime.utc(2026, 10, 1),
+        updatedAt: DateTime.utc(2026, 10, 15),
+        contributorId: 'dev-shot',
+      ),
+    );
+  }
+
+  @override
+  Future<ShareAnswer> submit(BarcodeRecord record) async {
+    return const ShareAnswer(ShareStatus.miss);
+  }
+}
 
 class _ShotScale implements ScaleSource {
   var status = ScaleStatus.ready;
@@ -67,6 +98,7 @@ Future<void> _capture(
     clock: () => DateTime(2026, 10, 12, 10),
   );
   await controller.init();
+  controller.shareClient = _ShotShare();
   await controller.setThemeMode(mode);
   const royalImage = '/tmp/opff-royal.jpg';
   await tester.runAsync(() => _primeFileImage(royalImage));
@@ -162,6 +194,15 @@ Future<void> _capture(
   );
   await _frames(tester);
   await _shot(tester, folder, 'lookup-cn');
+  await tester.tap(find.byTooltip('返回'));
+  await _frames(tester);
+
+  unawaited(
+    GoRouter.of(tester.element(find.byType(Scaffold).last))
+        .push('/lookup?code=6901234500004'),
+  );
+  await _frames(tester);
+  await _shot(tester, folder, 'lookup-fix');
   await tester.tap(find.byTooltip('返回'));
   await _frames(tester);
 
@@ -364,6 +405,7 @@ Future<void> _compare() async {
     'search',
     'lookup',
     'lookup-cn',
+    'lookup-fix',
     'lookup-miss',
     'today-top',
     'health',
