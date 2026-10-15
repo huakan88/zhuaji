@@ -30,8 +30,12 @@ void main() {
         if (RegExp('coral', caseSensitive: false).hasMatch(text)) {
           bad.add('$path coral');
         }
-        if (text.contains('Colors.')) bad.add('$path Colors.');
-        if (RegExp(r'''Color\s*\(\s*(?!["'])''').hasMatch(text)) {
+        if (RegExp(r'(?<![\w.])Colors\.').hasMatch(text)) {
+          bad.add('$path Colors.');
+        }
+        if (RegExp(
+          r'''(?<![\w.])Color\s*\(\s*(?!["'])''',
+        ).hasMatch(text)) {
           bad.add('$path Color(');
         }
         if (RegExp(r'#[0-9A-Fa-f]{3,8}\b').hasMatch(text)) {

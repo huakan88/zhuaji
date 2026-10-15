@@ -17,6 +17,7 @@ import 'package:maokangji/domain/models.dart';
 import 'package:maokangji/core/theme/app_tokens.dart';
 import 'package:maokangji/state/app_controller.dart';
 
+import 'app_harness.dart';
 import 'cjk_font.dart';
 
 class _ShotScale implements ScaleSource {
@@ -272,6 +273,7 @@ Future<void> _capture(
   await _frames(tester);
   await _shot(tester, folder, 'cat');
 
+  await revealText(tester, '最近');
   final story = find.text('最近').evaluate().where((e) => !_hidden(e));
   await tester.ensureVisible(find.byWidget(story.first.widget));
   await tester.drag(
