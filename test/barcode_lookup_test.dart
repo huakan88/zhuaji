@@ -2,6 +2,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:maokangji/data/db/app_database.dart';
 import 'package:maokangji/data/repositories/drift_care_repository.dart';
 import 'package:maokangji/domain/food/barcode_lookup.dart';
+import 'package:maokangji/domain/food/local_barcodes.dart';
+import 'package:maokangji/domain/models.dart';
 import 'package:maokangji/domain/search/pinyin.dart';
 import 'package:maokangji/services/coat_recognizer.dart';
 import 'package:maokangji/services/notification_service.dart';
@@ -199,10 +201,10 @@ void main() {
       }
       return const BarcodeResponse(404, '{"status":0}');
     };
-    final record = await controller.resolveBarcode('6958862134620');
+    final record = await controller.resolveBarcode('6970000000000');
     expect(record.found, isFalse);
     expect(record.incomplete, isTrue);
-    expect(controller.cachedBarcode('6958862134620'), isNull);
+    expect(controller.cachedBarcode('6970000000000'), isNull);
     await database.close();
   });
 
@@ -331,4 +333,101 @@ void main() {
       expect(ean.quantity, '1.3kg');
     },
   );
+
+  test('local library codes are real, unique, and cover the measured nine', () {
+    expect(localCatFoods.length, inInclusiveRange(40, 80));
+    final keys = localCatFoods.map((item) => localBarcodeKey(item.barcode));
+    expect(keys.toSet().length, localCatFoods.length);
+    const required = [
+      '6958862134620',
+      '6906628275179',
+      '6945496203099',
+      '6917878081946',
+      '6914973700871',
+      '6914973107519',
+      '3182550799669',
+      '0064992280178',
+      '0052742035963',
+    ];
+    for (final code in required) {
+      final item = localCatFood(code);
+      expect(item, isNotNull, reason: code);
+      expect(item!.sourceNote, isNotEmpty);
+    }
+    for (final item in localCatFoods) {
+      expect(item.category, anyOf('干粮', '湿粮', '零食'));
+      expect(item.brand, isNotEmpty);
+      expect(item.name, isNotEmpty);
+      expect(item.spec, isNotEmpty);
+      expect(_ean13Ok(item.barcode), isTrue, reason: item.barcode);
+    }
+    expect(localCatFood('064992280178')?.name, 'Orijen Original Cat');
+    expect(localFoodForm(localCatFood('6945496203099')!), FoodForm.can);
+    expect(localFoodForm(localCatFood('6914973107519')!), FoodForm.wet);
+    expect(localFoodForm(localCatFood('6958862134620')!), FoodForm.dry);
+  });
+
+  test('a library hit skips the network and ignores a cached miss', () async {
+    final database = AppDatabase.memory();
+    final controller = AppController(
+      repo: DriftCareRepository(database),
+      notifications: NoopNotificationService(),
+      recognizer: const MockCoatBreedRecognizer(),
+    );
+    await controller.init();
+    await controller.saveBarcodeRecord(BarcodeRecord.miss('6958862134620'));
+    controller.barcodeFetch = (_) async {
+      fail('a local hit must not ask the network');
+    };
+    final record = await controller.resolveBarcode(
+      '6958862134620',
+      refresh: true,
+    );
+    expect(record.source, 'local');
+    expect(record.brand, '麦富迪');
+    expect(record.name, '三文鱼双拼全价全期猫粮');
+    expect(record.quantity, '2千克');
+    expect(record.ingredients, isEmpty);
+    expect(controller.cachedBarcode('6958862134620')?.found, isFalse);
+    await database.close();
+  });
+
+  test('a food the user saved beats the built-in row', () async {
+    final database = AppDatabase.memory();
+    final controller = AppController(
+      repo: DriftCareRepository(database),
+      notifications: NoopNotificationService(),
+      recognizer: const MockCoatBreedRecognizer(),
+    );
+    await controller.init();
+    controller.barcodeFetch = (_) async {
+      fail('a user correction must not ask the network');
+    };
+    await controller.saveFood(
+      const FoodDraft(
+        brand: '自记',
+        name: '我改过的名字',
+        spec: '500克',
+        foodForm: FoodForm.dry,
+        storageMethod: '阴凉干燥，封好袋口。',
+        afterOpenDays: 30,
+      ),
+      barcode: '6958862134620',
+    );
+    final record = await controller.resolveBarcode('6958862134620');
+    expect(record.source, 'user');
+    expect(record.brand, '自记');
+    expect(record.name, '我改过的名字');
+    expect(record.quantity, '500克');
+    await database.close();
+  });
+}
+
+bool _ean13Ok(String code) {
+  if (code.length != 13) return false;
+  var sum = 0;
+  for (var i = 0; i < 12; i++) {
+    sum += (i.isEven ? 1 : 3) * int.parse(code[i]);
+  }
+  return (10 - sum % 10) % 10 == int.parse(code[12]);
 }

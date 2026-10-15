@@ -68,7 +68,9 @@ void main() {
     expect(find.text('猫三联'), findsWidgets);
   });
 
-  testWidgets('a cached barcode shows the real product', (tester) async {
+  testWidgets('a built-in code shows the local card, not a cached name', (
+    tester,
+  ) async {
     await controller.saveBarcodeRecord(
       const BarcodeRecord(
         code: '3182550799669',
@@ -76,24 +78,38 @@ void main() {
         brand: 'Royal Canin',
         name: 'Neutered Satiety Balance',
         quantity: '12 kg',
-        ingredients: 'Protéines de volailles déshydratées, maïs',
-        nutrients: [
-          BarcodeNutrient(label: '粗蛋白', text: '35 %'),
-          BarcodeNutrient(label: '粗脂肪', text: '10 %'),
-        ],
+        ingredients: 'cached ingredients that must not win',
+        nutrients: [BarcodeNutrient(label: '粗蛋白', text: '1 %')],
         source: 'openpetfoodfacts',
-        imageUrl: 'https://images.openpetfoodfacts.org/example.jpg',
       ),
     );
     await boot(tester, controller, location: '/lookup?code=3182550799669');
-    expect(find.text('Royal Canin'), findsOneWidget);
+    expect(find.text('皇家'), findsOneWidget);
     expect(find.text('Neutered Satiety Balance'), findsOneWidget);
-    expect(find.text('12 kg'), findsOneWidget);
+    expect(find.text('12千克'), findsOneWidget);
     expect(find.textContaining('Protéines'), findsOneWidget);
     expect(find.text('粗蛋白'), findsOneWidget);
     expect(find.text('35 %'), findsOneWidget);
+    expect(find.text('1 %'), findsNothing);
     expect(find.text('收进粮仓'), findsOneWidget);
-    expect(find.textContaining('Open Pet Food Facts'), findsOneWidget);
+    expect(find.textContaining('本机常见猫粮'), findsOneWidget);
+  });
+
+  testWidgets('a domestic library hit shows brand, name and spec', (
+    tester,
+  ) async {
+    controller.barcodeFetch = (_) async {
+      fail('a local hit must not ask the network');
+    };
+    await boot(tester, controller, location: '/lookup?code=6958862134620');
+    expect(find.text('麦富迪'), findsOneWidget);
+    expect(find.text('三文鱼双拼全价全期猫粮'), findsOneWidget);
+    expect(find.text('2千克'), findsOneWidget);
+    expect(find.text('6958862134620'), findsOneWidget);
+    expect(find.text('配料'), findsNothing);
+    expect(find.text('成分'), findsNothing);
+    expect(find.textContaining('本机常见猫粮'), findsOneWidget);
+    expect(find.text('收进粮仓'), findsOneWidget);
   });
 
   testWidgets('a hit hides ingredients and analysis when the source has none', (
@@ -101,7 +117,7 @@ void main() {
   ) async {
     await controller.saveBarcodeRecord(
       const BarcodeRecord(
-        code: '3182550799669',
+        code: '6970000000000',
         found: true,
         brand: 'Royal Canin',
         name: 'Neutered Satiety Balance',
@@ -112,7 +128,7 @@ void main() {
         sourceUrl: 'https://myproduct.guru/p/3182550799669',
       ),
     );
-    await boot(tester, controller, location: '/lookup?code=3182550799669');
+    await boot(tester, controller, location: '/lookup?code=6970000000000');
     expect(find.text('Royal Canin'), findsOneWidget);
     expect(find.text('配料'), findsNothing);
     expect(find.text('成分'), findsNothing);
@@ -128,7 +144,7 @@ void main() {
       }
       return const BarcodeResponse(404, '{"status":0}');
     };
-    await boot(tester, controller, location: '/lookup?code=6958862134620');
+    await boot(tester, controller, location: '/lookup?code=6970000000000');
     expect(find.text('公开库里没有这款'), findsOneWidget);
     expect(find.textContaining('国产粮'), findsOneWidget);
     expect(find.text('拍包装识别'), findsOneWidget);

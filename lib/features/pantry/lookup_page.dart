@@ -175,7 +175,11 @@ class _Hit extends StatelessWidget {
         if (source.isNotEmpty) ...[
           const SizedBox(height: 12),
           Text(
-            '来自 $source。公开资料，以包装为准。',
+            record.source == 'user'
+                ? '这是你之前记下的，以包装为准。'
+                : record.source == 'local'
+                ? '来自本机常见猫粮。名称和规格来自公开条码页，以包装为准。'
+                : '来自 $source。公开资料，以包装为准。',
             style: zhuaji.copyWith(
               fontSize: 12,
               height: 1.4,
