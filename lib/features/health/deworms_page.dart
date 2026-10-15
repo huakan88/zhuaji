@@ -65,12 +65,20 @@ class _DewormsPageState extends State<DewormsPage> {
             children: [
               ChoiceChip(
                 label: const Text('体内'),
+                labelPadding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 8,
+                ),
                 selected: kind == DewormKind.internal,
                 selectedColor: AppColors.of(context).brandTint,
                 onSelected: (_) => setState(() => _kind = DewormKind.internal),
               ),
               ChoiceChip(
                 label: const Text('体外'),
+                labelPadding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 8,
+                ),
                 selected: kind == DewormKind.external,
                 selectedColor: AppColors.of(context).brandTint,
                 onSelected: (_) => setState(() => _kind = DewormKind.external),
@@ -84,6 +92,10 @@ class _DewormsPageState extends State<DewormsPage> {
               for (final label in choices)
                 ChoiceChip(
                   label: Text(label),
+                  labelPadding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 8,
+                  ),
                   selected: product == label,
                   selectedColor: AppColors.of(context).brandTint,
                   onSelected: (_) => setState(() => _product = label),

@@ -2,9 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/format.dart';
+import '../../core/haptics.dart';
 import '../../core/theme/app_fonts.dart';
 import '../../core/theme/app_tokens.dart';
+import '../../core/widgets/care_timeline.dart';
 import '../../core/widgets/common.dart';
+import '../../domain/care/care_story.dart';
 import '../../domain/models.dart';
 import '../../state/app_controller.dart';
 
@@ -16,6 +19,17 @@ class HealthPage extends StatelessWidget {
     final app = AppScope.of<AppController>(context);
     final cat = app.active;
     final kg = app.latestWeight?.weightKg;
+    final events = cat == null
+        ? const <CareEvent>[]
+        : recentCare(
+            catId: cat.id,
+            vaccines: app.vaccines,
+            deworms: app.deworms,
+            visits: app.visits,
+            checkups: app.checkups,
+            weights: app.weights,
+            now: app.now,
+          );
     const tiles = [
       _Tile('体重', '步进记下', Icons.monitor_weight_outlined, '/weight'),
       _Tile('疫苗', '猫三联、狂犬', Icons.vaccines_outlined, '/vaccines'),
@@ -69,8 +83,49 @@ class HealthPage extends StatelessWidget {
                     ),
                 ],
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 16),
             ],
+            Row(
+              children: [
+                Expanded(
+                  child: _Quick(
+                    label: '记体重',
+                    icon: Icons.monitor_weight_outlined,
+                    onTap: () {
+                      pawTap();
+                      context.push('/weight');
+                    },
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: _Quick(
+                    label: '记疫苗',
+                    icon: Icons.vaccines_outlined,
+                    onTap: () {
+                      pawTap();
+                      context.push('/vaccines');
+                    },
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: _Quick(
+                    label: '记驱虫',
+                    icon: Icons.bug_report_outlined,
+                    onTap: () {
+                      pawTap();
+                      context.push('/deworms');
+                    },
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            const SectionLabel('近来'),
+            const SizedBox(height: 8),
+            CareTimeline(events: events, empty: '疫苗和驱虫会排在这里'),
+            const SizedBox(height: 16),
             const SectionLabel('护理'),
             const SizedBox(height: 8),
             QuietCard(
@@ -127,6 +182,35 @@ class HealthPage extends StatelessWidget {
       ageLabel(cat.birthday, now),
     ];
     return parts.join(' · ');
+  }
+}
+
+class _Quick extends StatelessWidget {
+  const _Quick({required this.label, required this.icon, required this.onTap});
+
+  final String label;
+  final IconData icon;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return OutlinedButton(
+      onPressed: onTap,
+      style: OutlinedButton.styleFrom(
+        backgroundColor: AppColors.of(context).brandTint,
+        foregroundColor: AppColors.of(context).ink,
+        minimumSize: const Size.fromHeight(72),
+        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+        side: BorderSide(color: AppColors.of(context).line),
+      ),
+      child: Column(
+        children: [
+          Icon(icon, size: 20),
+          const SizedBox(height: 4),
+          Text(label, style: zhuaji.copyWith(fontWeight: FontWeight.w700)),
+        ],
+      ),
+    );
   }
 }
 
