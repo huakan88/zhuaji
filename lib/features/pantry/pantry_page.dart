@@ -145,9 +145,7 @@ class _Link extends StatelessWidget {
       onPressed: onTap,
       style: TextButton.styleFrom(
         foregroundColor: AppColors.of(context).ink,
-        minimumSize: Size.zero,
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+        minimumSize: const Size(48, 48),
       ),
       child: Text(
         label,

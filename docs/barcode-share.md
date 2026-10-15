@@ -68,6 +68,8 @@ BARCODE_SHARE_KEY=换一串只有你知道的口令 PORT=8094 dart run bin/serve
 
 条码用路径里的数字。8、12、13、14 位都可以，前导 0 会当成同一个码。成功时返回留下的那条，并带 `applied`。
 
+`GET /v1/barcode-share` 不需要口令。手机在提交和重试前先读它，确认 `contract` 为 `shared-barcodes`。提交失败或这接口没就绪时，修正留在本机设置 `barcodeShareQueue`，下次打开再试。队列里没有猫咪和健康记录。选定的机器、表和重试间隔见 [共享条码的后端](backend-sync.md)。
+
 ## 测试
 
 ```bash

@@ -34,7 +34,7 @@ class _CalendarPageState extends State<CalendarPage> {
       backgroundColor: AppColors.of(context).background,
       appBar: zhuajiBar('未来 30 天'),
       body: ListView(
-        padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
+        padding: const EdgeInsets.fromLTRB(8, 8, 8, 32),
         children: [
           Row(
             children: [
@@ -57,9 +57,9 @@ class _CalendarPageState extends State<CalendarPage> {
             crossAxisCount: 7,
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
-            mainAxisSpacing: 6,
-            crossAxisSpacing: 6,
-            childAspectRatio: 0.85,
+            mainAxisSpacing: 4,
+            crossAxisSpacing: 0,
+            childAspectRatio: 1,
             children: [
               for (final day in cells)
                 _DayCell(

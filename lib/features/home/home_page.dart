@@ -379,7 +379,7 @@ class _CatSwitch extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: 44,
+      height: 48,
       child: ListView(
         scrollDirection: Axis.horizontal,
         children: [
@@ -420,45 +420,51 @@ class _CatPill extends StatelessWidget {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.fromLTRB(4, 4, 14, 4),
-        decoration: BoxDecoration(
-          color: selected
-              ? AppColors.of(context).brandTint
-              : AppColors.of(context).card,
-          borderRadius: BorderRadius.circular(999),
-          border: Border.all(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
+        child: Container(
+          padding: const EdgeInsets.fromLTRB(4, 7, 14, 7),
+          decoration: BoxDecoration(
             color: selected
-                ? AppColors.of(context).brandDeep
-                : AppColors.of(context).line,
+                ? AppColors.of(context).brandTint
+                : AppColors.of(context).card,
+            borderRadius: BorderRadius.circular(999),
+            border: Border.all(
+              color: selected
+                  ? AppColors.of(context).brandDeep
+                  : AppColors.of(context).line,
+            ),
           ),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ClipOval(
-              child: SizedBox(
-                width: 34,
-                height: 34,
-                child: CatImage(path: cat.avatarPath),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ClipOval(
+                child: SizedBox(
+                  width: 34,
+                  height: 34,
+                  child: CatImage(path: cat.avatarPath),
+                ),
               ),
-            ),
-            const SizedBox(width: 8),
-            Text(
-              cat.name,
-              style: zhuaji.copyWith(fontSize: 14, fontWeight: FontWeight.w700),
-            ),
-            const SizedBox(width: 6),
-            Text(
-              count == 0 ? '没事' : '$count 件',
-              style: zhuaji.copyWith(
-                fontSize: 12,
-                color: count == 0
-                    ? AppColors.of(context).muted
-                    : AppColors.of(context).brandDeep,
+              const SizedBox(width: 8),
+              Text(
+                cat.name,
+                style: zhuaji.copyWith(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                ),
               ),
-            ),
-          ],
+              const SizedBox(width: 6),
+              Text(
+                count == 0 ? '没事' : '$count 件',
+                style: zhuaji.copyWith(
+                  fontSize: 12,
+                  color: count == 0
+                      ? AppColors.of(context).muted
+                      : AppColors.of(context).brandDeep,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

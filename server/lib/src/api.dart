@@ -33,6 +33,18 @@ Handler buildApi(
     return jsonOk({'ok': true});
   });
 
+  router.get('/v1/barcode-share', (Request request) {
+    return jsonOk({
+      'contract': 'shared-barcodes',
+      'version': 1,
+      'enabled': true,
+      'conflict': 'updatedAt-then-contributorId',
+      'privacy': 'barcode-metadata-only',
+      'lookup': 'GET /v1/shared-barcodes/{code}',
+      'submit': 'PUT /v1/shared-barcodes/{code}',
+    });
+  });
+
   router.post('/v1/auth/phone/request', (Request request) async {
     final body = await readJson(request);
     final phone = body['phone'];
@@ -253,7 +265,9 @@ Future<Response> _guard(
   String shareKey,
 ) async {
   final path = request.url.path;
-  if (path == 'healthz' || path.startsWith('v1/auth/')) {
+  if (path == 'healthz' ||
+      path == 'v1/barcode-share' ||
+      path.startsWith('v1/auth/')) {
     return inner(request);
   }
   if (path.startsWith('v1/shared-barcodes')) {
