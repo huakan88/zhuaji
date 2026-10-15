@@ -29,6 +29,7 @@ import 'features/pantry/catalog_page.dart';
 import 'features/pantry/confirm_page.dart';
 import 'features/pantry/food_form_page.dart';
 import 'features/pantry/pantry_page.dart';
+import 'features/pantry/recipes_page.dart';
 import 'features/pantry/scan_page.dart';
 import 'features/shell/app_shell.dart';
 import 'services/scale_service.dart';
@@ -161,6 +162,12 @@ class _ZhuajiAppState extends State<ZhuajiApp> {
         },
       ),
       GoRoute(path: '/catalog', builder: (_, _) => const CatalogPage()),
+      GoRoute(path: '/recipes', builder: (_, _) => const RecipesPage()),
+      GoRoute(
+        path: '/recipe',
+        builder: (context, state) =>
+            RecipeDetailPage(cardId: state.uri.queryParameters['id'] ?? ''),
+      ),
       GoRoute(
         path: '/food',
         builder: (context, state) {

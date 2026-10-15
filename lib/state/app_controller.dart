@@ -8,6 +8,7 @@ import '../core/theme/app_tokens.dart';
 import '../domain/care/agenda.dart';
 import '../domain/care/easy_log.dart';
 import '../domain/dates.dart';
+import '../domain/food/fresh_recipes.dart';
 import '../domain/food/stock.dart' as stock;
 import '../domain/health/checkup_catalog.dart';
 import '../domain/health/disease_catalog.dart';
@@ -337,6 +338,52 @@ class AppController extends ChangeNotifier {
 
   Future<int> savePantry(PantryDraft draft) async {
     final id = await repo.upsertPantry(draft);
+    await _refresh();
+    return id;
+  }
+
+  /// Puts one homemade card into the pantry and starts its open-date reminder.
+  /// Tapping again updates that same bag instead of adding a second one.
+  Future<int> addFreshToPantry({
+    required String cardId,
+    required int holdDays,
+    double? dailyGrams,
+  }) async {
+    final card = freshById(cardId);
+    if (card == null) return -1;
+    final code = freshBarcode(card.id);
+    final existing = findBarcode(code);
+    final productId = await repo.upsertProduct(
+      FoodDraft(
+        id: existing?.id,
+        barcode: code,
+        brand: '自制',
+        name: card.pantryName.isEmpty ? card.title : card.pantryName,
+        spec: card.spec,
+        foodForm: card.form,
+        storageMethod: card.storage,
+        afterOpenDays: holdDays,
+        flavor: '鲜食',
+        isCustom: true,
+      ),
+    );
+    PantryEntry? bag;
+    for (final entry in pantry) {
+      if (entry.product.id == productId || entry.product.barcode == code) {
+        bag = entry;
+        break;
+      }
+    }
+    final id = await repo.upsertPantry(
+      PantryDraft(
+        id: bag?.item.id,
+        productId: productId,
+        dateSource: DateSource.manual,
+        openedAt: dateOnly(now),
+        afterOpenDays: holdDays,
+        dailyGrams: dailyGrams,
+      ),
+    );
     await _refresh();
     return id;
   }
