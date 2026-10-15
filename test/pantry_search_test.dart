@@ -61,7 +61,7 @@ void main() {
       expect(scanDestination(controller, '6901111222233'), '/bag?id=$bagId');
       expect(
         scanDestination(controller, '6900000000000'),
-        '/confirm?code=6900000000000',
+        '/lookup?code=6900000000000',
       );
       expect(scanDestination(controller, '  '), '/confirm');
     },
@@ -85,7 +85,7 @@ void main() {
     expect(find.text('品牌'), findsNothing);
   });
 
-  testWidgets('a scan shortcut opens the camera over 粮仓', (tester) async {
+  testWidgets('a scan shortcut opens the camera over 今天', (tester) async {
     await boot(tester, controller);
     final router = GoRouter.of(tester.element(find.text('今天').first));
     openAppRoute(router, shortcutRoute('scan')!);
@@ -97,7 +97,7 @@ void main() {
     expect(
       find.byWidgetPredicate(
         (widget) =>
-            widget is TextField && widget.decoration?.hintText == '品牌、名字或条码',
+            widget is TextField && widget.decoration?.hintText == '猫咪、粮、记录',
       ),
       findsOneWidget,
     );

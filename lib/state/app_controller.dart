@@ -8,6 +8,7 @@ import '../core/theme/app_tokens.dart';
 import '../domain/care/agenda.dart';
 import '../domain/care/easy_log.dart';
 import '../domain/dates.dart';
+import '../domain/food/barcode_lookup.dart';
 import '../domain/food/fresh_recipes.dart';
 import '../domain/food/stock.dart' as stock;
 import '../domain/health/checkup_catalog.dart';
@@ -17,6 +18,7 @@ import '../domain/models.dart';
 import '../domain/parsing/gs1_parser.dart';
 import '../domain/reminders/reminder_planner.dart';
 import '../domain/repositories/care_repository.dart';
+import '../services/barcode_client.dart';
 import '../services/notification_service.dart';
 import '../services/widget_bridge.dart';
 
@@ -60,6 +62,15 @@ class AppController extends ChangeNotifier {
 
   /// Barcodes the catalog did not know, mapped to the product the user chose.
   Map<String, int> barcodeMemory = {};
+
+  /// Public-database hits and confirmed misses, keyed by [barcodeKey].
+  Map<String, BarcodeRecord> barcodeCatalog = {};
+
+  /// Queries the person recently ran from 今天. Newest first, at most eight.
+  List<String> recentSearches = [];
+
+  /// Tests inject this. Production leaves it null and uses the live client.
+  BarcodeFetch? barcodeFetch;
 
   /// The owner's own weight from the last 「抱猫称」, offered again next time.
   double? ownerWeightKg;
@@ -656,6 +667,94 @@ class AppController extends ChangeNotifier {
     await _refresh();
   }
 
+  /// Turns a looked-up product into a pantry food and remembers the code.
+  Future<int> adoptBarcode(BarcodeRecord record) async {
+    final existing = findBarcode(record.code);
+    if (existing != null) {
+      await rememberBarcode(record.code, existing.id);
+      return existing.id;
+    }
+    final brand = record.brand.trim().isEmpty ? '未署名' : record.brand.trim();
+    final name = record.name.trim().isEmpty ? brand : record.name.trim();
+    final spec = record.quantity.trim().isEmpty
+        ? '见包装'
+        : record.quantity.trim();
+    return saveFood(
+      FoodDraft(
+        brand: brand,
+        name: name,
+        spec: spec,
+        foodForm: guessLookupForm(name, spec),
+        storageMethod: '阴凉干燥，封好袋口。',
+        afterOpenDays: 30,
+        kcalPer100g: record.kcalPer100g,
+        isCustom: true,
+      ),
+      barcode: record.code,
+    );
+  }
+
+  BarcodeRecord? cachedBarcode(String code) {
+    final key = barcodeKey(code);
+    if (key.isEmpty) return null;
+    return barcodeCatalog[key];
+  }
+
+  Future<void> saveBarcodeRecord(BarcodeRecord record) async {
+    final key = barcodeKey(record.code);
+    if (key.isEmpty || record.offline) return;
+    barcodeCatalog[key] = record;
+    await _storeCatalog();
+    notifyListeners();
+  }
+
+  /// Cache, then the public databases. Offline misses are not stored.
+  Future<BarcodeRecord> resolveBarcode(
+    String code, {
+    bool refresh = false,
+  }) async {
+    final key = barcodeKey(code);
+    if (key.isEmpty) return BarcodeRecord.miss(code);
+    if (!refresh) {
+      final cached = barcodeCatalog[key];
+      if (cached != null) return cached;
+    } else {
+      barcodeCatalog.remove(key);
+    }
+    final record = await lookupBarcode(
+      code,
+      fetch: barcodeFetch ?? defaultBarcodeFetch(),
+    );
+    if (!record.offline) {
+      barcodeCatalog[key] = record;
+      await _storeCatalog();
+    }
+    notifyListeners();
+    return record;
+  }
+
+  Future<void> pushRecentSearch(String query) async {
+    final text = query.trim();
+    if (text.isEmpty) return;
+    recentSearches.remove(text);
+    recentSearches.insert(0, text);
+    if (recentSearches.length > 8) {
+      recentSearches = recentSearches.sublist(0, 8);
+    }
+    await repo.setSetting('recentSearches', jsonEncode(recentSearches));
+    notifyListeners();
+  }
+
+  Future<void> _storeCatalog() {
+    return repo.setSetting(
+      'barcodeCatalog',
+      jsonEncode({
+        for (final entry in barcodeCatalog.entries)
+          entry.key: entry.value.toJson(),
+      }),
+    );
+  }
+
   /// Next scan of [barcode] goes straight to [productId].
   Future<void> rememberBarcode(String barcode, int productId) async {
     final key = barcodeKey(barcode);
@@ -725,7 +824,38 @@ class AppController extends ChangeNotifier {
     widgetEnabled = (await repo.setting('widgetEnabled') ?? '1') != '0';
     themeMode = ZhuajiThemeMode.fromStorage(await repo.setting('themeMode'));
     barcodeMemory = _decodeMemory(await repo.setting('barcodeMemory'));
+    barcodeCatalog = _decodeCatalog(await repo.setting('barcodeCatalog'));
+    recentSearches = _decodeSearches(await repo.setting('recentSearches'));
     ownerWeightKg = double.tryParse(await repo.setting('ownerWeightKg') ?? '');
+  }
+
+  Map<String, BarcodeRecord> _decodeCatalog(String? raw) {
+    if (raw == null || raw.isEmpty) return {};
+    try {
+      final decoded = jsonDecode(raw);
+      if (decoded is! Map) return {};
+      return {
+        for (final entry in decoded.entries)
+          if (entry.value is Map)
+            '${entry.key}': BarcodeRecord.fromJson(entry.value as Map),
+      };
+    } catch (_) {
+      return {};
+    }
+  }
+
+  List<String> _decodeSearches(String? raw) {
+    if (raw == null || raw.isEmpty) return [];
+    try {
+      final decoded = jsonDecode(raw);
+      if (decoded is! List) return [];
+      return [
+        for (final item in decoded)
+          if (item is String && item.trim().isNotEmpty) item.trim(),
+      ];
+    } catch (_) {
+      return [];
+    }
   }
 
   Map<String, int> _decodeMemory(String? raw) {

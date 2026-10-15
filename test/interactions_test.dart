@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:maokangji/data/db/app_database.dart';
 import 'package:maokangji/data/repositories/drift_care_repository.dart';
+import 'package:maokangji/features/health/weight_page.dart';
 import 'package:maokangji/features/home/home_page.dart';
 import 'package:maokangji/services/coat_recognizer.dart';
 import 'package:maokangji/services/notification_service.dart';
@@ -37,6 +38,7 @@ void main() {
     expect(find.text('猫咪'), findsOneWidget);
     expect(_homeText('到期粮'), findsOneWidget);
     expect(_homeText('疫苗'), findsOneWidget);
+    await revealText(tester, '示例体外驱虫');
     expect(_homeText('驱虫'), findsNWidgets(2));
     await revealText(tester, '体重');
     expect(_homeText('体重'), findsOneWidget);
@@ -51,7 +53,13 @@ void main() {
 
     await tapText(tester, '体重');
     expect(find.text('轻一点'), findsOneWidget);
-    expect(find.byType(TextField), findsNothing);
+    expect(
+      find.descendant(
+        of: find.byType(WeightPage),
+        matching: find.byType(TextField),
+      ),
+      findsNothing,
+    );
     await tapText(tester, '保存');
     expect(_homeText('体重'), findsNothing);
     expect(controller.weightAlertVisible(controller.active!), isFalse);

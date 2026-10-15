@@ -7,16 +7,47 @@ import '../../core/theme/app_tokens.dart';
 import '../../core/widgets/common.dart';
 import '../../domain/dates.dart';
 import '../../domain/models.dart';
+import '../../domain/search/global_search.dart';
 import '../../state/app_controller.dart';
+import '../shell/scan_button.dart';
 
-class HomePage extends StatelessWidget {
+class HomePage extends StatefulWidget {
   const HomePage({super.key});
+
+  @override
+  State<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
+  final _query = TextEditingController();
+
+  @override
+  void dispose() {
+    _query.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     final app = AppScope.of<AppController>(context);
     final cat = app.active;
     final todos = _todos(context, app, cat);
+    final query = _query.text.trim();
+    final groups = query.isEmpty
+        ? const <SearchGroup>[]
+        : globalSearch(
+            query: query,
+            cats: app.cats,
+            pantry: app.pantry,
+            products: app.products,
+            vaccines: app.vaccines,
+            deworms: app.deworms,
+            weights: app.weights,
+            labs: app.labs,
+            visits: app.visits,
+            reminders: app.agenda(),
+            catName: (id) => app.catById(id)?.name ?? '',
+          );
     return Scaffold(
       backgroundColor: AppColors.of(context).background,
       appBar: zhuajiBar('今天'),
@@ -24,61 +55,146 @@ class HomePage extends StatelessWidget {
         child: ListView(
           padding: const EdgeInsets.fromLTRB(20, 4, 20, 108),
           children: [
-            if (app.cats.length > 1) ...[
-              _CatSwitch(app: app, activeCount: todos.length),
-              const SizedBox(height: 12),
-            ],
-            if (cat != null)
-              HeroCard(
-                path: cat.avatarPath,
-                title: cat.name,
-                subtitle: _meta(cat, app.now),
-              ),
-            const SizedBox(height: 16),
-            QuietCard(
-              onTap: () => context.push('/calendar'),
-              child: Row(
-                children: [
-                  const IconWell(icon: Icons.calendar_today_outlined),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          '未来 30 天',
-                          style: zhuaji.copyWith(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          '疫苗、驱虫、体检、粮和复诊',
-                          style: zhuaji.copyWith(
-                            fontSize: 12,
-                            color: AppColors.of(context).muted,
-                          ),
-                        ),
-                      ],
+            Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _query,
+                    textInputAction: TextInputAction.search,
+                    decoration: const InputDecoration(
+                      hintText: '猫咪、粮、记录',
+                      prefixIcon: Icon(Icons.search),
                     ),
+                    onChanged: (_) => setState(() {}),
+                    onSubmitted: app.pushRecentSearch,
                   ),
+                ),
+                const SizedBox(width: 8),
+                const ScanCameraButton(),
+              ],
+            ),
+            if (query.isEmpty && app.recentSearches.isNotEmpty) ...[
+              const SizedBox(height: 8),
+              Wrap(
+                spacing: 8,
+                runSpacing: 4,
+                children: [
+                  for (final item in app.recentSearches)
+                    ActionChip(
+                      label: Text(item),
+                      onPressed: () {
+                        _query.text = item;
+                        setState(() {});
+                      },
+                    ),
                 ],
               ),
-            ),
-            const SizedBox(height: 24),
-            SectionLabel(todos.isEmpty ? '今天要办' : '今天要办  ${todos.length}'),
-            const SizedBox(height: 8),
-            if (todos.isEmpty)
-              const EmptyHint(title: '今天没什么要办', body: '到期、疫苗和驱虫会出现在这里'),
-            for (final todo in todos) ...[
-              _TodoRow(todo: todo),
+            ],
+            if (query.isNotEmpty) ...[
+              const SizedBox(height: 16),
+              if (groups.isEmpty)
+                const EmptyHint(title: '没有找到', body: '换个词，或扫包装上的条码')
+              else
+                for (final group in groups) ...[
+                  SectionLabel(group.label),
+                  const SizedBox(height: 8),
+                  for (final hit in group.hits) ...[
+                    QuietCard(
+                      onTap: () => _open(app, hit),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            hit.title,
+                            style: zhuaji.copyWith(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          if (hit.subtitle.isNotEmpty) ...[
+                            const SizedBox(height: 2),
+                            Text(
+                              hit.subtitle,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: zhuaji.copyWith(
+                                fontSize: 12,
+                                color: AppColors.of(context).muted,
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                  ],
+                ],
+            ] else ...[
+              if (app.cats.length > 1) ...[
+                _CatSwitch(app: app, activeCount: todos.length),
+                const SizedBox(height: 12),
+              ],
+              if (cat != null)
+                HeroCard(
+                  path: cat.avatarPath,
+                  title: cat.name,
+                  subtitle: _meta(cat, app.now),
+                ),
+              const SizedBox(height: 16),
+              QuietCard(
+                onTap: () => context.push('/calendar'),
+                child: Row(
+                  children: [
+                    const IconWell(icon: Icons.calendar_today_outlined),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            '未来 30 天',
+                            style: zhuaji.copyWith(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            '疫苗、驱虫、体检、粮和复诊',
+                            style: zhuaji.copyWith(
+                              fontSize: 12,
+                              color: AppColors.of(context).muted,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 24),
+              SectionLabel(todos.isEmpty ? '今天要办' : '今天要办  ${todos.length}'),
               const SizedBox(height: 8),
+              if (todos.isEmpty)
+                const EmptyHint(title: '今天没什么要办', body: '到期、疫苗和驱虫会出现在这里'),
+              for (final todo in todos) ...[
+                _TodoRow(todo: todo),
+                const SizedBox(height: 8),
+              ],
             ],
           ],
         ),
       ),
     );
+  }
+
+  Future<void> _open(AppController app, SearchHit hit) async {
+    await app.pushRecentSearch(_query.text);
+    if (hit.catId != null && hit.catId != app.activeCatId) {
+      await app.selectCat(hit.catId!);
+    }
+    if (!mounted) return;
+    context.push(hit.route);
   }
 
   List<_Todo> _todos(BuildContext context, AppController app, CatProfile? cat) {
