@@ -8,7 +8,6 @@ import '../../domain/dates.dart';
 import '../format.dart';
 import '../theme/app_fonts.dart';
 import '../theme/app_tokens.dart';
-import 'paw_icon.dart';
 
 class AppScope extends InheritedNotifier<Listenable> {
   const AppScope({required this.controller, required super.child, super.key})
@@ -330,62 +329,20 @@ class _PressableState extends State<Pressable> {
   }
 }
 
-class _EmptyIllustration extends StatelessWidget {
-  const _EmptyIllustration();
+/// Square brand mark. The asset already includes the dark green field.
+class BrandMark extends StatelessWidget {
+  const BrandMark({this.size = 96, super.key});
+
+  final double size;
 
   @override
   Widget build(BuildContext context) {
-    final colors = AppColors.of(context);
-    return CustomPaint(
-      size: const Size(96, 72),
-      painter: _RestPainter(fill: colors.brandTint, ink: colors.brand),
+    return Image.asset(
+      'assets/brand/logo-paw.png',
+      width: size,
+      height: size,
+      fit: BoxFit.cover,
     );
-  }
-}
-
-/// Two hills and a small sun. No photo and no sample numbers.
-class _RestPainter extends CustomPainter {
-  const _RestPainter({required this.fill, required this.ink});
-
-  final Color fill;
-  final Color ink;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final ground = Paint()..color = fill;
-    final mark = Paint()
-      ..color = ink
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 2;
-    canvas.drawCircle(
-      Offset(size.width * 0.72, size.height * 0.28),
-      10,
-      ground,
-    );
-    canvas.drawCircle(Offset(size.width * 0.72, size.height * 0.28), 10, mark);
-    final hill = Path()
-      ..moveTo(0, size.height)
-      ..quadraticBezierTo(
-        size.width * 0.28,
-        size.height * 0.15,
-        size.width * 0.55,
-        size.height * 0.72,
-      )
-      ..quadraticBezierTo(
-        size.width * 0.78,
-        size.height * 1.05,
-        size.width,
-        size.height * 0.55,
-      )
-      ..lineTo(size.width, size.height)
-      ..close();
-    canvas.drawPath(hill, ground);
-    canvas.drawPath(hill, mark);
-  }
-
-  @override
-  bool shouldRepaint(covariant _RestPainter oldDelegate) {
-    return oldDelegate.fill != fill || oldDelegate.ink != ink;
   }
 }
 
@@ -431,7 +388,7 @@ class EmptyHint extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: Space.x6),
       child: Column(
         children: [
-          const _EmptyIllustration(),
+          const BrandMark(),
           const SizedBox(height: Space.x4),
           Text(
             title,
@@ -468,12 +425,7 @@ class CatImage extends StatelessWidget {
   Widget build(BuildContext context) {
     final source = path;
     if (source == null || source.isEmpty) {
-      return ColoredBox(
-        color: AppColors.of(context).field,
-        child: Center(
-          child: PawIcon(size: 42, color: AppColors.of(context).brandDeep),
-        ),
-      );
+      return Image.asset('assets/brand/logo-paw.png', fit: fit);
     }
     if (source.startsWith('asset:')) {
       return Image.asset(source.substring(6), fit: fit);

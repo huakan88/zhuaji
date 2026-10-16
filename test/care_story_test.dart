@@ -76,7 +76,7 @@ void main() {
     expect(card, contains('上次就医'));
     expect(card, contains('年度体检'));
     expect(card, contains('请遵医嘱'));
-    expect(card, contains('由肉垫本整理'));
+    expect(card, contains('由花爪整理'));
     expect(card, isNot(contains('奶油')));
   });
 

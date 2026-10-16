@@ -177,7 +177,7 @@ class NotificationService implements ReminderNotifier {
       android: AndroidNotificationDetails(
         id,
         name,
-        channelDescription: '肉垫本的$name',
+        channelDescription: '花爪的$name',
         importance: Importance.defaultImportance,
         priority: Priority.defaultPriority,
         color: AppColors.light.brand,
