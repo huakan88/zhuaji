@@ -177,9 +177,7 @@ String vetCard({
       bits.add('${value.code} ${reading.flagLabel}');
     }
     final summary = bits.isEmpty ? '已存档' : bits.join('，');
-    lines.add(
-      '化验 ${day(report.takenOn)} ${labKindLabel(report.kind)}：$summary',
-    );
+    lines.add('化验 ${day(report.takenOn)} ${report.kindTitle}：$summary');
   }
 
   final custom = [

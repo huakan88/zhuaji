@@ -638,20 +638,21 @@ class AppController extends ChangeNotifier {
     String stageLabel = '',
   }) async {
     final cat = active;
-    final info = diseaseById(diseaseId);
-    if (cat == null || info == null) return;
-    final existing = conditionFor(diseaseId);
+    final id = diseaseId.trim();
+    if (cat == null || id.isEmpty) return;
+    final info = diseaseById(id);
+    final existing = conditionFor(id);
     await repo.upsertCondition(
       ConditionDraft(
         id: existing?.id,
         catId: cat.id,
-        diseaseId: diseaseId,
+        diseaseId: id,
         diagnosedOn: existing?.diagnosedOn ?? dateOnly(now),
         stageLabel: stageLabel,
         note: existing?.note ?? '',
         nextRecheck:
             existing?.nextRecheck ??
-            dateOnly(now).add(Duration(days: info.recheckDays)),
+            dateOnly(now).add(Duration(days: info?.recheckDays ?? 180)),
       ),
     );
     await _refresh();
@@ -743,6 +744,7 @@ class AppController extends ChangeNotifier {
         flavor: draft.flavor,
         isCustom: true,
         photoPath: draft.photoPath,
+        customForm: draft.customForm,
       ),
     );
     if (code.isNotEmpty) {
@@ -1666,7 +1668,7 @@ class AppController extends ChangeNotifier {
             FollowUpInput(
               id: item.id,
               catName: _name(item.catId),
-              label: checkupById(item.itemId)?.name ?? '体检',
+              label: checkupById(item.itemId)?.name ?? item.itemId,
               dueDate: item.nextDue!,
               recheck: false,
             ),
@@ -1675,7 +1677,7 @@ class AppController extends ChangeNotifier {
             FollowUpInput(
               id: item.id,
               catName: _name(item.catId),
-              label: diseaseById(item.diseaseId)?.name ?? '复查',
+              label: diseaseById(item.diseaseId)?.name ?? item.diseaseId,
               dueDate: item.nextRecheck!,
               recheck: true,
             ),

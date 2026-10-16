@@ -16,6 +16,7 @@ import '../../services/photo_store.dart';
 import '../../services/vaccine_ocr_service.dart';
 import '../../state/app_controller.dart';
 import '../records/record_sheets.dart';
+import 'known_or_custom.dart';
 
 class StickerPage extends StatefulWidget {
   const StickerPage({this.initial, super.key});
@@ -28,11 +29,20 @@ class StickerPage extends StatefulWidget {
 
 class _StickerPageState extends State<StickerPage> {
   static const _known = ['猫三联', '狂犬'];
+  final _customText = TextEditingController();
   String? _name;
   DateTime? _given;
   String? _batch;
+  var _custom = false;
+  var _seeded = false;
   var _busy = false;
   var _read = false;
+
+  @override
+  void dispose() {
+    _customText.dispose();
+    super.dispose();
+  }
 
   @override
   void initState() {
@@ -57,11 +67,16 @@ class _StickerPageState extends State<StickerPage> {
       );
     }
     final given = _given ??= dateOnly(app.now);
-    final name = _name ??= '猫三联';
-    final choices = [
-      ..._known,
-      if (name.isNotEmpty && !_known.contains(name)) name,
-    ];
+    if (!_seeded) {
+      _seeded = true;
+      final initialName = (_name ?? '').trim();
+      if (initialName.isNotEmpty && !_known.contains(initialName)) {
+        _custom = true;
+        _customText.text = initialName;
+      }
+      if (initialName.isEmpty) _name = '猫三联';
+    }
+    final name = _name ?? '猫三联';
     final next = nextVaccineDate(cat.birthday, given);
     return Scaffold(
       backgroundColor: AppColors.of(context).background,
@@ -78,18 +93,17 @@ class _StickerPageState extends State<StickerPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: [
-                    for (final label in choices)
-                      ChoiceChip(
-                        label: Text(label),
-                        selected: name == label,
-                        selectedColor: AppColors.of(context).brandTint,
-                        onSelected: (_) => setState(() => _name = label),
-                      ),
-                  ],
+                KnownOrCustom(
+                  known: _known,
+                  selected: name,
+                  custom: _custom,
+                  controller: _customText,
+                  hint: '疫苗名称',
+                  onKnown: (label) => setState(() {
+                    _custom = false;
+                    _name = label;
+                  }),
+                  onCustom: () => setState(() => _custom = true),
                 ),
                 DateChips(
                   label: '接种',
@@ -127,11 +141,20 @@ class _StickerPageState extends State<StickerPage> {
             onPressed: _busy
                 ? null
                 : () async {
+                    final chosen = chosenOrTyped(
+                      custom: _custom,
+                      controller: _customText,
+                      selected: name,
+                    );
+                    if (chosen == null) {
+                      showMessage(context, '先写上名字');
+                      return;
+                    }
                     setState(() => _busy = true);
                     await app.saveVaccine(
                       VaccineDraft(
                         catId: cat.id,
-                        name: name,
+                        name: chosen,
                         givenOn: given,
                         nextDue: next,
                         batch: _batch,
@@ -178,7 +201,16 @@ class _StickerPageState extends State<StickerPage> {
       if (!mounted) return;
       setState(() {
         _read = true;
-        if (read.name != null && read.name!.isNotEmpty) _name = read.name;
+        final found = read.name?.trim() ?? '';
+        if (found.isNotEmpty) {
+          _name = found;
+          if (_known.contains(found)) {
+            _custom = false;
+          } else {
+            _custom = true;
+            _customText.text = found;
+          }
+        }
         if (read.givenOn != null) _given = read.givenOn;
         _batch = read.batch;
       });

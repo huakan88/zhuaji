@@ -16,6 +16,7 @@ import '../../services/lab_ocr_service.dart';
 import '../../services/photo_store.dart';
 import '../../state/app_controller.dart';
 import '../records/record_sheets.dart';
+import 'known_or_custom.dart';
 
 class LabFormPage extends StatefulWidget {
   const LabFormPage({this.reportId, this.kind, this.checkupItemId, super.key});
@@ -30,6 +31,7 @@ class LabFormPage extends StatefulWidget {
 
 class _LabFormPageState extends State<LabFormPage> {
   final _photosStore = PhotoStore();
+  final _kindText = TextEditingController();
   var _kind = LabKind.cbc;
   DateTime? _date;
   var _photos = <String>[];
@@ -46,10 +48,18 @@ class _LabFormPageState extends State<LabFormPage> {
         ? null
         : app.labById(widget.reportId!);
     _kind = existing?.kind ?? widget.kind ?? LabKind.cbc;
+    final typedKind = existing?.kindLabel?.trim() ?? '';
+    if (typedKind.isNotEmpty) _kindText.text = typedKind;
     _date = dateOnly(existing?.takenOn ?? app.now);
     _photos = [...?existing?.photos];
     _values = [...?existing?.values];
     _ready = true;
+  }
+
+  @override
+  void dispose() {
+    _kindText.dispose();
+    super.dispose();
   }
 
   @override
@@ -88,6 +98,14 @@ class _LabFormPageState extends State<LabFormPage> {
                 ),
             ],
           ),
+          if (_kind == LabKind.other) ...[
+            const SizedBox(height: 8),
+            TextField(
+              controller: _kindText,
+              textInputAction: TextInputAction.done,
+              decoration: const InputDecoration(hintText: '化验名称'),
+            ),
+          ],
           DateChips(
             label: '日期',
             date: _date!,
@@ -378,6 +396,7 @@ class _LabFormPageState extends State<LabFormPage> {
           id: widget.reportId,
           catId: cat.id,
           kind: _kind,
+          kindLabel: _kind == LabKind.other ? _kindText.text : null,
           takenOn: _date!,
           photos: _photos,
           checkupItemId: existing?.checkupItemId ?? widget.checkupItemId,
@@ -604,118 +623,204 @@ Future<LabEdit?> showLabEditor(
   LabAnalyte analyte, {
   LabValue? current,
 }) {
-  final initialUnit = analyte.unitFor(current?.unit ?? analyte.base.label);
-  var unit = initialUnit;
-  var shown = current == null
-      ? (analyte.low + analyte.high) / 2 / unit.toBase
-      : current.value * analyte.unitFor(current.unit).toBase / unit.toBase;
   return showModalBottomSheet<LabEdit>(
     context: context,
     isDismissible: true,
-    builder: (context) => SafeArea(
-      child: StatefulBuilder(
-        builder: (context, setSheet) {
-          final step = switch (analyte.decimals) {
-            0 => 1.0,
-            1 => 0.1,
-            _ => 0.01,
-          };
-          void nudge(double times) {
-            setSheet(() {
-              shown = (shown + step * times).clamp(0, 100000).toDouble();
-            });
-          }
+    isScrollControlled: true,
+    builder: (context) => Padding(
+      padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
+      child: _UnitSheet(analyte: analyte, current: current),
+    ),
+  );
+}
 
-          return Padding(
-            padding: const EdgeInsets.fromLTRB(20, 12, 20, 12),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  analyte.name,
-                  style: zhuaji.copyWith(fontWeight: FontWeight.w700),
+class _UnitSheet extends StatefulWidget {
+  const _UnitSheet({required this.analyte, this.current});
+
+  final LabAnalyte analyte;
+  final LabValue? current;
+
+  @override
+  State<_UnitSheet> createState() => _UnitSheetState();
+}
+
+class _UnitSheetState extends State<_UnitSheet> {
+  final _unitText = TextEditingController();
+  late LabUnit _unit;
+  late double _shown;
+  var _custom = false;
+  var _unitError = '';
+
+  @override
+  void initState() {
+    super.initState();
+    final current = widget.current;
+    final analyte = widget.analyte;
+    final matched = current == null ? null : analyte.matchUnit(current.unit);
+    _custom =
+        current != null && current.unit.trim().isNotEmpty && matched == null;
+    if (_custom && current != null) _unitText.text = current.unit;
+    _unit = matched ?? analyte.base;
+    _shown = current == null
+        ? (analyte.low + analyte.high) / 2 / _unit.toBase
+        : _custom
+        ? current.value
+        : current.value * analyte.unitFor(current.unit).toBase / _unit.toBase;
+  }
+
+  @override
+  void dispose() {
+    _unitText.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final analyte = widget.analyte;
+    final current = widget.current;
+    final step = switch (analyte.decimals) {
+      0 => 1.0,
+      1 => 0.1,
+      _ => 0.01,
+    };
+    void nudge(double times) {
+      setState(() {
+        _shown = (_shown + step * times).clamp(0, 100000).toDouble();
+      });
+    }
+
+    final typedUnit = _unitText.text.trim();
+    final unitLabel = _custom
+        ? (typedUnit.isEmpty ? '单位' : typedUnit)
+        : _unit.label;
+    return SafeArea(
+      child: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 12, 20, 12),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                analyte.name,
+                style: zhuaji.copyWith(fontWeight: FontWeight.w700),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                '${formatLabNumber(_shown, analyte.decimals)} $unitLabel',
+                style: zhuaji.copyWith(
+                  fontSize: 28,
+                  fontWeight: FontWeight.w700,
                 ),
-                const SizedBox(height: 8),
-                Text(
-                  '${formatLabNumber(shown, analyte.decimals)} ${unit.label}',
-                  style: zhuaji.copyWith(
-                    fontSize: 28,
-                    fontWeight: FontWeight.w700,
+              ),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  for (final item in analyte.units)
+                    ChoiceChip(
+                      label: Text(item.label),
+                      selected: !_custom && item.label == _unit.label,
+                      selectedColor: AppColors.of(context).brandTint,
+                      onSelected: (_) => setState(() {
+                        final base = _custom ? _shown : _shown * _unit.toBase;
+                        _custom = false;
+                        _unitError = '';
+                        _unit = item;
+                        _shown = base / item.toBase;
+                      }),
+                    ),
+                  ChoiceChip(
+                    label: const Text(otherChoiceLabel),
+                    selected: _custom,
+                    selectedColor: AppColors.of(context).brandTint,
+                    onSelected: (_) => setState(() {
+                      _custom = true;
+                      _unitError = '';
+                    }),
                   ),
-                ),
-                if (analyte.units.length > 1)
-                  Wrap(
-                    spacing: 8,
-                    children: [
-                      for (final item in analyte.units)
-                        ChoiceChip(
-                          label: Text(item.label),
-                          selected: item.label == unit.label,
-                          selectedColor: AppColors.of(context).brandTint,
-                          onSelected: (_) => setSheet(() {
-                            final base = shown * unit.toBase;
-                            unit = item;
-                            shown = base / item.toBase;
-                          }),
-                        ),
-                    ],
-                  ),
-                const SizedBox(height: 12),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: [
-                    OutlinedButton(
-                      onPressed: () => nudge(-10),
-                      child: const Text('少很多'),
-                    ),
-                    OutlinedButton(
-                      onPressed: () => nudge(-1),
-                      child: const Text('少一点'),
-                    ),
-                    OutlinedButton(
-                      onPressed: () => nudge(1),
-                      child: const Text('多一点'),
-                    ),
-                    OutlinedButton(
-                      onPressed: () => nudge(10),
-                      child: const Text('多很多'),
-                    ),
-                  ],
-                ),
+                ],
+              ),
+              if (_custom) ...[
                 const SizedBox(height: 8),
-                FilledButton(
-                  onPressed: () => Navigator.pop(
+                TextField(
+                  controller: _unitText,
+                  textInputAction: TextInputAction.done,
+                  onChanged: (_) => setState(() => _unitError = ''),
+                  decoration: const InputDecoration(hintText: '单位'),
+                ),
+                if (_unitError.isNotEmpty)
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      _unitError,
+                      style: zhuaji.copyWith(
+                        color: AppColors.of(context).danger,
+                      ),
+                    ),
+                  ),
+              ],
+              const SizedBox(height: 12),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  OutlinedButton(
+                    onPressed: () => nudge(-10),
+                    child: const Text('少很多'),
+                  ),
+                  OutlinedButton(
+                    onPressed: () => nudge(-1),
+                    child: const Text('少一点'),
+                  ),
+                  OutlinedButton(
+                    onPressed: () => nudge(1),
+                    child: const Text('多一点'),
+                  ),
+                  OutlinedButton(
+                    onPressed: () => nudge(10),
+                    child: const Text('多很多'),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              FilledButton(
+                onPressed: () {
+                  final typed = _unitText.text.trim();
+                  if (_custom && typed.isEmpty) {
+                    setState(() => _unitError = '先写上单位');
+                    return;
+                  }
+                  Navigator.pop(
                     context,
                     LabEdit.value(
                       LabValue(
                         code: analyte.code,
                         value: double.parse(
-                          shown.toStringAsFixed(analyte.decimals),
+                          _shown.toStringAsFixed(analyte.decimals),
                         ),
-                        unit: unit.label,
+                        unit: _custom ? typed : _unit.label,
                         source: LabValueSource.manual,
                         printedLow: current?.printedLow,
                         printedHigh: current?.printedHigh,
                       ),
                     ),
-                  ),
-                  style: FilledButton.styleFrom(
-                    minimumSize: const Size.fromHeight(48),
-                  ),
-                  child: const Text('用这个'),
+                  );
+                },
+                style: FilledButton.styleFrom(
+                  minimumSize: const Size.fromHeight(48),
                 ),
-                if (current != null)
-                  TextButton(
-                    onPressed: () =>
-                        Navigator.pop(context, const LabEdit.remove()),
-                    child: const Text('去掉这项'),
-                  ),
-              ],
-            ),
-          );
-        },
+                child: const Text('用这个'),
+              ),
+              if (current != null)
+                TextButton(
+                  onPressed: () =>
+                      Navigator.pop(context, const LabEdit.remove()),
+                  child: const Text('去掉这项'),
+                ),
+            ],
+          ),
+        ),
       ),
-    ),
-  );
+    );
+  }
 }

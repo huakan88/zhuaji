@@ -7,6 +7,7 @@ import '../../core/widgets/common.dart';
 import '../../domain/models.dart';
 import '../../services/photo_store.dart';
 import '../../state/app_controller.dart';
+import '../health/known_or_custom.dart';
 
 class CatFormPage extends StatefulWidget {
   const CatFormPage({this.catId, super.key});
@@ -18,9 +19,23 @@ class CatFormPage extends StatefulWidget {
 }
 
 class _CatFormPageState extends State<CatFormPage> {
+  static const _breeds = [
+    '中华田园猫',
+    '英国短毛猫',
+    '美国短毛猫',
+    '布偶猫',
+    '暹罗猫',
+    '俄罗斯蓝猫',
+    '缅因猫',
+    '异国短毛猫',
+  ];
+
   final _name = TextEditingController();
+  final _breedText = TextEditingController();
   final _photos = PhotoStore();
   String? _avatar;
+  String _breed = '';
+  var _breedCustom = false;
   var _loaded = false;
   var _busy = false;
 
@@ -34,6 +49,13 @@ class _CatFormPageState extends State<CatFormPage> {
     if (existing != null) {
       _name.text = existing.name;
       _avatar = existing.avatarPath;
+      final breed = existing.breed?.trim() ?? '';
+      if (breed.isNotEmpty && !_breeds.contains(breed)) {
+        _breedCustom = true;
+        _breedText.text = breed;
+      } else {
+        _breed = breed;
+      }
     }
     _loaded = true;
   }
@@ -41,6 +63,7 @@ class _CatFormPageState extends State<CatFormPage> {
   @override
   void dispose() {
     _name.dispose();
+    _breedText.dispose();
     super.dispose();
   }
 
@@ -81,6 +104,21 @@ class _CatFormPageState extends State<CatFormPage> {
             controller: _name,
             textInputAction: TextInputAction.done,
             decoration: const InputDecoration(labelText: '名字'),
+          ),
+          const SizedBox(height: 16),
+          const SectionLabel('品种'),
+          const SizedBox(height: 8),
+          KnownOrCustom(
+            known: _breeds,
+            selected: _breed,
+            custom: _breedCustom,
+            controller: _breedText,
+            hint: '品种',
+            onKnown: (label) => setState(() {
+              _breedCustom = false;
+              _breed = _breed == label ? '' : label;
+            }),
+            onCustom: () => setState(() => _breedCustom = true),
           ),
           const SizedBox(height: 24),
           FilledButton(
@@ -128,6 +166,12 @@ class _CatFormPageState extends State<CatFormPage> {
       showMessage(context, '先拍一张');
       return;
     }
+    final typedBreed = _breedText.text.trim();
+    if (_breedCustom && typedBreed.isEmpty) {
+      showMessage(context, '先写上品种');
+      return;
+    }
+    final breed = _breedCustom ? typedBreed : (_breed.isEmpty ? null : _breed);
     final app = AppScope.of<AppController>(context);
     final existing = widget.catId == null ? null : app.catById(widget.catId!);
     setState(() => _busy = true);
@@ -140,7 +184,7 @@ class _CatFormPageState extends State<CatFormPage> {
           neutered: existing?.neutered ?? false,
           birthday: existing?.birthday,
           coatColor: existing?.coatColor,
-          breed: existing?.breed,
+          breed: breed,
           goal: existing?.goal ?? CareGoal.maintain,
           notes: existing?.notes ?? '',
           avatarPath: _avatar,

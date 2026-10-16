@@ -9,6 +9,7 @@ import '../../domain/dates.dart';
 import '../../domain/food/stock.dart';
 import '../../domain/models.dart';
 import '../../state/app_controller.dart';
+import '../health/known_or_custom.dart';
 
 class BagPage extends StatelessWidget {
   const BagPage({required this.pantryId, super.key});
@@ -101,18 +102,11 @@ class BagPage extends StatelessWidget {
           const SizedBox(height: 8),
           Text('每天喂多少', style: zhuaji.copyWith(fontWeight: FontWeight.w700)),
           const SizedBox(height: 8),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              for (final grams in dailyGramChoices)
-                ChoiceChip(
-                  label: Text('$grams 克'),
-                  selected: entry.item.dailyGrams == grams.toDouble(),
-                  selectedColor: AppColors.of(context).brandTint,
-                  onSelected: (_) => app.setDailyGrams(entry, grams.toDouble()),
-                ),
-            ],
+          _DailyGrams(
+            grams: entry.item.dailyGrams,
+            onPick: (grams) {
+              app.setDailyGrams(entry, grams);
+            },
           ),
           const SizedBox(height: 8),
           Text(sentence, style: zhuaji.copyWith(height: 1.4)),
@@ -161,6 +155,65 @@ class BagPage extends StatelessWidget {
       ),
     );
   }
+}
+
+class _DailyGrams extends StatefulWidget {
+  const _DailyGrams({required this.grams, required this.onPick});
+
+  final double? grams;
+  final ValueChanged<double> onPick;
+
+  @override
+  State<_DailyGrams> createState() => _DailyGramsState();
+}
+
+class _DailyGramsState extends State<_DailyGrams> {
+  final _text = TextEditingController();
+  var _custom = false;
+
+  @override
+  void dispose() {
+    _text.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final values = <num>[...dailyGramChoices];
+    final labels = <String>[for (final grams in dailyGramChoices) '$grams 克'];
+    final current = widget.grams;
+    if (current != null && !values.any((item) => item == current)) {
+      values.add(current);
+      labels.add('${_gramLabel(current)} 克');
+    }
+    return NumberOrCustom(
+      labels: labels,
+      values: values,
+      selected: current,
+      custom: _custom,
+      controller: _text,
+      hint: '克',
+      onKnown: (value) {
+        setState(() => _custom = false);
+        widget.onPick(value.toDouble());
+      },
+      onCustom: () => setState(() => _custom = true),
+      onApply: () {
+        final amount = typedAmount(_text);
+        if (amount == null) {
+          showMessage(context, '先写上数字');
+          return;
+        }
+        setState(() => _custom = false);
+        widget.onPick(amount);
+      },
+    );
+  }
+}
+
+String _gramLabel(double grams) {
+  if (grams == grams.roundToDouble()) return '${grams.round()}';
+  return '$grams';
 }
 
 String? _lookupCode(AppController app, PantryEntry entry) {

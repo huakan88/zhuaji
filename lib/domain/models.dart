@@ -29,6 +29,11 @@ FoodForm parseFoodForm(String raw) => switch (raw) {
   _ => FoodForm.dry,
 };
 
+bool knownFoodFormKey(String raw) => switch (raw) {
+  'dry' || 'wet' || 'can' || 'freeze' || 'treat' => true,
+  _ => false,
+};
+
 String foodFormKey(FoodForm form) => switch (form) {
   FoodForm.dry => 'dry',
   FoodForm.wet => 'wet',
@@ -404,6 +409,7 @@ class FoodProduct {
     this.flavor = '',
     this.isCustom = false,
     this.photoPath,
+    this.customForm,
   });
 
   final int id;
@@ -426,7 +432,22 @@ class FoodProduct {
   /// Front-of-pack photo for custom foods.
   final String? photoPath;
 
+  /// Typed 形态 when it is not one of the preset keys. Null for 干粮、湿粮 and the rest.
+  final String? customForm;
+
   String get displayName => '$brand $name';
+
+  String get formTitle {
+    final typed = customForm?.trim() ?? '';
+    if (typed.isNotEmpty) return typed;
+    return switch (foodForm) {
+      FoodForm.dry => '干粮',
+      FoodForm.wet => '湿粮',
+      FoodForm.can => '主食罐',
+      FoodForm.freezeDried => '冻干',
+      FoodForm.treat => '零食',
+    };
+  }
 }
 
 class FoodDraft {
@@ -444,6 +465,7 @@ class FoodDraft {
     this.flavor = '',
     this.isCustom = false,
     this.photoPath,
+    this.customForm,
   });
 
   final int? id;
@@ -459,6 +481,15 @@ class FoodDraft {
   final String flavor;
   final bool isCustom;
   final String? photoPath;
+
+  /// Typed 形态. Empty means [foodForm] is the preset to store.
+  final String? customForm;
+
+  String get storedForm {
+    final typed = customForm?.trim() ?? '';
+    if (typed.isEmpty) return foodFormKey(foodForm);
+    return typed;
+  }
 }
 
 class PantryItem {
@@ -681,19 +712,16 @@ class LabValue {
   final double? printedLow;
   final double? printedHigh;
 
-  LabValue copyWith({
-    double? value,
-    String? unit,
-    LabValueSource? source,
-  }) => LabValue(
-    id: id,
-    code: code,
-    value: value ?? this.value,
-    unit: unit ?? this.unit,
-    source: source ?? this.source,
-    printedLow: printedLow,
-    printedHigh: printedHigh,
-  );
+  LabValue copyWith({double? value, String? unit, LabValueSource? source}) =>
+      LabValue(
+        id: id,
+        code: code,
+        value: value ?? this.value,
+        unit: unit ?? this.unit,
+        source: source ?? this.source,
+        printedLow: printedLow,
+        printedHigh: printedHigh,
+      );
 }
 
 class LabReport {
@@ -707,6 +735,7 @@ class LabReport {
     required this.createdAt,
     this.note = '',
     this.checkupItemId,
+    this.kindLabel,
   });
 
   final int id;
@@ -718,6 +747,15 @@ class LabReport {
   final String note;
   final String? checkupItemId;
   final DateTime createdAt;
+
+  /// Typed name when the report is not one of the preset kinds.
+  final String? kindLabel;
+
+  String get kindTitle {
+    final typed = kindLabel?.trim() ?? '';
+    if (typed.isNotEmpty) return typed;
+    return labKindLabel(kind);
+  }
 }
 
 class LabDraft {
@@ -729,6 +767,7 @@ class LabDraft {
     this.id,
     this.note = '',
     this.checkupItemId,
+    this.kindLabel,
   });
 
   final int? id;
@@ -738,4 +777,18 @@ class LabDraft {
   final List<String> photos;
   final String note;
   final String? checkupItemId;
+
+  /// Typed name stored in place of the preset key.
+  final String? kindLabel;
+
+  String get storedKind {
+    final typed = kindLabel?.trim() ?? '';
+    if (typed.isEmpty) return labKindKey(kind);
+    return typed;
+  }
 }
+
+bool knownLabKindKey(String raw) => switch (raw) {
+  'cbc' || 'chem' || 'urine' || 'imaging' || 'other' => true,
+  _ => false,
+};

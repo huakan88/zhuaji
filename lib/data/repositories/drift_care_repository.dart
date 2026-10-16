@@ -805,7 +805,7 @@ class DriftCareRepository implements CareRepository {
       brand: Value(draft.brand.trim()),
       name: Value(draft.name.trim()),
       spec: Value(draft.spec.trim()),
-      foodForm: Value(foodFormKey(draft.foodForm)),
+      foodForm: Value(draft.storedForm),
       kcalPer100g: Value(draft.kcalPer100g),
       storageMethod: Value(draft.storageMethod.trim()),
       afterOpenDays: Value(draft.afterOpenDays),
@@ -1046,6 +1046,7 @@ class DriftCareRepository implements CareRepository {
           id: row.id,
           catId: row.catId,
           kind: parseLabKind(row.kind),
+          kindLabel: knownLabKindKey(row.kind) ? null : row.kind,
           takenOn: row.takenOn,
           photos: _paths(row.photos),
           values: byReport[row.id] ?? const [],
@@ -1068,7 +1069,7 @@ class DriftCareRepository implements CareRepository {
   Future<int> upsertLab(LabDraft draft) async {
     final companion = LabReportsCompanion(
       catId: Value(draft.catId),
-      kind: Value(labKindKey(draft.kind)),
+      kind: Value(draft.storedKind),
       takenOn: Value(draft.takenOn),
       photos: Value(jsonEncode(draft.photos)),
       note: Value(draft.note.trim()),
@@ -1143,6 +1144,7 @@ class DriftCareRepository implements CareRepository {
     name: row.name,
     spec: row.spec,
     foodForm: parseFoodForm(row.foodForm),
+    customForm: knownFoodFormKey(row.foodForm) ? null : row.foodForm,
     kcalPer100g: row.kcalPer100g,
     storageMethod: row.storageMethod,
     afterOpenDays: row.afterOpenDays,

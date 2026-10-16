@@ -8,6 +8,7 @@ import '../../domain/dates.dart';
 import '../../domain/models.dart';
 import '../../state/app_controller.dart';
 import '../records/record_sheets.dart';
+import 'known_or_custom.dart';
 
 class DewormsPage extends StatefulWidget {
   const DewormsPage({super.key});
@@ -18,10 +19,33 @@ class DewormsPage extends StatefulWidget {
 
 class _DewormsPageState extends State<DewormsPage> {
   static const _products = ['大宠爱', '博来恩', '海乐妙'];
+  final _customText = TextEditingController();
   DewormKind? _kind;
   String? _product;
   DateTime? _given;
+  var _custom = false;
+  var _seeded = false;
   var _busy = false;
+
+  @override
+  void dispose() {
+    _customText.dispose();
+    super.dispose();
+  }
+
+  void _seed(DewormRecord? last) {
+    if (_seeded) return;
+    _seeded = true;
+    _kind = last?.kind ?? DewormKind.internal;
+    final lastName = last?.product.trim() ?? '';
+    if (lastName.isNotEmpty && !_products.contains(lastName)) {
+      _custom = true;
+      _customText.text = lastName;
+      _product = lastName;
+      return;
+    }
+    _product = lastName.isEmpty ? _products.first : lastName;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -35,9 +59,9 @@ class _DewormsPageState extends State<DewormsPage> {
       );
     }
     final last = app.lastDeworm;
-    final kind = _kind ??= last?.kind ?? DewormKind.internal;
-    final product = _product ??= last?.product ?? _products.first;
-    final choices = [..._products, if (!_products.contains(product)) product];
+    _seed(last);
+    final kind = _kind ?? DewormKind.internal;
+    final product = _product ?? _products.first;
     final given = _given ??= dateOnly(app.now);
     final next = given.add(const Duration(days: 90));
     final items = [...app.catDeworms]
@@ -86,21 +110,17 @@ class _DewormsPageState extends State<DewormsPage> {
             ],
           ),
           const SizedBox(height: 8),
-          Wrap(
-            spacing: 8,
-            children: [
-              for (final label in choices)
-                ChoiceChip(
-                  label: Text(label),
-                  labelPadding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 8,
-                  ),
-                  selected: product == label,
-                  selectedColor: AppColors.of(context).brandTint,
-                  onSelected: (_) => setState(() => _product = label),
-                ),
-            ],
+          KnownOrCustom(
+            known: _products,
+            selected: product,
+            custom: _custom,
+            controller: _customText,
+            hint: '药名或品牌',
+            onKnown: (label) => setState(() {
+              _custom = false;
+              _product = label;
+            }),
+            onCustom: () => setState(() => _custom = true),
           ),
           DateChips(
             label: '使用',
@@ -121,12 +141,21 @@ class _DewormsPageState extends State<DewormsPage> {
             onPressed: _busy
                 ? null
                 : () async {
+                    final name = chosenOrTyped(
+                      custom: _custom,
+                      controller: _customText,
+                      selected: product,
+                    );
+                    if (name == null) {
+                      showMessage(context, '先写上名字');
+                      return;
+                    }
                     setState(() => _busy = true);
                     await app.saveDeworm(
                       DewormDraft(
                         catId: cat.id,
                         kind: kind,
-                        product: product,
+                        product: name,
                         givenOn: given,
                         nextDue: next,
                       ),

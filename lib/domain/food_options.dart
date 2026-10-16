@@ -41,21 +41,13 @@ List<FoodProduct> filterFoods(List<FoodProduct> products, String query) {
   return matched;
 }
 
-String _formName(FoodForm form) => switch (form) {
-  FoodForm.dry => '干粮',
-  FoodForm.wet => '湿粮',
-  FoodForm.can => '主食罐',
-  FoodForm.freezeDried => '冻干',
-  FoodForm.treat => '零食',
-};
-
 String _haystack(FoodProduct item) {
   return [
     item.brand,
     item.name,
     item.flavor,
     item.spec,
-    _formName(item.foodForm),
+    item.formTitle,
     item.barcode ?? '',
     if (item.isCustom) '自定义',
   ].join(' ').toLowerCase();
