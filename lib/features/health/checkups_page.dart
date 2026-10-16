@@ -9,6 +9,7 @@ import '../../domain/health/checkup_catalog.dart';
 import '../../domain/health/lab_catalog.dart';
 import '../../domain/health/life_stage.dart';
 import '../../state/app_controller.dart';
+import 'known_or_custom.dart';
 
 class CheckupsPage extends StatefulWidget {
   const CheckupsPage({super.key});
@@ -18,8 +19,16 @@ class CheckupsPage extends StatefulWidget {
 }
 
 class _CheckupsPageState extends State<CheckupsPage> {
+  final _customText = TextEditingController();
   String? _selected;
+  var _custom = false;
   var _busy = false;
+
+  @override
+  void dispose() {
+    _customText.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -56,20 +65,33 @@ class _CheckupsPageState extends State<CheckupsPage> {
             style: zhuaji.copyWith(fontSize: 17, fontWeight: FontWeight.w700),
           ),
           const SizedBox(height: 12),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              for (final advice in plan.items)
-                ChoiceChip(
-                  label: Text(advice.item.name),
-                  selected: advice.item.id == selected?.item.id,
-                  selectedColor: AppColors.of(context).brandTint,
-                  onSelected: (_) => setState(() => _selected = advice.item.id),
-                ),
-            ],
+          KnownOrCustom(
+            known: [for (final advice in plan.items) advice.item.name],
+            selected: selected?.item.name ?? '',
+            custom: _custom,
+            controller: _customText,
+            hint: '项目',
+            onKnown: (label) => setState(() {
+              _custom = false;
+              for (final advice in plan.items) {
+                if (advice.item.name == label) {
+                  _selected = advice.item.id;
+                  break;
+                }
+              }
+            }),
+            onCustom: () => setState(() => _custom = true),
           ),
-          if (selected != null) ...[
+          if (_custom) ...[
+            const SizedBox(height: 12),
+            Text(
+              '按你写的名字记下，一年后再提醒。',
+              style: zhuaji.copyWith(
+                color: AppColors.of(context).muted,
+                height: 1.35,
+              ),
+            ),
+          ] else if (selected != null) ...[
             const SizedBox(height: 12),
             Text(
               selected.plan.frequency,
@@ -95,26 +117,40 @@ class _CheckupsPageState extends State<CheckupsPage> {
         child: Padding(
           padding: const EdgeInsets.fromLTRB(20, 8, 20, 12),
           child: FilledButton(
-            onPressed: selected == null || _busy
+            onPressed: (!_custom && selected == null) || _busy
                 ? null
                 : () async {
                     final advice = selected;
-                    if (advice == null) return;
+                    late final String itemId;
+                    late final int intervalDays;
+                    if (_custom) {
+                      final typed = _customText.text.trim();
+                      if (typed.isEmpty) {
+                        showMessage(context, '先写上名字');
+                        return;
+                      }
+                      itemId = typed;
+                      intervalDays = 365;
+                    } else if (advice != null) {
+                      itemId = advice.item.id;
+                      intervalDays = advice.plan.intervalDays;
+                    } else {
+                      return;
+                    }
                     setState(() => _busy = true);
                     await app.completeCheckup(
-                      itemId: advice.item.id,
+                      itemId: itemId,
                       result: '已完成',
-                      intervalDays: advice.plan.intervalDays,
+                      intervalDays: intervalDays,
                     );
                     if (!mounted) return;
                     setState(() => _busy = false);
                     if (!context.mounted) return;
                     showMessage(context, '记下了');
-                    final kind = suggestedLabKind(advice.item.id);
+                    if (_custom) return;
+                    final kind = suggestedLabKind(itemId);
                     if (kind != null) {
-                      context.push(
-                        '/lab?kind=${kind.name}&checkup=${advice.item.id}',
-                      );
+                      context.push('/lab?kind=${kind.name}&checkup=$itemId');
                     }
                   },
             style: FilledButton.styleFrom(

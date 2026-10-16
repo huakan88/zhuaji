@@ -8,6 +8,7 @@ import '../../domain/dates.dart';
 import '../../domain/models.dart';
 import '../../domain/parsing/gs1_parser.dart';
 import '../../state/app_controller.dart';
+import '../health/known_or_custom.dart';
 import '../records/record_sheets.dart';
 
 class ConfirmPage extends StatefulWidget {
@@ -35,7 +36,9 @@ class _ConfirmPageState extends State<ConfirmPage> {
   DateTime? _production;
   DateTime? _expiry;
   DateTime? _opened;
+  final _daysText = TextEditingController();
   var _days = 30;
+  var _daysCustom = false;
   String _storage = '阴凉干燥，封好袋口。';
   String? _batch;
   var _fromCode = false;
@@ -75,6 +78,12 @@ class _ConfirmPageState extends State<ConfirmPage> {
     return app.products.isEmpty ? null : app.products.first;
   }
 
+  @override
+  void dispose() {
+    _daysText.dispose();
+    super.dispose();
+  }
+
   void _apply(FoodProduct? product) {
     _product = product;
     if (product == null) return;
@@ -110,7 +119,7 @@ class _ConfirmPageState extends State<ConfirmPage> {
     final matched = known != null && !_rechoose;
     final fromSearch = widget.productId != null && !_rechoose && !matched;
     final locked = matched || fromSearch;
-    final days = {7, 30, 42, _days}.toList()..sort();
+    final dayValues = <num>{7, 30, 42, _days}.toList()..sort();
     return Scaffold(
       backgroundColor: AppColors.of(context).background,
       appBar: zhuajiBar('确认'),
@@ -179,29 +188,13 @@ class _ConfirmPageState extends State<ConfirmPage> {
               ),
             ),
           const SizedBox(height: 8),
-          OutlinedButton(
-            onPressed: () async {
-              final code = widget.code.trim();
-              final query = code.isEmpty
-                  ? ''
-                  : '?code=${Uri.encodeComponent(code)}';
-              final id = await context.push<int>('/food$query');
-              if (id == null || !context.mounted) return;
-              final chosen = AppScope.of<AppController>(context)
-                  .productById(id);
-              setState(() {
-                _rechoose = false;
-                _apply(chosen);
-              });
-            },
-            child: const Text('自己添加'),
-          ),
+          OutlinedButton(onPressed: _addOwnFood, child: const Text('自己添加')),
           if (!locked && brands.isNotEmpty) ...[
             const SizedBox(height: 20),
             const SectionLabel('品牌'),
             const SizedBox(height: 8),
             SizedBox(
-              height: 48,
+              height: 56,
               child: ListView(
                 scrollDirection: Axis.horizontal,
                 children: [
@@ -224,6 +217,15 @@ class _ConfirmPageState extends State<ConfirmPage> {
                         },
                       ),
                     ),
+                  Padding(
+                    padding: const EdgeInsets.only(right: 8),
+                    child: ChoiceChip(
+                      label: const Text(otherChoiceLabel),
+                      selected: false,
+                      selectedColor: AppColors.of(context).brandTint,
+                      onSelected: (_) => _addOwnFood(),
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -286,17 +288,18 @@ class _ConfirmPageState extends State<ConfirmPage> {
           const SizedBox(height: 20),
           const SectionLabel('开封后'),
           const SizedBox(height: 8),
-          Wrap(
-            spacing: 8,
-            children: [
-              for (final day in days)
-                ChoiceChip(
-                  label: Text('$day天'),
-                  selected: _days == day,
-                  selectedColor: AppColors.of(context).brandTint,
-                  onSelected: (_) => setState(() => _days = day),
-                ),
-            ],
+          NumberOrCustom(
+            labels: [for (final day in dayValues) '$day天'],
+            values: dayValues,
+            selected: _days,
+            custom: _daysCustom,
+            controller: _daysText,
+            hint: '天数',
+            onKnown: (value) => setState(() {
+              _daysCustom = false;
+              _days = value.toInt();
+            }),
+            onCustom: () => setState(() => _daysCustom = true),
           ),
         ],
       ),
@@ -329,11 +332,32 @@ class _ConfirmPageState extends State<ConfirmPage> {
     return parts.first;
   }
 
+  Future<void> _addOwnFood() async {
+    final code = widget.code.trim();
+    final query = code.isEmpty ? '' : '?code=${Uri.encodeComponent(code)}';
+    final id = await context.push<int>('/food$query');
+    if (id == null || !mounted) return;
+    final chosen = AppScope.of<AppController>(context).productById(id);
+    setState(() {
+      _rechoose = false;
+      _apply(chosen);
+    });
+  }
+
   Future<void> _save() async {
     final product = _product;
     if (product == null) {
       showMessage(context, '先选品牌');
       return;
+    }
+    var days = _days;
+    if (_daysCustom) {
+      final typed = typedWhole(_daysText);
+      if (typed == null) {
+        showMessage(context, '先写上数字');
+        return;
+      }
+      days = typed;
     }
     final app = AppScope.of<AppController>(context);
     setState(() => _busy = true);
@@ -360,7 +384,7 @@ class _ConfirmPageState extends State<ConfirmPage> {
           batch: _batch,
           dateSource: _fromCode ? DateSource.gs1 : DateSource.manual,
           openedAt: _opened,
-          afterOpenDays: _days,
+          afterOpenDays: days,
         ),
       );
       if (!mounted) return;

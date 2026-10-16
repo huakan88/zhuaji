@@ -8,6 +8,7 @@ import '../../domain/food/fresh_recipes.dart';
 import '../../domain/food/stock.dart';
 import '../../domain/models.dart';
 import '../../state/app_controller.dart';
+import '../health/known_or_custom.dart';
 
 class RecipesPage extends StatelessWidget {
   const RecipesPage({super.key});
@@ -48,9 +49,20 @@ class RecipeDetailPage extends StatefulWidget {
 }
 
 class _RecipeDetailPageState extends State<RecipeDetailPage> {
+  final _holdText = TextEditingController();
+  final _gramsText = TextEditingController();
   int? _hold;
   int? _grams;
+  var _holdCustom = false;
+  var _gramsCustom = false;
   var _busy = false;
+
+  @override
+  void dispose() {
+    _holdText.dispose();
+    _gramsText.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -130,36 +142,36 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
               card.kind == FreshKind.supplement ? '提醒我过几天再看这瓶' : '冷藏提醒（不是保质期）',
             ),
             const SizedBox(height: 8),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: [
-                for (final days in card.holdDays)
-                  ChoiceChip(
-                    label: Text('$days 天后提醒'),
-                    selected: hold == days,
-                    selectedColor: colors.brandTint,
-                    onSelected: (_) => setState(() => _hold = days),
-                  ),
-              ],
+            NumberOrCustom(
+              labels: [for (final days in card.holdDays) '$days 天后提醒'],
+              values: <num>[...card.holdDays],
+              selected: hold,
+              custom: _holdCustom,
+              controller: _holdText,
+              hint: '天数',
+              onKnown: (value) => setState(() {
+                _holdCustom = false;
+                _hold = value.toInt();
+              }),
+              onCustom: () => setState(() => _holdCustom = true),
             ),
           ],
           if (card.pickGrams) ...[
             const SizedBox(height: 12),
             const SectionLabel('每天从这批里喂'),
             const SizedBox(height: 8),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: [
-                for (final amount in dailyGramChoices)
-                  ChoiceChip(
-                    label: Text('$amount 克'),
-                    selected: grams == amount,
-                    selectedColor: colors.brandTint,
-                    onSelected: (_) => setState(() => _grams = amount),
-                  ),
-              ],
+            NumberOrCustom(
+              labels: [for (final amount in dailyGramChoices) '$amount 克'],
+              values: <num>[...dailyGramChoices],
+              selected: grams,
+              custom: _gramsCustom,
+              controller: _gramsText,
+              hint: '克',
+              onKnown: (value) => setState(() {
+                _gramsCustom = false;
+                _grams = value.toInt();
+              }),
+              onCustom: () => setState(() => _gramsCustom = true),
             ),
           ],
           if (card.sources.isNotEmpty) ...[
@@ -189,7 +201,24 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
                 child: FilledButton(
                   onPressed: _busy
                       ? null
-                      : () => _save(app, stock, hold, grams?.toDouble()),
+                      : () {
+                          final days = _holdCustom
+                              ? typedWhole(_holdText)
+                              : hold;
+                          if (days == null) {
+                            showMessage(context, '先写上数字');
+                            return;
+                          }
+                          double? amount = grams?.toDouble();
+                          if (card.pickGrams && _gramsCustom) {
+                            amount = typedAmount(_gramsText);
+                            if (amount == null) {
+                              showMessage(context, '先写上数字');
+                              return;
+                            }
+                          }
+                          _save(app, stock, days, amount);
+                        },
                   style: FilledButton.styleFrom(
                     minimumSize: const Size.fromHeight(56),
                   ),

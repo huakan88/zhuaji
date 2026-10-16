@@ -16,6 +16,7 @@ import '../../services/date_ocr_service.dart';
 import '../../services/pack_ocr_service.dart';
 import '../../services/photo_store.dart';
 import '../../state/app_controller.dart';
+import '../health/known_or_custom.dart';
 import '../records/record_sheets.dart';
 
 class FoodFormPage extends StatefulWidget {
@@ -41,11 +42,17 @@ class FoodFormPage extends StatefulWidget {
 class _FoodFormPageState extends State<FoodFormPage> {
   final _brand = TextEditingController();
   final _name = TextEditingController();
+  final _flavorText = TextEditingController();
+  final _specText = TextEditingController();
+  final _formText = TextEditingController();
   final _photos = PhotoStore();
   String? _photo;
   String _flavor = '';
+  var _flavorCustom = false;
   var _form = FoodForm.dry;
+  var _formCustom = false;
   String _spec = '';
+  var _specCustom = false;
   DateTime? _expiry;
   var _dateFromPhoto = false;
   var _ready = false;
@@ -64,8 +71,21 @@ class _FoodFormPageState extends State<FoodFormPage> {
       _brand.text = existing.brand;
       _name.text = existing.name;
       _flavor = existing.flavor;
+      if (existing.flavor.isNotEmpty && !_knownFlavor(existing.flavor)) {
+        _flavorCustom = true;
+        _flavorText.text = existing.flavor;
+      }
+      final typedForm = existing.customForm?.trim() ?? '';
+      if (typedForm.isNotEmpty) {
+        _formCustom = true;
+        _formText.text = typedForm;
+      }
       _form = existing.foodForm;
       _spec = existing.spec;
+      if (existing.spec.isNotEmpty && !_knownSpec(existing.spec)) {
+        _specCustom = true;
+        _specText.text = existing.spec;
+      }
       _photo = existing.photoPath;
     }
     if (widget.addBag && widget.productId == null) {
@@ -86,18 +106,16 @@ class _FoodFormPageState extends State<FoodFormPage> {
   void dispose() {
     _brand.dispose();
     _name.dispose();
+    _flavorText.dispose();
+    _specText.dispose();
+    _formText.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     final editing = widget.productId != null;
-    final specs = [...foodSpecs];
-    if (_spec.isNotEmpty && !specs.contains(_spec)) specs.insert(0, _spec);
     final flavors = foodFlavors.where((item) => item != '鱼').toList();
-    if (_flavor.isNotEmpty && !flavors.contains(_flavor)) {
-      flavors.insert(0, _flavor);
-    }
     return Scaffold(
       backgroundColor: AppColors.of(context).background,
       appBar: zhuajiBar(editing ? '改这款' : '自己添加'),
@@ -157,54 +175,55 @@ class _FoodFormPageState extends State<FoodFormPage> {
           const SizedBox(height: 16),
           const SectionLabel('形态'),
           const SizedBox(height: 8),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              for (final form in FoodForm.values)
-                ChoiceChip(
-                  label: Text(formLabel(form)),
-                  selected: _form == form,
-                  selectedColor: AppColors.of(context).brandTint,
-                  onSelected: (_) => setState(() => _form = form),
-                ),
-            ],
+          KnownOrCustom(
+            known: [for (final form in FoodForm.values) formLabel(form)],
+            selected: formLabel(_form),
+            custom: _formCustom,
+            controller: _formText,
+            hint: '形态',
+            onKnown: (label) => setState(() {
+              _formCustom = false;
+              _form = _formForLabel(label);
+            }),
+            onCustom: () => setState(() => _formCustom = true),
           ),
           const SizedBox(height: 16),
           const SectionLabel('口味'),
           const SizedBox(height: 8),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              for (final flavor in flavors)
-                ChoiceChip(
-                  label: Text(flavor),
-                  selected: _flavor == flavor,
-                  selectedColor: AppColors.of(context).brandTint,
-                  onSelected: (_) => setState(() {
-                    _flavor = _flavor == flavor ? '' : flavor;
-                  }),
-                ),
-            ],
+          KnownOrCustom(
+            known: flavors,
+            selected: _flavor,
+            custom: _flavorCustom,
+            controller: _flavorText,
+            hint: '口味',
+            onKnown: (label) => setState(() {
+              if (!_flavorCustom && _flavor == label) {
+                _flavor = '';
+              } else {
+                _flavorCustom = false;
+                _flavor = label;
+              }
+            }),
+            onCustom: () => setState(() => _flavorCustom = true),
           ),
           const SizedBox(height: 16),
           const SectionLabel('规格'),
           const SizedBox(height: 8),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              for (final spec in specs)
-                ChoiceChip(
-                  label: Text(spec),
-                  selected: _spec == spec,
-                  selectedColor: AppColors.of(context).brandTint,
-                  onSelected: (_) => setState(() {
-                    _spec = _spec == spec ? '' : spec;
-                  }),
-                ),
-            ],
+          KnownOrCustom(
+            known: foodSpecs,
+            selected: _spec,
+            custom: _specCustom,
+            controller: _specText,
+            hint: '规格',
+            onKnown: (label) => setState(() {
+              if (!_specCustom && _spec == label) {
+                _spec = '';
+              } else {
+                _specCustom = false;
+                _spec = label;
+              }
+            }),
+            onCustom: () => setState(() => _specCustom = true),
           ),
           if (_expiry != null) ...[
             const SizedBox(height: 16),
@@ -295,9 +314,32 @@ class _FoodFormPageState extends State<FoodFormPage> {
         _brand.text = read.brand!;
       }
       if (read.name != null && read.name!.isNotEmpty) _name.text = read.name!;
-      if (read.flavor != null) _flavor = read.flavor!;
-      if (read.form != null) _form = read.form!;
-      if (read.spec != null) _spec = read.spec!;
+      if (read.flavor != null) {
+        final flavor = read.flavor!;
+        if (_knownFlavor(flavor)) {
+          _flavorCustom = false;
+          _flavor = flavor;
+        } else {
+          _flavorCustom = true;
+          _flavorText.text = flavor;
+          _flavor = flavor;
+        }
+      }
+      if (read.form != null) {
+        _formCustom = false;
+        _form = read.form!;
+      }
+      if (read.spec != null) {
+        final spec = read.spec!;
+        if (_knownSpec(spec)) {
+          _specCustom = false;
+          _spec = spec;
+        } else {
+          _specCustom = true;
+          _specText.text = spec;
+          _spec = spec;
+        }
+      }
     });
     showMessage(
       context,
@@ -342,6 +384,21 @@ class _FoodFormPageState extends State<FoodFormPage> {
       showMessage(context, '先确认品牌和名称');
       return;
     }
+    final flavor = _flavorCustom ? _flavorText.text.trim() : _flavor;
+    if (_flavorCustom && flavor.isEmpty) {
+      showMessage(context, '先写上口味');
+      return;
+    }
+    final spec = _specCustom ? _specText.text.trim() : _spec;
+    if (_specCustom && spec.isEmpty) {
+      showMessage(context, '先写上规格');
+      return;
+    }
+    final typedForm = _formText.text.trim();
+    if (_formCustom && typedForm.isEmpty) {
+      showMessage(context, '先写上形态');
+      return;
+    }
     final app = AppScope.of<AppController>(context);
     final code = widget.barcode.trim();
     if (_barcodeTaken(app, code, widget.productId)) {
@@ -359,11 +416,12 @@ class _FoodFormPageState extends State<FoodFormPage> {
           barcode: existing?.barcode,
           brand: brand,
           name: name,
-          spec: _spec,
+          spec: spec,
           foodForm: _form,
+          customForm: _formCustom ? typedForm : null,
           storageMethod: existing?.storageMethod ?? _storage(_form),
           afterOpenDays: existing?.afterOpenDays ?? _days(_form),
-          flavor: _flavor,
+          flavor: flavor,
           isCustom: true,
           photoPath: _photo,
         ),
@@ -411,6 +469,19 @@ class _FoodFormPageState extends State<FoodFormPage> {
     if (!mounted) return;
     context.pop();
   }
+}
+
+bool _knownFlavor(String value) {
+  return foodFlavors.where((item) => item != '鱼').contains(value);
+}
+
+bool _knownSpec(String value) => foodSpecs.contains(value);
+
+FoodForm _formForLabel(String label) {
+  for (final form in FoodForm.values) {
+    if (formLabel(form) == label) return form;
+  }
+  return FoodForm.dry;
 }
 
 bool _barcodeTaken(AppController app, String code, int? exceptId) {

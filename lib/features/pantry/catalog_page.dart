@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../core/format.dart';
 import '../../core/theme/app_fonts.dart';
 import '../../core/theme/app_tokens.dart';
 import '../../core/widgets/common.dart';
@@ -82,7 +81,7 @@ class _CatalogPageState extends State<CatalogPage> {
                           const SizedBox(height: 2),
                           Text(
                             [
-                              formLabel(item.foodForm),
+                              item.formTitle,
                               if (item.flavor.isNotEmpty) item.flavor,
                               if (item.spec.isNotEmpty) item.spec,
                               if (item.isCustom) '自定义',
