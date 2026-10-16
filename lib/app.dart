@@ -9,6 +9,9 @@ import 'core/widgets/common.dart';
 import 'features/cats/cat_form_page.dart';
 import 'features/cats/cats_page.dart';
 import 'features/cats/privacy_page.dart';
+import 'features/legal/consent_gate.dart';
+import 'features/legal/legal_copy.dart';
+import 'features/legal/legal_page.dart';
 import 'features/health/checkups_page.dart';
 import 'features/health/lab_form_page.dart';
 import 'features/health/labs_page.dart';
@@ -82,6 +85,7 @@ class ZhuajiApp extends StatefulWidget {
     required this.controller,
     this.initialLocation = '/home',
     this.scaleSource,
+    this.gateConsent = true,
     super.key,
   });
 
@@ -90,6 +94,9 @@ class ZhuajiApp extends StatefulWidget {
 
   /// Defaults to the real Bluetooth scale; tests pass a fake.
   final ScaleSource Function()? scaleSource;
+
+  /// Tests that are not about the first-launch choice pass false.
+  final bool gateConsent;
 
   @override
   State<ZhuajiApp> createState() => _ZhuajiAppState();
@@ -157,6 +164,16 @@ class _ZhuajiAppState extends State<ZhuajiApp> {
         ),
       ),
       GoRoute(path: '/privacy', builder: (_, _) => const PrivacyPage()),
+      GoRoute(
+        path: '/agreement',
+        builder: (_, _) =>
+            const LegalPage(title: '用户协议', sections: agreementSections),
+      ),
+      GoRoute(
+        path: '/permissions',
+        builder: (_, _) =>
+            const LegalPage(title: '权限说明', sections: permissionSections),
+      ),
       GoRoute(path: '/vaccines', builder: (_, _) => const VaccinesPage()),
       GoRoute(path: '/calendar', builder: (_, _) => const CalendarPage()),
       GoRoute(
@@ -221,12 +238,36 @@ class _ZhuajiAppState extends State<ZhuajiApp> {
     ],
   );
 
+  var _armed = false;
+
   @override
   void initState() {
     super.initState();
+    final choice = widget.controller.privacyChoice;
+    if (!widget.gateConsent || choice != PrivacyChoice.unset) {
+      _armIntegrations();
+    }
+  }
+
+  void _armIntegrations() {
+    if (_armed) return;
+    _armed = true;
     _shortcuts();
     WidgetBridge.listen((route) => openAppRoute(_router, route));
     _openWidgetRoute();
+  }
+
+  Future<void> _acceptConsent() async {
+    await widget.controller.acceptPrivacy();
+    await widget.controller.init();
+    await widget.controller.enableNotifications();
+    _armIntegrations();
+  }
+
+  Future<void> _basicConsent() async {
+    await widget.controller.useBasicMode();
+    await widget.controller.init();
+    _armIntegrations();
   }
 
   Future<void> _openWidgetRoute() async {
@@ -275,10 +316,20 @@ class _ZhuajiAppState extends State<ZhuajiApp> {
             GlobalCupertinoLocalizations.delegate,
           ],
           routerConfig: _router,
-          builder: (context, child) => RepaintBoundary(
-            key: const Key('shot'),
-            child: child ?? const SizedBox.shrink(),
-          ),
+          builder: (context, child) {
+            final waiting =
+                widget.gateConsent &&
+                widget.controller.privacyChoice == PrivacyChoice.unset;
+            return RepaintBoundary(
+              key: const Key('shot'),
+              child: waiting
+                  ? ConsentGate(
+                      onAccept: _acceptConsent,
+                      onBasic: _basicConsent,
+                    )
+                  : (child ?? const SizedBox.shrink()),
+            );
+          },
         ),
       ),
     );

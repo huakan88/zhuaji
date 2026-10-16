@@ -24,6 +24,9 @@ import '../services/barcode_share.dart';
 import '../services/notification_service.dart';
 import '../services/widget_bridge.dart';
 
+/// Saved under `privacyConsent`: accept is `1`, basic mode is `0`.
+enum PrivacyChoice { unset, accepted, basic }
+
 class AppController extends ChangeNotifier {
   AppController({
     required this.repo,
@@ -91,6 +94,12 @@ class AppController extends ChangeNotifier {
   /// The owner's own weight from the last 「抱猫称」, offered again next time.
   double? ownerWeightKg;
   String? permissionNote;
+
+  /// Unset until the first-launch choice is saved. Basic mode stays on device.
+  PrivacyChoice privacyChoice = PrivacyChoice.unset;
+
+  /// Notification plugin, timezone and cloud sync. Main wires this.
+  Future<void> Function()? onFullAccess;
 
   DateTime get now => _clock();
 
@@ -175,7 +184,9 @@ class AppController extends ChangeNotifier {
       await _read();
       await _reschedule();
       await _publishWidget();
-      await flushBarcodeShare();
+      if (privacyChoice == PrivacyChoice.accepted) {
+        await flushBarcodeShare();
+      }
     } catch (error) {
       this.error = '本地数据没有打开：$error';
     } finally {
@@ -202,7 +213,13 @@ class AppController extends ChangeNotifier {
   }
 
   Future<void> enableNotifications() async {
+    if (privacyChoice != PrivacyChoice.accepted) return;
     try {
+      final asked = await repo.setting('notifAsked');
+      if (asked == '1') {
+        await _reschedule();
+        return;
+      }
       final askedExact = await repo.setting('exactAsked');
       await notifications.requestPermissions(askExactAlarm: askedExact != '1');
       await repo.setSetting('exactAsked', '1');
@@ -213,6 +230,70 @@ class AppController extends ChangeNotifier {
       permissionNote = '通知权限没有打开，记录仍会留在这台手机上';
       debugPrint('通知权限没有打开：$error\n$stack');
     }
+    notifyListeners();
+  }
+
+  /// Full features: network barcode lookup, reminders, optional cloud sync.
+  Future<void> acceptPrivacy() async {
+    final first = privacyChoice != PrivacyChoice.accepted;
+    privacyChoice = PrivacyChoice.accepted;
+    await repo.setSetting('privacyConsent', '1');
+    await onFullAccess?.call();
+    notifyListeners();
+    if (!first || loading) return;
+    await enableNotifications();
+    await flushBarcodeShare();
+  }
+
+  /// Local records only. Drops the share queue and cancels reminders.
+  Future<void> useBasicMode() async {
+    privacyChoice = PrivacyChoice.basic;
+    await repo.setSetting('privacyConsent', '0');
+    shareQueue = [];
+    await _storeShareQueue();
+    try {
+      await notifications.replaceAll(const []);
+    } catch (error, stack) {
+      debugPrint('撤回后取消提醒失败：$error\n$stack');
+    }
+    notifyListeners();
+  }
+
+  /// Wipes personal rows, keeps the built-in food table, and asks again.
+  Future<void> erasePersonalData() async {
+    try {
+      await notifications.replaceAll(const []);
+    } catch (error, stack) {
+      debugPrint('删除前取消提醒失败：$error\n$stack');
+    }
+    await repo.erasePersonalData();
+    await repo.setSetting('demoSeeded', '1');
+    privacyChoice = PrivacyChoice.unset;
+    cats = [];
+    activeCatId = null;
+    vaccines = [];
+    deworms = [];
+    visits = [];
+    weights = [];
+    products = await repo.products();
+    pantry = [];
+    conditions = [];
+    checkups = [];
+    waters = [];
+    labs = [];
+    weightAcks = {};
+    pantryAcks = {};
+    stockSnooze = {};
+    barcodeMemory = {};
+    barcodeCatalog = {};
+    barcodeRevisions = {};
+    shareQueue = [];
+    recentSearches = [];
+    ownerWeightKg = null;
+    permissionNote = null;
+    loading = false;
+    error = null;
+    await _publishWidget();
     notifyListeners();
   }
 
@@ -763,8 +844,10 @@ class AppController extends ChangeNotifier {
     if (key.isEmpty) return BarcodeRecord.miss(code);
     final owned = findBarcode(code);
     if (owned != null) return _userRecord(owned, code);
-    final shared = await _readShare(key, code);
-    if (shared != null) return shared;
+    if (privacyChoice != PrivacyChoice.basic) {
+      final shared = await _readShare(key, code);
+      if (shared != null) return shared;
+    }
     final local = localCatFood(code);
     if (local != null) return local.toRecord();
     if (!refresh) {
@@ -772,6 +855,9 @@ class AppController extends ChangeNotifier {
       if (cached != null) return cached;
     } else {
       barcodeCatalog.remove(key);
+    }
+    if (privacyChoice == PrivacyChoice.basic) {
+      return BarcodeRecord.miss(code);
     }
     final record = await lookupBarcode(
       code,
@@ -880,6 +966,7 @@ class AppController extends ChangeNotifier {
     );
     barcodeRevisions[key] = revision;
     await _storeRevisions();
+    if (privacyChoice == PrivacyChoice.basic) return;
     if (!shareEnabled) return;
     final consent = await repo.setting('barcodeShareConsent');
     if (consent == '0') return;
@@ -972,6 +1059,7 @@ class AppController extends ChangeNotifier {
   }
 
   Future<int> _flushBarcodeShare() async {
+    if (privacyChoice == PrivacyChoice.basic) return 0;
     if (shareQueue.isEmpty) return 0;
     if (!shareEnabled && shareClient == null) return 0;
     final client = _shares;
@@ -1123,6 +1211,11 @@ class AppController extends ChangeNotifier {
     shareQueue = decodeShareQueue(await repo.setting('barcodeShareQueue'));
     recentSearches = _decodeSearches(await repo.setting('recentSearches'));
     ownerWeightKg = double.tryParse(await repo.setting('ownerWeightKg') ?? '');
+    privacyChoice = switch (await repo.setting('privacyConsent')) {
+      '1' => PrivacyChoice.accepted,
+      '0' => PrivacyChoice.basic,
+      _ => PrivacyChoice.unset,
+    };
   }
 
   Map<String, BarcodeRevision> _decodeRevisions(String? raw) {

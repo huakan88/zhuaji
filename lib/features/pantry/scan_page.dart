@@ -187,6 +187,14 @@ class _ScanPageState extends State<ScanPage> {
                       ),
                       child: const Text('手输条码'),
                     ),
+                    Text(
+                      '扫包装上的条码时才使用相机',
+                      style: zhuaji.copyWith(
+                        fontSize: 13,
+                        color: AppColors.of(context).onScrimMuted,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
                     TextButton(
                       onPressed: () => _openConfirm(''),
                       style: TextButton.styleFrom(
