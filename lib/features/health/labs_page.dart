@@ -56,7 +56,7 @@ class LabsPage extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            '${formatDate(report.takenOn)} · ${labKindLabel(report.kind)}',
+                            '${formatDate(report.takenOn)} · ${report.kindTitle}',
                             style: zhuaji.copyWith(
                               fontSize: 15,
                               fontWeight: FontWeight.w700,

@@ -10,6 +10,7 @@ import '../../domain/dates.dart';
 import '../../domain/models.dart';
 import '../../state/app_controller.dart';
 import '../records/record_sheets.dart';
+import 'known_or_custom.dart';
 
 class VaccinesPage extends StatefulWidget {
   const VaccinesPage({super.key});
@@ -20,9 +21,17 @@ class VaccinesPage extends StatefulWidget {
 
 class _VaccinesPageState extends State<VaccinesPage> {
   static const _names = ['猫三联', '狂犬'];
+  final _customText = TextEditingController();
   var _name = '猫三联';
+  var _custom = false;
   DateTime? _given;
   var _busy = false;
+
+  @override
+  void dispose() {
+    _customText.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -69,21 +78,17 @@ class _VaccinesPageState extends State<VaccinesPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Wrap(
-                  spacing: 8,
-                  children: [
-                    for (final label in _names)
-                      ChoiceChip(
-                        label: Text(label),
-                        labelPadding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 8,
-                        ),
-                        selected: _name == label,
-                        selectedColor: AppColors.of(context).brandTint,
-                        onSelected: (_) => setState(() => _name = label),
-                      ),
-                  ],
+                KnownOrCustom(
+                  known: _names,
+                  selected: _name,
+                  custom: _custom,
+                  controller: _customText,
+                  hint: '疫苗名称',
+                  onKnown: (label) => setState(() {
+                    _custom = false;
+                    _name = label;
+                  }),
+                  onCustom: () => setState(() => _custom = true),
                 ),
                 DateChips(
                   label: '接种',
@@ -110,11 +115,20 @@ class _VaccinesPageState extends State<VaccinesPage> {
             onPressed: _busy
                 ? null
                 : () async {
+                    final name = chosenOrTyped(
+                      custom: _custom,
+                      controller: _customText,
+                      selected: _name,
+                    );
+                    if (name == null) {
+                      showMessage(context, '先写上名字');
+                      return;
+                    }
                     setState(() => _busy = true);
                     await app.saveVaccine(
                       VaccineDraft(
                         catId: cat.id,
-                        name: _name,
+                        name: name,
                         givenOn: given,
                         nextDue: next,
                       ),

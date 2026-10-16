@@ -137,7 +137,7 @@ List<AgendaItem> buildAgenda({
   for (final item in checkups) {
     final due = item.nextDue;
     if (due == null) continue;
-    final name = checkupById(item.itemId)?.name ?? '体检';
+    final name = checkupById(item.itemId)?.name ?? item.itemId;
     place(
       due: due,
       kind: AgendaKind.checkup,
@@ -150,14 +150,14 @@ List<AgendaItem> buildAgenda({
   for (final item in conditions) {
     final due = item.nextRecheck;
     if (due == null) continue;
-    final name = diseaseById(item.diseaseId)?.name ?? '复查';
+    final name = diseaseById(item.diseaseId)?.name ?? item.diseaseId;
     place(
       due: due,
       kind: AgendaKind.recheck,
       title: '复诊',
       detail: '${who(item.catId)} · $name',
       recordId: item.id,
-      route: '/disease?id=${item.diseaseId}',
+      route: '/disease?id=${Uri.encodeComponent(item.diseaseId)}',
     );
   }
   for (final entry in pantry) {

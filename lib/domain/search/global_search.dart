@@ -140,15 +140,10 @@ List<SearchGroup> globalSearch({
           catId: item.catId,
         ),
     for (final report in labs)
-      if (hit([
-        labKindLabel(report.kind),
-        report.note,
-        catName(report.catId),
-        '化验',
-      ]))
+      if (hit([report.kindTitle, report.note, catName(report.catId), '化验']))
         SearchHit(
           group: '化验',
-          title: labKindLabel(report.kind),
+          title: report.kindTitle,
           subtitle: _whoWhen(catName(report.catId), report.takenOn),
           route: '/lab?id=${report.id}',
           catId: report.catId,
@@ -199,7 +194,7 @@ List<String> _foodParts(FoodProduct item) {
     item.name,
     item.flavor,
     item.spec,
-    formLabel(item.foodForm),
+    item.formTitle,
     item.barcode ?? '',
     if (item.isCustom) '自定义',
   ];

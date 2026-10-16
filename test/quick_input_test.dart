@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:maokangji/data/db/app_database.dart';
 import 'package:maokangji/data/repositories/drift_care_repository.dart';
 import 'package:maokangji/domain/models.dart';
+import 'package:maokangji/features/health/known_or_custom.dart';
 import 'package:maokangji/features/home/home_page.dart';
 import 'package:maokangji/services/coat_recognizer.dart';
 import 'package:maokangji/services/notification_service.dart';
@@ -106,13 +107,20 @@ void main() {
   ) async {
     final last = controller.lastDeworm!;
     await boot(tester, controller, location: '/deworms');
-    final chip = tester.widget<ChoiceChip>(
+    expect(find.text('大宠爱'), findsOneWidget);
+    expect(find.text('博来恩'), findsOneWidget);
+    expect(find.text('海乐妙'), findsOneWidget);
+    final other = tester.widget<ChoiceChip>(
       find.ancestor(
-        of: find.text(last.product).last,
+        of: find.text(otherChoiceLabel),
         matching: find.byType(ChoiceChip),
       ),
     );
-    expect(chip.selected, isTrue);
+    expect(other.selected, isTrue);
+    expect(
+      tester.widget<TextField>(find.byType(TextField)).controller?.text,
+      last.product,
+    );
     await tapText(tester, '前天');
     await tapText(tester, '记下');
     final saved = controller.catDeworms.reduce((a, b) => a.id > b.id ? a : b);

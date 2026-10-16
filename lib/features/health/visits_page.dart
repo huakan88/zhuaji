@@ -8,6 +8,7 @@ import '../../domain/dates.dart';
 import '../../domain/models.dart';
 import '../../state/app_controller.dart';
 import '../records/record_sheets.dart';
+import 'known_or_custom.dart';
 
 class VisitsPage extends StatefulWidget {
   const VisitsPage({super.key});
@@ -18,10 +19,21 @@ class VisitsPage extends StatefulWidget {
 
 class _VisitsPageState extends State<VisitsPage> {
   static const _reasons = ['体检', '疫苗', '不吃饭', '呕吐'];
+  final _reasonText = TextEditingController();
+  final _clinicText = TextEditingController();
   var _reason = '体检';
+  var _reasonCustom = false;
   DateTime? _date;
   String? _clinic;
+  var _clinicCustom = false;
   var _busy = false;
+
+  @override
+  void dispose() {
+    _reasonText.dispose();
+    _clinicText.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -52,36 +64,31 @@ class _VisitsPageState extends State<VisitsPage> {
           else
             for (final visit in visits.take(3)) _Record(visit: visit),
           const SizedBox(height: 8),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              for (final label in _reasons)
-                ChoiceChip(
-                  label: Text(label),
-                  selected: _reason == label,
-                  selectedColor: AppColors.of(context).brandTint,
-                  onSelected: (_) => setState(() => _reason = label),
-                ),
-            ],
+          KnownOrCustom(
+            known: _reasons,
+            selected: _reason,
+            custom: _reasonCustom,
+            controller: _reasonText,
+            hint: '原因',
+            onKnown: (label) => setState(() {
+              _reasonCustom = false;
+              _reason = label;
+            }),
+            onCustom: () => setState(() => _reasonCustom = true),
           ),
-          if (clinics.isNotEmpty) ...[
-            const SizedBox(height: 8),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: [
-                for (final name in clinics)
-                  ChoiceChip(
-                    label: Text(name),
-                    selected: clinic == name,
-                    selectedColor: AppColors.of(context).brandTint,
-                    onSelected: (on) =>
-                        setState(() => _clinic = on ? name : ''),
-                  ),
-              ],
-            ),
-          ],
+          const SizedBox(height: 8),
+          KnownOrCustom(
+            known: clinics,
+            selected: clinic,
+            custom: _clinicCustom,
+            controller: _clinicText,
+            hint: '医院',
+            onKnown: (name) => setState(() {
+              _clinicCustom = false;
+              _clinic = clinic == name ? '' : name;
+            }),
+            onCustom: () => setState(() => _clinicCustom = true),
+          ),
           DateChips(
             label: '就诊',
             date: date,
@@ -97,13 +104,32 @@ class _VisitsPageState extends State<VisitsPage> {
             onPressed: _busy
                 ? null
                 : () async {
+                    final reason = chosenOrTyped(
+                      custom: _reasonCustom,
+                      controller: _reasonText,
+                      selected: _reason,
+                    );
+                    if (reason == null) {
+                      showMessage(context, '先写上名字');
+                      return;
+                    }
+                    final typedClinic = chosenOrTyped(
+                      custom: _clinicCustom,
+                      controller: _clinicText,
+                      selected: clinic,
+                    );
+                    if (_clinicCustom && typedClinic == null) {
+                      showMessage(context, '先写上名字');
+                      return;
+                    }
+                    final place = _clinicCustom ? typedClinic : clinic;
                     setState(() => _busy = true);
                     await app.saveVisit(
                       VetDraft(
                         catId: cat.id,
                         visitedOn: date,
-                        reason: _reason,
-                        clinic: clinic.isEmpty ? null : clinic,
+                        reason: reason,
+                        clinic: place == null || place.isEmpty ? null : place,
                       ),
                     );
                     if (!mounted) return;

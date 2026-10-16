@@ -54,15 +54,23 @@ class LabAnalyte {
   LabUnit get base => units.first;
 
   LabUnit unitFor(String label) {
+    return matchUnit(label) ?? base;
+  }
+
+  /// True when [label] is empty or one of this analyte's conversion units.
+  bool recognizesUnit(String label) =>
+      label.trim().isEmpty || matchUnit(label) != null;
+
+  LabUnit? matchUnit(String label) {
     final key = normalizeUnit(label);
-    if (key.isEmpty) return base;
+    if (key.isEmpty) return null;
     for (final unit in units) {
       if (normalizeUnit(unit.label) == key) return unit;
       for (final alias in unit.aliases) {
         if (normalizeUnit(alias) == key) return unit;
       }
     }
-    return base;
+    return null;
   }
 }
 
@@ -91,10 +99,7 @@ const _cell12 = [
   ),
 ];
 
-const _gPerL = [
-  LabUnit('g/L', 1),
-  LabUnit('g/dL', 10),
-];
+const _gPerL = [LabUnit('g/L', 1), LabUnit('g/dL', 10)];
 
 const _enzyme = [
   LabUnit('U/L', 1, aliases: ['IU/L']),
@@ -117,7 +122,16 @@ const labCatalog = <LabAnalyte>[
     code: 'NEU',
     name: '中性粒细胞',
     kind: LabKind.cbc,
-    aliases: ['NEU#', 'NEUT#', 'GRAN#', 'NEU', 'NEUT', 'GRAN', '中性粒细胞数', '中性粒细胞'],
+    aliases: [
+      'NEU#',
+      'NEUT#',
+      'GRAN#',
+      'NEU',
+      'NEUT',
+      'GRAN',
+      '中性粒细胞数',
+      '中性粒细胞',
+    ],
     units: _cell9,
     low: 2.30,
     high: 10.29,
@@ -190,10 +204,7 @@ const labCatalog = <LabAnalyte>[
     name: '红细胞压积',
     kind: LabKind.cbc,
     aliases: ['HCT', 'PCV', '红细胞压积', '红细胞比容', '压积'],
-    units: [
-      LabUnit('%', 1),
-      LabUnit('L/L', 100),
-    ],
+    units: [LabUnit('%', 1), LabUnit('L/L', 100)],
     low: 30.3,
     high: 52.3,
     highText: '红细胞压积偏高，常见于脱水。',
@@ -204,7 +215,9 @@ const labCatalog = <LabAnalyte>[
     name: '平均红细胞体积',
     kind: LabKind.cbc,
     aliases: ['MCV', '平均红细胞体积'],
-    units: [LabUnit('fL', 1, aliases: ['fl'])],
+    units: [
+      LabUnit('fL', 1, aliases: ['fl']),
+    ],
     low: 35.9,
     high: 53.1,
     highText: '红细胞个头偏大，有时见于再生性贫血或采血放置过久。',
@@ -336,10 +349,7 @@ const labCatalog = <LabAnalyte>[
     name: '尿素氮',
     kind: LabKind.chem,
     aliases: ['BUN', 'UREA', '尿素氮', '尿素', '血尿素氮'],
-    units: [
-      LabUnit('mmol/L', 1),
-      LabUnit('mg/dL', 0.357),
-    ],
+    units: [LabUnit('mmol/L', 1), LabUnit('mg/dL', 0.357)],
     low: 5.7,
     high: 12.9,
     highText: '肾脏排废可能变慢，脱水或刚吃过高蛋白也会升高，要结合肌酐看。',
@@ -379,10 +389,7 @@ const labCatalog = <LabAnalyte>[
     name: '血糖',
     kind: LabKind.chem,
     aliases: ['GLU', 'GLUC', '葡萄糖', '血糖'],
-    units: [
-      LabUnit('mmol/L', 1),
-      LabUnit('mg/dL', 0.0555),
-    ],
+    units: [LabUnit('mmol/L', 1), LabUnit('mg/dL', 0.0555)],
     low: 4.11,
     high: 8.83,
     highText: '血糖偏高，猫紧张时常见应激性升高，持续偏高要排查糖尿病。',
@@ -393,10 +400,7 @@ const labCatalog = <LabAnalyte>[
     name: '磷',
     kind: LabKind.chem,
     aliases: ['PHOS', 'IP', '无机磷', '血磷', '磷'],
-    units: [
-      LabUnit('mmol/L', 1),
-      LabUnit('mg/dL', 0.323),
-    ],
+    units: [LabUnit('mmol/L', 1), LabUnit('mg/dL', 0.323)],
     low: 1.00,
     high: 2.42,
     decimals: 2,
@@ -408,10 +412,7 @@ const labCatalog = <LabAnalyte>[
     name: '钙',
     kind: LabKind.chem,
     aliases: ['CA', '总钙', '血钙', '钙'],
-    units: [
-      LabUnit('mmol/L', 1),
-      LabUnit('mg/dL', 0.25),
-    ],
+    units: [LabUnit('mmol/L', 1), LabUnit('mg/dL', 0.25)],
     low: 1.95,
     high: 2.83,
     decimals: 2,
@@ -423,10 +424,7 @@ const labCatalog = <LabAnalyte>[
     name: '胆固醇',
     kind: LabKind.chem,
     aliases: ['CHOL', 'TC', '总胆固醇', '胆固醇'],
-    units: [
-      LabUnit('mmol/L', 1),
-      LabUnit('mg/dL', 0.0259),
-    ],
+    units: [LabUnit('mmol/L', 1), LabUnit('mg/dL', 0.0259)],
     low: 1.68,
     high: 5.81,
     decimals: 2,
@@ -517,6 +515,8 @@ LabReading? readLabValue(LabValue value) {
   if (fromReport) {
     low = printedLow;
     high = printedHigh;
+  } else if (!analyte.recognizesUnit(value.unit)) {
+    return null;
   } else {
     final unit = analyte.unitFor(value.unit);
     low = analyte.low / unit.toBase;
@@ -540,6 +540,7 @@ LabReading? readLabValue(LabValue value) {
 double? baseValue(LabValue value) {
   final analyte = analyteByCode(value.code);
   if (analyte == null) return null;
+  if (!analyte.recognizesUnit(value.unit)) return value.value;
   return value.value * analyte.unitFor(value.unit).toBase;
 }
 
