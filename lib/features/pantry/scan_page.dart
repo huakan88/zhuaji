@@ -8,19 +8,112 @@ import '../../core/theme/app_fonts.dart';
 import '../../core/theme/app_tokens.dart';
 import '../../core/widgets/common.dart';
 import '../../domain/food/barcode_lookup.dart';
+import '../../domain/food/local_barcodes.dart';
+import '../../domain/parsing/gs1_parser.dart';
 import '../../state/app_controller.dart';
 
-/// Where a finished scan should go. A code already in the pantry opens that
-/// bag. An EAN or UPC opens the product lookup. Anything else, including a
-/// blank "pick a brand", opens confirm.
-String scanDestination(AppController app, String raw) {
+final _gtinRun = RegExp(r'(?<!\d)(\d{8}|\d{12}|\d{13}|\d{14})(?!\d)');
+
+/// A retail code printed on a bag, or the same code pulled out of a QR,
+/// a GS1 element string, or a product link. Plain scans keep their own
+/// digits. Embedded codes prefer the 13-digit form used on Chinese bags.
+String? productCodeOf(String raw) {
+  final value = raw.trim();
+  if (value.isEmpty) return null;
+  if (isRetailBarcode(value)) return value;
+  return _preferredRetail(_retailForms(value));
+}
+
+List<String> _retailForms(String raw) {
+  final forms = <String>[];
+  void add(String? candidate) {
+    if (candidate == null || candidate.isEmpty) return;
+    for (final form in barcodeCandidates(candidate)) {
+      if (isRetailBarcode(form) && !forms.contains(form)) forms.add(form);
+    }
+  }
+
+  add(const Gs1Parser().parse(raw).gtin);
+  for (final match in _gtinRun.allMatches(raw)) {
+    add(match.group(1));
+  }
+  return forms;
+}
+
+String? _preferredRetail(List<String> forms) {
+  if (forms.isEmpty) return null;
+  const prefer = [13, 12, 8, 14];
+  for (final length in prefer) {
+    for (final form in forms) {
+      if (form.length == length) return form;
+    }
+  }
+  return forms.first;
+}
+
+/// Codes worth matching against the pantry and the built-in catalog.
+/// Includes a saved bag whose check digit is wrong, when that digit string
+/// is what the camera or the QR actually carried.
+List<String> _scanKeys(String raw) {
+  final keys = <String>[];
+  void add(String? value) {
+    final text = value?.trim() ?? '';
+    if (text.isEmpty || keys.contains(text)) return;
+    keys.add(text);
+  }
+
+  add(productCodeOf(raw));
+  add(const Gs1Parser().parse(raw).gtin);
+  for (final match in _gtinRun.allMatches(raw)) {
+    add(match.group(1));
+  }
+  add(raw);
+  return keys;
+}
+
+/// True when [raw] carries a production date, expiry, or batch the confirm
+/// page should keep. A bare barcode does not.
+bool _carryScanPayload(String raw) {
+  if (isRetailBarcode(raw)) return false;
+  final parsed = const Gs1Parser().parse(raw);
+  return parsed.productionDate != null ||
+      parsed.expiryDate != null ||
+      parsed.bestBeforeDate != null ||
+      (parsed.batch != null && parsed.batch!.isNotEmpty);
+}
+
+String _confirmRoute(String raw, String matched, int productId) {
+  final code = _carryScanPayload(raw) ? raw : (productCodeOf(raw) ?? matched);
+  return '/confirm?code=${Uri.encodeComponent(code)}&product=$productId';
+}
+
+/// Where a finished scan should go.
+///
+/// A bag already in the pantry opens that bag. A built-in or previously
+/// saved cat food opens the add-bag page with that product filled in.
+/// A QR code or product link that contains the same barcode takes the same
+/// route. An unknown EAN or UPC still opens lookup. A blank scan opens
+/// confirm so the person can pick a brand.
+Future<String> scanDestination(AppController app, String raw) async {
   final value = raw.trim();
   if (value.isEmpty) return '/confirm';
-  final bag = app.bagForBarcode(value);
-  if (bag != null) return '/bag?id=${bag.item.id}';
-  if (isRetailBarcode(value)) {
-    return '/lookup?code=${Uri.encodeComponent(value)}';
+  final keys = _scanKeys(value);
+  for (final key in keys) {
+    final bag = app.bagForBarcode(key);
+    if (bag != null) return '/bag?id=${bag.item.id}';
   }
+  for (final key in keys) {
+    final owned = app.findBarcode(key);
+    if (owned != null) return _confirmRoute(value, key, owned.id);
+  }
+  for (final key in keys) {
+    final local = localCatFood(key);
+    if (local == null) continue;
+    final id = await app.adoptBarcode(local.toRecord());
+    return _confirmRoute(value, local.barcode, id);
+  }
+  final retail = productCodeOf(value);
+  if (retail != null) return '/lookup?code=${Uri.encodeComponent(retail)}';
   return '/confirm?code=${Uri.encodeComponent(value)}';
 }
 
@@ -281,7 +374,9 @@ class _ScanPageState extends State<ScanPage> {
     } catch (_) {}
     if (!mounted) return;
     final app = AppScope.of<AppController>(context);
-    context.pushReplacement(scanDestination(app, value));
+    final route = await scanDestination(app, value);
+    if (!mounted) return;
+    context.pushReplacement(route);
   }
 }
 

@@ -31,8 +31,8 @@ void main() {
 
       final database = AppDatabase.memory();
       final controller = _controller(database);
-      expect(scanDestination(controller, ''), '/confirm');
-      expect(scanDestination(controller, '  '), '/confirm');
+      expect(await scanDestination(controller, ''), '/confirm');
+      expect(await scanDestination(controller, '  '), '/confirm');
       await controller.init();
       controller.barcodeFetch = (_) async {
         fail('an empty code must not ask the public chain');

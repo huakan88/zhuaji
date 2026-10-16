@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:maokangji/data/db/app_database.dart';
 import 'package:maokangji/data/repositories/drift_care_repository.dart';
 import 'package:maokangji/domain/food/barcode_lookup.dart';
+import 'package:maokangji/domain/search/global_search.dart';
 import 'package:maokangji/services/coat_recognizer.dart';
 import 'package:maokangji/services/notification_service.dart';
 import 'package:maokangji/state/app_controller.dart';
@@ -31,11 +32,44 @@ void main() {
     await database.close();
   });
 
+  test('today search covers cats, health, foods and recipes', () {
+    List<String> labels(String query) {
+      return [
+        for (final group in globalSearch(
+          query: query,
+          cats: controller.cats,
+          pantry: controller.pantry,
+          products: controller.products,
+          vaccines: controller.vaccines,
+          deworms: controller.deworms,
+          weights: controller.weights,
+          labs: controller.labs,
+          visits: controller.visits,
+          reminders: controller.agenda(),
+          catName: (id) => controller.catById(id)?.name ?? '',
+        ))
+          group.label,
+      ];
+    }
+
+    expect(labels('橘座'), contains('猫咪'));
+    expect(labels('猫三联'), contains('疫苗'));
+    expect(labels('驱虫'), contains('驱虫'));
+    expect(labels('体重'), contains('体重'));
+    expect(labels('室内成猫'), containsAll(['粮仓', '猫粮库']));
+    expect(labels('营养师'), contains('自制食谱'));
+  });
+
   testWidgets('today search matches pinyin and groups the hits', (
     tester,
   ) async {
     await boot(tester, controller);
     expect(find.byTooltip('扫码'), findsOneWidget);
+    expect(find.text('扫码'), findsNothing);
+    expect(find.text('今天'), findsWidgets);
+    expect(find.text('健康'), findsWidgets);
+    expect(find.text('粮仓'), findsWidgets);
+    expect(find.text('猫咪'), findsWidgets);
     expect(
       find.byWidgetPredicate(
         (widget) =>
