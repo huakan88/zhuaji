@@ -1,6 +1,6 @@
 # Git 工作流
 
-肉垫本的主仓是 GitHub 私有仓库 [huakan88/zhuaji](https://github.com/huakan88/zhuaji)。提交、附注标签和安装包说明都以这个仓库为准。
+花爪的主仓是 GitHub 私有仓库 [huakan88/zhuaji](https://github.com/huakan88/zhuaji)。提交、附注标签和安装包说明都以这个仓库为准。
 
 ```bash
 git clone https://github.com/huakan88/zhuaji.git
@@ -77,7 +77,7 @@ git config core.hooksPath tool/git-hooks
 ```bash
 git checkout main
 git pull origin main
-git tag -a v2.3.0 -m "肉垫本 2.3.0"
+git tag -a v2.3.0 -m "花爪 2.3.0"
 git push origin v2.3.0
 ```
 

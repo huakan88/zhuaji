@@ -48,7 +48,7 @@ def paginate(lines: list[str]) -> str:
     pages = [chosen[i : i + per] for i in range(0, len(chosen), per)]
     blocks = []
     for index, page in enumerate(pages, start=1):
-        header = f"肉垫本软件 V2.17.0{' ' * 24}第 {index} 页"
+        header = f"花爪软件 V2.18.0{' ' * 24}第 {index} 页"
         body = list(page)
         while len(body) < per:
             body.append("")
@@ -58,11 +58,12 @@ def paginate(lines: list[str]) -> str:
 
 def feature_graphic() -> None:
     width, height = 1024, 500
-    image = Image.new("RGB", (width, height), "#F4F7F3")
+    icon_path = ROOT / "assets/brand/logo-paw.png"
+    icon = Image.open(icon_path).convert("RGB").resize((300, 300), Image.Resampling.LANCZOS)
+    ground = icon.getpixel((2, 2))
+    image = Image.new("RGB", (width, height), ground)
     draw = ImageDraw.Draw(image)
-    icon_path = ROOT / "assets/cats/cat-icon.jpg"
-    icon = Image.open(icon_path).convert("RGBA").resize((300, 300))
-    image.paste(icon, (64, 100), icon)
+    image.paste(icon, (64, 100))
     regular = ImageFont.truetype(
         str(ROOT / "assets/fonts/NotoSansSC-Regular.ttf"),
         42,
@@ -71,9 +72,9 @@ def feature_graphic() -> None:
         str(ROOT / "assets/fonts/NotoSansSC-Bold.ttf"),
         92,
     )
-    draw.text((420, 140), "肉垫本", font=bold, fill="#1A2A22")
-    draw.text((420, 270), "给猫记粮、疫苗和体重", font=regular, fill="#1B5C3C")
-    draw.text((420, 340), "记录留在这台手机上", font=regular, fill="#3E5348")
+    draw.text((420, 140), "花爪", font=bold, fill="#F6F1E4")
+    draw.text((420, 270), "给猫记粮、疫苗和体重", font=regular, fill="#F6F1E4")
+    draw.text((420, 340), "记录留在这台手机上", font=regular, fill="#E7D7C4")
     out = OUT_STORE / "feature-1024x500.png"
     image.save(out, "PNG")
 
@@ -88,11 +89,11 @@ def manual() -> None:
     style = doc.styles["Normal"]
     style.font.name = "Noto Sans SC"
     style.font.size = Pt(12)
-    title = doc.add_heading("肉垫本软件用户手册（草案）", level=0)
+    title = doc.add_heading("花爪软件用户手册（草案）", level=0)
     title.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    doc.add_paragraph("软件版本：V2.17.0    文档日期：2026 年 10 月")
+    doc.add_paragraph("软件版本：V2.18.0    文档日期：2026 年 10 月")
     doc.add_paragraph(
-        "本手册说明肉垫本（PawPad）在 Android 手机上的日常用法。"
+        "本手册说明花爪在 Android 手机上的日常用法。"
         "界面以简体中文显示。包名为 com.maokangji.maokangji。"
     )
 

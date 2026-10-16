@@ -25,7 +25,7 @@ void main() {
             child: RepaintBoundary(
               key: Key('glyph'),
               child: Text(
-                '肉垫本喂食',
+                '花爪喂食',
                 style: TextStyle(fontSize: 40, color: Color(0xFF1E1E1E)),
               ),
             ),

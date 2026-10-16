@@ -19,7 +19,7 @@ mkdir %USERPROFILE%\keystores
 "%PROGRAMFILES%\Android\Android Studio\jbr\bin\keytool.exe" -genkeypair -v -keystore %USERPROFILE%\keystores\roudianben-upload.jks -storetype JKS -keyalg RSA -keysize 2048 -validity 10000 -alias roudianben
 ```
 
-命令会问两项密码（库密码、密钥密码）以及姓名。姓名可以填「肉垫本」。密码请记在密码管理器里，不要写进聊天记录或仓库。
+命令会问两项密码（库密码、密钥密码）以及姓名。姓名可以填「花爪」。密码请记在密码管理器里，不要写进聊天记录或仓库。
 
 有效期 10000 天，大约 27 年。商店要求上传密钥长期不变。
 

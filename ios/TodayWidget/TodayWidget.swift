@@ -105,7 +105,7 @@ struct TodayWidgetView: View {
 
   var body: some View {
     VStack(alignment: .leading, spacing: 6) {
-      Text("肉垫本")
+      Text("花爪")
         .font(.caption)
         .foregroundColor(Color("WidgetMuted"))
       Text(entry.today)

@@ -191,7 +191,7 @@ String vetCard({
     lines.add('自定义猫粮：${food.brand} ${food.name}$spec');
   }
 
-  lines.add('由肉垫本整理于 ${day(dateOnly(now))}，仅供参考，请遵医嘱。');
+  lines.add('由花爪整理于 ${day(dateOnly(now))}，仅供参考，请遵医嘱。');
   return lines.join('\n');
 }
 

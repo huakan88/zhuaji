@@ -1,4 +1,4 @@
-# 肉垫本（PawPad）
+# 花爪
 
 主仓是 GitHub：[huakan88/zhuaji](https://github.com/huakan88/zhuaji)。克隆：`git clone https://github.com/huakan88/zhuaji.git`，进入目录后执行 `flutter pub get`。
 分支：日常集成在 `develop`，功能用 `feature/*`，修复用 `fix/*`，`main` 只接受合并。
@@ -6,7 +6,9 @@
 
 猫咪喂养与健康记录的本地原型。数据留在手机里，不需要账号和服务器。界面是简体中文。
 
-版本 2.17.0。显示名是肉垫本，英文名 PawPad。包名和 Bundle ID 仍是 `com.maokangji.maokangji`，覆盖安装不会清掉手机里的记录。仓库名仍是 zhuaji。底部四个入口：今天、健康、粮仓、猫咪。今天页顶部左边是全局搜索，右边是相机。粮仓页仍保留本页搜索和相机。除了建档时的猫名、自己添加猫粮时的品牌和名称、今天和粮仓的搜索，其它都用点选或滚轮。浅色是浅绿底和白卡片，深色是深灰绿，默认跟随系统。猫咪页可以改成「跟随系统 / 浅色 / 深色」。照片用大圆角，没有大面积渐变。
+版本 2.18.0。显示名是花爪。包名和 Bundle ID 仍是 `com.maokangji.maokangji`，覆盖安装不会清掉手机里的记录。仓库名仍是 zhuaji。底部四个入口：今天、健康、粮仓、猫咪。今天页顶部左边是全局搜索，右边是相机。粮仓页仍保留本页搜索和相机。除了建档时的猫名、自己添加猫粮时的品牌和名称、今天和粮仓的搜索，其它都用点选或滚轮。浅色是浅绿底和白卡片，深色是深灰绿，默认跟随系统。猫咪页可以改成「跟随系统 / 浅色 / 深色」。照片用大圆角，没有大面积渐变。
+
+2.18 把用户看得到的名字改成花爪。启动图标、启动页、空状态、没有照片时的头像，以及协议页上的标志，都用同一张奶油色绒毛肉垫（粉色肉垫，深绿色底）。包名仍是 `com.maokangji.maokangji`。通知栏小图标仍是白色剪影，避免状态栏显示成彩色方块。
 
 2.17 为国内应用商店补了首次打开的隐私政策和用户协议。同意之前不初始化通知、扫码和联网，也可以只使用基本功能或退出。相机和相册仍在使用时才申请。猫咪页可以打开协议、撤回同意或删除本机数据。发布签名改读 `android/key.properties`，没有密钥时仍用 debug 签名。说明见 [隐私政策](docs/privacy-policy.md)、[用户协议](docs/user-agreement.md)、[权限说明](docs/permissions.md) 和 [发布签名](docs/release-signing.md)。
 
@@ -117,7 +119,7 @@ iOS `Info.plist`：
 
 ## iOS
 
-Bundle ID 是 `com.maokangji.maokangji`，和 Android 的包名一样。主屏幕显示名是「肉垫本」，英文名 PawPad。部署目标 iOS 15.5。工程里没有 `DEVELOPMENT_TEAM`，没有描述文件，也没有把签名身份写死。`Runner.entitlements` 里写了 App Group，但没有挂到编译目标上，避免没有 Team ID 时签名失败。
+Bundle ID 是 `com.maokangji.maokangji`，和 Android 的包名一样。主屏幕显示名是「花爪」。部署目标 iOS 15.5。工程里没有 `DEVELOPMENT_TEAM`，没有描述文件，也没有把签名身份写死。`Runner.entitlements` 里写了 App Group，但没有挂到编译目标上，避免没有 Team ID 时签名失败。
 
 依赖分两路：
 
@@ -241,7 +243,7 @@ cd server && dart test
 - 文字识别依赖印刷清晰程度，保存前需要人工确认。
 - 不是每袋粮都印 GS1 日期码。普通商品条码不能反推日期。
 - 通知不是精确到秒的闹钟，部分国产系统还会限制后台提醒。
-- 通知上的「已完成」会把肉垫本带到前台再记下，不是后台静默完成。
+- 通知上的「已完成」会把花爪带到前台再记下，不是后台静默完成。
 - 蓝牙秤没在真秤上测过。小米秤要先踩一下才会广播；单位是斤或磅时会自动换算成 kg。读数不对请用「手动输入」。
 - 本仓库在 Linux 上验证了 `flutter analyze`、`flutter test` 和 Android 构建。iOS 工程和权限已经补上，但 Linux 编不出安装包，模拟器和真机都还没跑过。
 - iPhone 桌面小组件只有源码，还没出现在桌面上。蓝牙秤不能由 App 打开系统开关，也不能在后台读。

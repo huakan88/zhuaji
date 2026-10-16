@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 
 import '../../core/theme/app_fonts.dart';
 import '../../core/theme/app_tokens.dart';
+import '../../core/widgets/common.dart';
 import 'legal_copy.dart';
 import 'legal_page.dart';
 
@@ -73,9 +74,16 @@ class _ConsentGateState extends State<ConsentGate> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              '欢迎使用肉垫本',
-              style: zhuaji.copyWith(fontSize: 28, fontWeight: FontWeight.w700),
+            const Center(child: BrandMark(size: 120)),
+            const SizedBox(height: 20),
+            Center(
+              child: Text(
+                '欢迎使用花爪',
+                style: zhuaji.copyWith(
+                  fontSize: 28,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
             ),
             const SizedBox(height: 12),
             Text(
