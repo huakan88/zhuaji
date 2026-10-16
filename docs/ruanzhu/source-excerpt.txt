@@ -1,4 +1,4 @@
-肉垫本软件 V2.17.0                        第 1 页
+花爪软件 V2.18.0                        第 1 页
 // lib/app.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -50,7 +50,7 @@ const appShortcuts = [
   (type: 'weight', title: '称体重', icon: 'ic_shortcut_weight', route: '/weight'),
   (type: 'deworm', title: '记驱虫', icon: 'ic_shortcut_deworm', route: '/deworms'),
 
-肉垫本软件 V2.17.0                        第 2 页
+花爪软件 V2.18.0                        第 2 页
   (type: 'scan', title: '扫粮', icon: 'ic_shortcut_scan', route: '/scan'),
 ];
 
@@ -102,7 +102,7 @@ class ZhuajiApp extends StatefulWidget {
   /// Tests that are not about the first-launch choice pass false.
   final bool gateConsent;
 
-肉垫本软件 V2.17.0                        第 3 页
+花爪软件 V2.18.0                        第 3 页
 
   @override
   State<ZhuajiApp> createState() => _ZhuajiAppState();
@@ -154,7 +154,7 @@ class _ZhuajiAppState extends State<ZhuajiApp> {
       GoRoute(
         path: '/bag',
 
-肉垫本软件 V2.17.0                        第 4 页
+花爪软件 V2.18.0                        第 4 页
         builder: (context, state) =>
             BagPage(pantryId: int.parse(state.uri.queryParameters['id']!)),
       ),
@@ -206,7 +206,7 @@ class _ZhuajiAppState extends State<ZhuajiApp> {
       GoRoute(path: '/labs', builder: (_, _) => const LabsPage()),
       GoRoute(
 
-肉垫本软件 V2.17.0                        第 5 页
+花爪软件 V2.18.0                        第 5 页
         path: '/lab',
         builder: (context, state) {
           final query = state.uri.queryParameters;
@@ -258,7 +258,7 @@ class _ZhuajiAppState extends State<ZhuajiApp> {
       _armIntegrations();
     }
 
-肉垫本软件 V2.17.0                        第 6 页
+花爪软件 V2.18.0                        第 6 页
   }
 
   void _armIntegrations() {
@@ -310,13 +310,13 @@ class _ZhuajiAppState extends State<ZhuajiApp> {
   @override
   Widget build(BuildContext context) {
 
-肉垫本软件 V2.17.0                        第 7 页
+花爪软件 V2.18.0                        第 7 页
     return ListenableBuilder(
       listenable: widget.controller,
       builder: (context, _) => AppScope(
         controller: widget.controller,
         child: MaterialApp.router(
-          title: '肉垫本',
+          title: '花爪',
           scaffoldMessengerKey: zhuajiMessenger,
           debugShowCheckedModeBanner: false,
           theme: buildAppTheme(AppColors.light),
@@ -362,7 +362,7 @@ class AppConfig {
 
   factory AppConfig.fromEnvironment() {
 
-肉垫本软件 V2.17.0                        第 8 页
+花爪软件 V2.18.0                        第 8 页
     const envName = String.fromEnvironment('API_ENV', defaultValue: 'local');
     const override = String.fromEnvironment('API_BASE_URL');
     return AppConfig(
@@ -414,7 +414,7 @@ class LaunchPlan {
   final bool syncCloud;
 
 
-肉垫本软件 V2.17.0                        第 9 页
+花爪软件 V2.18.0                        第 9 页
   static const pending = LaunchPlan(
     showConsent: true,
     initNotifications: false,
@@ -466,7 +466,7 @@ String formatClock(int hour, int minute) =>
     '${hour.toString().padLeft(2, '0')}:${minute.toString().padLeft(2, '0')}';
 
 
-肉垫本软件 V2.17.0                        第 10 页
+花爪软件 V2.18.0                        第 10 页
 String sexLabel(CatSex sex) => switch (sex) {
   CatSex.male => '公',
   CatSex.female => '母',
@@ -518,7 +518,7 @@ String ageLabel(DateTime? birthday, DateTime now) {
 String countdownLabel(int days) {
   if (days < 0) return '已过期 ${-days} 天';
 
-肉垫本软件 V2.17.0                        第 11 页
+花爪软件 V2.18.0                        第 11 页
   if (days == 0) return '今天到期';
   return '还剩 $days 天';
 }
@@ -570,7 +570,7 @@ TextStyle zhuajiOf(TextStyle? style) {
     fontFamily: zhuajiFamily,
     fontFamilyFallback: zhuajiFallback,
 
-肉垫本软件 V2.17.0                        第 12 页
+花爪软件 V2.18.0                        第 12 页
     fontWeight: zhuajiWeight(style?.fontWeight),
   );
 }
@@ -622,7 +622,7 @@ ThemeData buildAppTheme(AppColors colors) {
     extensions: [colors],
     scaffoldBackgroundColor: colors.background,
 
-肉垫本软件 V2.17.0                        第 13 页
+花爪软件 V2.18.0                        第 13 页
     canvasColor: colors.background,
     dividerColor: colors.line,
     fontFamily: zhuajiFamily,
@@ -674,7 +674,7 @@ ThemeData buildAppTheme(AppColors colors) {
       filled: true,
       fillColor: colors.field,
 
-肉垫本软件 V2.17.0                        第 14 页
+花爪软件 V2.18.0                        第 14 页
       labelStyle: body,
       hintStyle: body.copyWith(color: colors.muted),
       floatingLabelStyle: body,
@@ -726,7 +726,7 @@ ThemeData buildAppTheme(AppColors colors) {
       backgroundColor: colors.ink,
       contentTextStyle: body.copyWith(color: colors.background),
 
-肉垫本软件 V2.17.0                        第 15 页
+花爪软件 V2.18.0                        第 15 页
       behavior: SnackBarBehavior.floating,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(Radii.m),
@@ -778,7 +778,7 @@ class SoftPageTransition extends PageTransitionsBuilder {
     Widget child,
   ) {
 
-肉垫本软件 V2.17.0                        第 16 页
+花爪软件 V2.18.0                        第 16 页
     final curved = CurvedAnimation(
       parent: animation,
       curve: Curves.easeOutCubic,
@@ -830,7 +830,7 @@ class AppColors extends ThemeExtension<AppColors> {
     required this.background,
     required this.card,
 
-肉垫本软件 V2.17.0                        第 17 页
+花爪软件 V2.18.0                        第 17 页
     required this.ink,
     required this.muted,
     required this.line,
@@ -882,7 +882,7 @@ class AppColors extends ThemeExtension<AppColors> {
   final Color tintLow;
   final Color tintOlive;
 
-肉垫本软件 V2.17.0                        第 18 页
+花爪软件 V2.18.0                        第 18 页
   final Color tintWarm;
   final Color onBrand;
   final Color onDanger;
@@ -934,7 +934,7 @@ class AppColors extends ThemeExtension<AppColors> {
     card: Color(0xFF1C2822),
     ink: Color(0xFFE8F2EC),
 
-肉垫本软件 V2.17.0                        第 19 页
+花爪软件 V2.18.0                        第 19 页
     muted: Color(0xFFB7C7BE),
     line: Color(0xFF314239),
     brand: Color(0xFF8FD4AE),
@@ -986,7 +986,7 @@ class AppColors extends ThemeExtension<AppColors> {
     Color? accent,
     Color? sage,
 
-肉垫本软件 V2.17.0                        第 20 页
+花爪软件 V2.18.0                        第 20 页
     Color? olive,
     Color? warm,
     Color? field,
@@ -1038,7 +1038,7 @@ class AppColors extends ThemeExtension<AppColors> {
       scrimSoft: scrimSoft ?? this.scrimSoft,
       snackAction: snackAction ?? this.snackAction,
 
-肉垫本软件 V2.17.0                        第 21 页
+花爪软件 V2.18.0                        第 21 页
       shadow: shadow ?? this.shadow,
     );
   }
@@ -1090,7 +1090,7 @@ enum ZhuajiThemeMode {
 
   static ZhuajiThemeMode fromStorage(String? raw) {
 
-肉垫本软件 V2.17.0                        第 22 页
+花爪软件 V2.18.0                        第 22 页
     return switch (raw) {
       'light' => ZhuajiThemeMode.light,
       'dark' => ZhuajiThemeMode.dark,
@@ -1142,7 +1142,7 @@ import '../theme/app_fonts.dart';
 import '../theme/app_tokens.dart';
 import '../../domain/care/care_story.dart';
 
-肉垫本软件 V2.17.0                        第 23 页
+花爪软件 V2.18.0                        第 23 页
 import 'common.dart';
 
 /// A short vertical list: icon, title, and the day on the right.
@@ -1194,7 +1194,7 @@ class CareTimeline extends StatelessWidget {
                       style: zhuaji.copyWith(fontSize: 15),
                     ),
 
-肉垫本软件 V2.17.0                        第 24 页
+花爪软件 V2.18.0                        第 24 页
                   ),
                   Text(
                     formatMonthDay(events[i].on),
@@ -1220,7 +1220,6 @@ import '../../domain/dates.dart';
 import '../format.dart';
 import '../theme/app_fonts.dart';
 import '../theme/app_tokens.dart';
-import 'paw_icon.dart';
 
 class AppScope extends InheritedNotifier<Listenable> {
   const AppScope({required this.controller, required super.child, super.key})
@@ -1245,9 +1244,9 @@ class SoftCard extends StatelessWidget {
   });
 
   final Widget child;
-
-肉垫本软件 V2.17.0                        第 25 页
   final EdgeInsets padding;
+
+花爪软件 V2.18.0                        第 25 页
   final Color? color;
   final double radius;
 
@@ -1297,9 +1296,9 @@ class TagChip extends StatelessWidget {
   }
 }
 
-
-肉垫本软件 V2.17.0                        第 26 页
 class SectionHeader extends StatelessWidget {
+
+花爪软件 V2.18.0                        第 26 页
   const SectionHeader({
     required this.title,
     this.action,
@@ -1349,9 +1348,9 @@ class QuietCard extends StatelessWidget {
   final Widget child;
   final EdgeInsets padding;
   final VoidCallback? onTap;
-
-肉垫本软件 V2.17.0                        第 27 页
 
+
+花爪软件 V2.18.0                        第 27 页
   @override
   Widget build(BuildContext context) {
     final card = DecoratedBox(
@@ -1401,9 +1400,9 @@ class HeroCard extends StatelessWidget {
     required this.subtitle,
     this.height = 252,
     this.onTitleTap,
-
-肉垫本软件 V2.17.0                        第 28 页
     super.key,
+
+花爪软件 V2.18.0                        第 28 页
   });
 
   final String? path;
@@ -1453,9 +1452,9 @@ class HeroCard extends StatelessWidget {
                       ),
                     ),
                   ),
-
-肉垫本软件 V2.17.0                        第 29 页
                 ),
+
+花爪软件 V2.18.0                        第 29 页
                 if (subtitle.isNotEmpty) ...[
                   const SizedBox(height: 4),
                   Text(
@@ -1505,9 +1504,9 @@ class IconWell extends StatelessWidget {
       width: 40,
       height: 40,
       decoration: BoxDecoration(
-
-肉垫本软件 V2.17.0                        第 30 页
         color: AppColors.of(context).field,
+
+花爪软件 V2.18.0                        第 30 页
         borderRadius: BorderRadius.circular(Radii.s),
       ),
       child: Icon(icon, size: 22, color: AppColors.of(context).ink),
@@ -1554,11 +1553,12 @@ class _PressableState extends State<Pressable> {
   }
 }
 
-class _EmptyIllustration extends StatelessWidget {
-  const _EmptyIllustration();
+/// Square brand mark. The asset already includes the dark green field.
+class BrandMark extends StatelessWidget {
+  const BrandMark({this.size = 96, super.key});
 
 
-肉垫本软件 V2.17.0                        第 31 页
+花爪软件 V2.18.0                        第 31 页
       if (asked == '1') {
         await _reschedule();
         return;
@@ -1610,7 +1610,7 @@ class _EmptyIllustration extends StatelessWidget {
       debugPrint('删除前取消提醒失败：$error\n$stack');
     }
 
-肉垫本软件 V2.17.0                        第 32 页
+花爪软件 V2.18.0                        第 32 页
     await repo.erasePersonalData();
     await repo.setSetting('demoSeeded', '1');
     privacyChoice = PrivacyChoice.unset;
@@ -1662,7 +1662,7 @@ class _EmptyIllustration extends StatelessWidget {
   }
 
 
-肉垫本软件 V2.17.0                        第 33 页
+花爪软件 V2.18.0                        第 33 页
   Future<void> removeVaccine(int id) async {
     await repo.deleteVaccine(id);
     await _refresh();
@@ -1714,7 +1714,7 @@ class _EmptyIllustration extends StatelessWidget {
     VaccineDraft(
       id: record.id,
 
-肉垫本软件 V2.17.0                        第 34 页
+花爪软件 V2.18.0                        第 34 页
       catId: record.catId,
       name: record.name,
       givenOn: record.givenOn,
@@ -1766,7 +1766,7 @@ class _EmptyIllustration extends StatelessWidget {
     return next;
   }
 
-肉垫本软件 V2.17.0                        第 35 页
+花爪软件 V2.18.0                        第 35 页
 
   Future<void> saveVisit(VetDraft draft) async {
     await repo.upsertVisit(draft);
@@ -1818,7 +1818,7 @@ class _EmptyIllustration extends StatelessWidget {
         id: existing?.id,
         barcode: code,
 
-肉垫本软件 V2.17.0                        第 36 页
+花爪软件 V2.18.0                        第 36 页
         brand: '自制',
         name: card.pantryName.isEmpty ? card.title : card.pantryName,
         spec: card.spec,
@@ -1870,7 +1870,7 @@ class _EmptyIllustration extends StatelessWidget {
   Future<void> removePantry(int id) async {
     await repo.deletePantry(id);
 
-肉垫本软件 V2.17.0                        第 37 页
+花爪软件 V2.18.0                        第 37 页
     await _refresh();
   }
 
@@ -1922,7 +1922,7 @@ class _EmptyIllustration extends StatelessWidget {
         completedOn: dateOnly(now),
         result: result.trim(),
 
-肉垫本软件 V2.17.0                        第 38 页
+花爪软件 V2.18.0                        第 38 页
         nextDue: dateOnly(now).add(Duration(days: intervalDays)),
       ),
     );
@@ -1974,7 +1974,7 @@ class _EmptyIllustration extends StatelessWidget {
   /// One analyte across the active cat's reports, oldest first.
   List<({DateTime date, int reportId, LabValue value})> labTrend(String code) {
 
-肉垫本软件 V2.17.0                        第 39 页
+花爪软件 V2.18.0                        第 39 页
     final points = <({DateTime date, int reportId, LabValue value})>[];
     for (final report in catLabs) {
       for (final value in report.values) {
@@ -2026,7 +2026,7 @@ class _EmptyIllustration extends StatelessWidget {
       ConditionDraft(
         id: found.id,
 
-肉垫本软件 V2.17.0                        第 40 页
+花爪软件 V2.18.0                        第 40 页
         catId: found.catId,
         diseaseId: found.diseaseId,
         diagnosedOn: found.diagnosedOn,
@@ -2078,7 +2078,7 @@ class _EmptyIllustration extends StatelessWidget {
   }
 
 
-肉垫本软件 V2.17.0                        第 41 页
+花爪软件 V2.18.0                        第 41 页
   Future<void> saveOwnerWeight(double kg) async {
     ownerWeightKg = kg;
     await repo.setSetting('ownerWeightKg', kg.toStringAsFixed(2));
@@ -2130,7 +2130,7 @@ class _EmptyIllustration extends StatelessWidget {
     ];
     barcodeMemory.removeWhere((_, value) => value == id);
 
-肉垫本软件 V2.17.0                        第 42 页
+花爪软件 V2.18.0                        第 42 页
     for (final key in forgotten) {
       barcodeRevisions.remove(key);
     }
@@ -2182,7 +2182,7 @@ class _EmptyIllustration extends StatelessWidget {
     if (key.isEmpty || record.offline) return;
     barcodeCatalog[key] = record;
 
-肉垫本软件 V2.17.0                        第 43 页
+花爪软件 V2.18.0                        第 43 页
     await _storeCatalog();
     notifyListeners();
   }
@@ -2234,7 +2234,7 @@ class _EmptyIllustration extends StatelessWidget {
     if (!record.offline && !record.incomplete) {
       barcodeCatalog[key] = record;
 
-肉垫本软件 V2.17.0                        第 44 页
+花爪软件 V2.18.0                        第 44 页
       await _storeCatalog();
     }
     notifyListeners();
@@ -2286,7 +2286,7 @@ class _EmptyIllustration extends StatelessWidget {
         return answer.record;
       }
 
-肉垫本软件 V2.17.0                        第 45 页
+花爪软件 V2.18.0                        第 45 页
       if (answer.status == ShareStatus.miss) {
         final cached = barcodeCatalog[key];
         if (cached != null && cached.source == 'share') {
@@ -2338,7 +2338,7 @@ class _EmptyIllustration extends StatelessWidget {
     barcodeRevisions[key] = revision;
     await _storeRevisions();
 
-肉垫本软件 V2.17.0                        第 46 页
+花爪软件 V2.18.0                        第 46 页
     if (privacyChoice == PrivacyChoice.basic) return;
     if (!shareEnabled) return;
     final consent = await repo.setting('barcodeShareConsent');
@@ -2390,7 +2390,7 @@ class _EmptyIllustration extends StatelessWidget {
     if (answer.status == ShareStatus.failed) {
       await _enqueueShare(record);
 
-肉垫本软件 V2.17.0                        第 47 页
+花爪软件 V2.18.0                        第 47 页
       return;
     }
     await _dropQueued(record.code);
@@ -2442,7 +2442,7 @@ class _EmptyIllustration extends StatelessWidget {
     final config = await _askConfig(client);
     if (!config.ready) return 0;
 
-肉垫本软件 V2.17.0                        第 48 页
+花爪软件 V2.18.0                        第 48 页
     final now = _clock().toUtc();
     final left = <SharePending>[];
     var sent = 0;
@@ -2494,7 +2494,7 @@ class _EmptyIllustration extends StatelessWidget {
 
   Future<void> pushRecentSearch(String query) async {
 
-肉垫本软件 V2.17.0                        第 49 页
+花爪软件 V2.18.0                        第 49 页
     final text = query.trim();
     if (text.isEmpty) return;
     recentSearches.remove(text);
@@ -2546,7 +2546,7 @@ class _EmptyIllustration extends StatelessWidget {
   CatProfile? catById(int id) {
     for (final cat in cats) {
 
-肉垫本软件 V2.17.0                        第 50 页
+花爪软件 V2.18.0                        第 50 页
       if (cat.id == id) return cat;
     }
     return null;
@@ -2598,7 +2598,7 @@ class _EmptyIllustration extends StatelessWidget {
       _ => PrivacyChoice.unset,
     };
 
-肉垫本软件 V2.17.0                        第 51 页
+花爪软件 V2.18.0                        第 51 页
   }
 
   Map<String, BarcodeRevision> _decodeRevisions(String? raw) {
@@ -2650,7 +2650,7 @@ class _EmptyIllustration extends StatelessWidget {
 
   Map<String, int> _decodeMemory(String? raw) {
 
-肉垫本软件 V2.17.0                        第 52 页
+花爪软件 V2.18.0                        第 52 页
     if (raw == null || raw.isEmpty) return {};
     try {
       final decoded = jsonDecode(raw);
@@ -2702,7 +2702,7 @@ class _EmptyIllustration extends StatelessWidget {
 
   Future<void> setThemeMode(ZhuajiThemeMode value) async {
 
-肉垫本软件 V2.17.0                        第 53 页
+花爪软件 V2.18.0                        第 53 页
     themeMode = value;
     await repo.setSetting('themeMode', value.storage);
     await _publishWidget();
@@ -2754,7 +2754,7 @@ class _EmptyIllustration extends StatelessWidget {
         if (record == null || due == null) return;
         await repo.upsertCheckup(
 
-肉垫本软件 V2.17.0                        第 54 页
+花爪软件 V2.18.0                        第 54 页
           CheckupDraft(
             id: record.id,
             catId: record.catId,
@@ -2806,7 +2806,7 @@ class _EmptyIllustration extends StatelessWidget {
         final next = await completeDeworm(record);
         return '${record.product}记下了，下次 ${formatDate(next)}';
 
-肉垫本软件 V2.17.0                        第 55 页
+花爪软件 V2.18.0                        第 55 页
       case AgendaKind.checkup:
         final record = _checkup(item.recordId);
         if (record == null) return '这条已经不在了';
@@ -2858,7 +2858,7 @@ class _EmptyIllustration extends StatelessWidget {
     DateTime? expiryDate,
     DateTime? openedAt,
 
-肉垫本软件 V2.17.0                        第 56 页
+花爪软件 V2.18.0                        第 56 页
     int? afterOpenDays,
     double? dailyGrams,
   }) {
@@ -2910,7 +2910,7 @@ class _EmptyIllustration extends StatelessWidget {
   }
 
 
-肉垫本软件 V2.17.0                        第 57 页
+花爪软件 V2.18.0                        第 57 页
   Future<void> _storeSnooze() async {
     await repo.setSetting(
       'stockSnooze',
@@ -2944,7 +2944,7 @@ class _EmptyIllustration extends StatelessWidget {
         ? homeWidgetCopy(now: now, items: agenda())
         : const HomeWidgetCopy(
             todayLines: ['小组件已关闭'],
-            nextLine: '打开肉垫本查看',
+            nextLine: '打开花爪查看',
             route: '/calendar',
           );
     await WidgetBridge.publish(copy.toJson(appearance: themeMode.storage));
@@ -2962,7 +2962,7 @@ class _EmptyIllustration extends StatelessWidget {
     final held = stockSnooze[entry.item.id];
     final snoozed = held != null && dateOnly(held).isAfter(dateOnly(now));
 
-肉垫本软件 V2.17.0                        第 58 页
+花爪软件 V2.18.0                        第 58 页
     return StockInput(
       id: entry.item.id,
       productName: entry.product.displayName,
@@ -3014,7 +3014,7 @@ class _EmptyIllustration extends StatelessWidget {
       debugPrint('提醒同步失败：$error\n$stack');
     }
 
-肉垫本软件 V2.17.0                        第 59 页
+花爪软件 V2.18.0                        第 59 页
   }
 
   List<PlannedNotification> _plan() {
@@ -3066,7 +3066,7 @@ class _EmptyIllustration extends StatelessWidget {
               id: item.id,
               catName: _name(item.catId),
 
-肉垫本软件 V2.17.0                        第 60 页
+花爪软件 V2.18.0                        第 60 页
               label: checkupById(item.itemId)?.name ?? '体检',
               dueDate: item.nextDue!,
               recheck: false,
