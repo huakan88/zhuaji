@@ -1,0 +1,3119 @@
+肉垫本软件 V2.17.0                        第 1 页
+// lib/app.dart
+import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:go_router/go_router.dart';
+import 'package:quick_actions/quick_actions.dart';
+
+import 'core/theme/app_theme.dart';
+import 'core/theme/app_tokens.dart';
+import 'core/widgets/common.dart';
+import 'features/cats/cat_form_page.dart';
+import 'features/cats/cats_page.dart';
+import 'features/cats/privacy_page.dart';
+import 'features/legal/consent_gate.dart';
+import 'features/legal/legal_copy.dart';
+import 'features/legal/legal_page.dart';
+import 'features/health/checkups_page.dart';
+import 'features/health/lab_form_page.dart';
+import 'features/health/labs_page.dart';
+import 'features/health/deworms_page.dart';
+import 'features/health/disease_page.dart';
+import 'features/health/health_page.dart';
+import 'features/health/scale_page.dart';
+import 'features/health/sticker_page.dart';
+import 'features/health/vaccines_page.dart';
+import 'features/health/visits_page.dart';
+import 'features/health/weight_page.dart';
+import 'domain/parsing/vaccine_sticker_parser.dart';
+import 'features/home/calendar_page.dart';
+import 'features/home/home_page.dart';
+import 'services/widget_bridge.dart';
+import 'features/pantry/bag_page.dart';
+import 'features/pantry/catalog_page.dart';
+import 'features/pantry/confirm_page.dart';
+import 'features/pantry/lookup_page.dart';
+import 'features/pantry/food_form_page.dart';
+import 'features/pantry/pantry_page.dart';
+import 'features/pantry/recipes_page.dart';
+import 'features/pantry/scan_page.dart';
+import 'features/shell/app_shell.dart';
+import 'services/scale_service.dart';
+import 'domain/models.dart';
+import 'state/app_controller.dart';
+
+/// Lets work that happens outside a page (notification taps) show a message.
+final zhuajiMessenger = GlobalKey<ScaffoldMessengerState>();
+
+/// Long-press launcher shortcuts and the page each one opens.
+const appShortcuts = [
+  (type: 'weight', title: '称体重', icon: 'ic_shortcut_weight', route: '/weight'),
+  (type: 'deworm', title: '记驱虫', icon: 'ic_shortcut_deworm', route: '/deworms'),
+
+肉垫本软件 V2.17.0                        第 2 页
+  (type: 'scan', title: '扫粮', icon: 'ic_shortcut_scan', route: '/scan'),
+];
+
+String? shortcutRoute(String type) {
+  for (final item in appShortcuts) {
+    if (item.type == type) return item.route;
+  }
+  return null;
+}
+
+/// True when a shortcut, notification payload or `zhuaji://` route should
+/// open the camera. The path may arrive as `/scan` or nested in `route`.
+bool routeSelectsScan(String route) {
+  final trimmed = route.trim();
+  final uri = Uri.tryParse(trimmed);
+  if (uri == null) return trimmed == '/scan';
+  if (uri.path == '/scan') return true;
+  final nested = uri.queryParameters['route'];
+  if (nested == null || nested == trimmed) return false;
+  return routeSelectsScan(nested);
+}
+
+/// External entries. A scan target selects 今天 first, then the camera, so
+/// closing the camera lands on the page that holds the scan button.
+void openAppRoute(GoRouter router, String route) {
+  if (routeSelectsScan(route)) {
+    router.go('/home');
+    router.push('/scan');
+    return;
+  }
+  router.push(route);
+}
+
+class ZhuajiApp extends StatefulWidget {
+  const ZhuajiApp({
+    required this.controller,
+    this.initialLocation = '/home',
+    this.scaleSource,
+    this.gateConsent = true,
+    super.key,
+  });
+
+  final AppController controller;
+  final String initialLocation;
+
+  /// Defaults to the real Bluetooth scale; tests pass a fake.
+  final ScaleSource Function()? scaleSource;
+
+  /// Tests that are not about the first-launch choice pass false.
+  final bool gateConsent;
+
+肉垫本软件 V2.17.0                        第 3 页
+
+  @override
+  State<ZhuajiApp> createState() => _ZhuajiAppState();
+}
+
+class _ZhuajiAppState extends State<ZhuajiApp> {
+  late final GoRouter _router = GoRouter(
+    initialLocation: widget.initialLocation,
+    routes: [
+      StatefulShellRoute.indexedStack(
+        builder: (context, state, shell) => AppShell(shell: shell),
+        branches: [
+          StatefulShellBranch(
+            routes: [
+              GoRoute(path: '/home', builder: (_, _) => const HomePage()),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(path: '/health', builder: (_, _) => const HealthPage()),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(path: '/pantry', builder: (_, _) => const PantryPage()),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(path: '/cats', builder: (_, _) => const CatsPage()),
+            ],
+          ),
+        ],
+      ),
+      GoRoute(path: '/scan', builder: (_, _) => const ScanPage()),
+      GoRoute(
+        path: '/lookup',
+        builder: (context, state) =>
+            LookupPage(code: state.uri.queryParameters['code'] ?? ''),
+      ),
+      GoRoute(
+        path: '/confirm',
+        builder: (context, state) => ConfirmPage(
+          code: state.uri.queryParameters['code'] ?? '',
+          productId: int.tryParse(state.uri.queryParameters['product'] ?? ''),
+          blank: state.uri.queryParameters['blank'] == '1',
+        ),
+      ),
+      GoRoute(
+        path: '/bag',
+
+肉垫本软件 V2.17.0                        第 4 页
+        builder: (context, state) =>
+            BagPage(pantryId: int.parse(state.uri.queryParameters['id']!)),
+      ),
+      GoRoute(
+        path: '/cat-form',
+        builder: (context, state) => CatFormPage(
+          catId: int.tryParse(state.uri.queryParameters['id'] ?? ''),
+        ),
+      ),
+      GoRoute(path: '/weight', builder: (_, _) => const WeightPage()),
+      GoRoute(
+        path: '/scale',
+        builder: (_, _) => ScalePage(
+          source: (widget.scaleSource ?? BleScaleSource.new).call(),
+        ),
+      ),
+      GoRoute(path: '/privacy', builder: (_, _) => const PrivacyPage()),
+      GoRoute(
+        path: '/agreement',
+        builder: (_, _) =>
+            const LegalPage(title: '用户协议', sections: agreementSections),
+      ),
+      GoRoute(
+        path: '/permissions',
+        builder: (_, _) =>
+            const LegalPage(title: '权限说明', sections: permissionSections),
+      ),
+      GoRoute(path: '/vaccines', builder: (_, _) => const VaccinesPage()),
+      GoRoute(path: '/calendar', builder: (_, _) => const CalendarPage()),
+      GoRoute(
+        path: '/sticker',
+        builder: (context, state) {
+          final demo = state.uri.queryParameters['demo'] == '1';
+          return StickerPage(
+            initial: demo
+                ? VaccineStickerRead(
+                    name: '猫三联',
+                    knownName: true,
+                    batch: 'A12B-3391',
+                    givenOn: DateTime(2026, 3, 12),
+                  )
+                : null,
+          );
+        },
+      ),
+      GoRoute(path: '/deworms', builder: (_, _) => const DewormsPage()),
+      GoRoute(path: '/visits', builder: (_, _) => const VisitsPage()),
+      GoRoute(path: '/checkups', builder: (_, _) => const CheckupsPage()),
+      GoRoute(path: '/labs', builder: (_, _) => const LabsPage()),
+      GoRoute(
+
+肉垫本软件 V2.17.0                        第 5 页
+        path: '/lab',
+        builder: (context, state) {
+          final query = state.uri.queryParameters;
+          final kindName = query['kind'];
+          return LabFormPage(
+            reportId: int.tryParse(query['id'] ?? ''),
+            kind: kindName == null || kindName.isEmpty
+                ? null
+                : parseLabKind(kindName),
+            checkupItemId: query['checkup'],
+          );
+        },
+      ),
+      GoRoute(path: '/catalog', builder: (_, _) => const CatalogPage()),
+      GoRoute(path: '/recipes', builder: (_, _) => const RecipesPage()),
+      GoRoute(
+        path: '/recipe',
+        builder: (context, state) =>
+            RecipeDetailPage(cardId: state.uri.queryParameters['id'] ?? ''),
+      ),
+      GoRoute(
+        path: '/food',
+        builder: (context, state) {
+          final query = state.uri.queryParameters;
+          return FoodFormPage(
+            productId: int.tryParse(query['id'] ?? ''),
+            barcode: query['code'] ?? '',
+            openCamera: query['shot'] == '1',
+            addBag: query['bag'] == '1',
+          );
+        },
+      ),
+      GoRoute(path: '/diseases', builder: (_, _) => const DiseaseLibraryPage()),
+      GoRoute(
+        path: '/disease',
+        builder: (context, state) =>
+            DiseaseDetailPage(diseaseId: state.uri.queryParameters['id'] ?? ''),
+      ),
+    ],
+  );
+
+  var _armed = false;
+
+  @override
+  void initState() {
+    super.initState();
+    final choice = widget.controller.privacyChoice;
+    if (!widget.gateConsent || choice != PrivacyChoice.unset) {
+      _armIntegrations();
+    }
+
+肉垫本软件 V2.17.0                        第 6 页
+  }
+
+  void _armIntegrations() {
+    if (_armed) return;
+    _armed = true;
+    _shortcuts();
+    WidgetBridge.listen((route) => openAppRoute(_router, route));
+    _openWidgetRoute();
+  }
+
+  Future<void> _acceptConsent() async {
+    await widget.controller.acceptPrivacy();
+    await widget.controller.init();
+    await widget.controller.enableNotifications();
+    _armIntegrations();
+  }
+
+  Future<void> _basicConsent() async {
+    await widget.controller.useBasicMode();
+    await widget.controller.init();
+    _armIntegrations();
+  }
+
+  Future<void> _openWidgetRoute() async {
+    final route = await WidgetBridge.takeRoute();
+    if (route != null) openAppRoute(_router, route);
+  }
+
+  Future<void> _shortcuts() async {
+    const actions = QuickActions();
+    try {
+      await actions.initialize((type) {
+        final route = shortcutRoute(type);
+        if (route != null) openAppRoute(_router, route);
+      });
+      await actions.setShortcutItems([
+        for (final item in appShortcuts)
+          ShortcutItem(
+            type: item.type,
+            localizedTitle: item.title,
+            icon: item.icon,
+          ),
+      ]);
+    } catch (error) {
+      debugPrint('长按快捷方式没有装上：$error');
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+
+肉垫本软件 V2.17.0                        第 7 页
+    return ListenableBuilder(
+      listenable: widget.controller,
+      builder: (context, _) => AppScope(
+        controller: widget.controller,
+        child: MaterialApp.router(
+          title: '肉垫本',
+          scaffoldMessengerKey: zhuajiMessenger,
+          debugShowCheckedModeBanner: false,
+          theme: buildAppTheme(AppColors.light),
+          darkTheme: buildAppTheme(AppColors.dark),
+          themeMode: widget.controller.themeMode.material,
+          locale: const Locale('zh', 'CN'),
+          supportedLocales: const [Locale('zh', 'CN'), Locale('en')],
+          localizationsDelegates: const [
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+          routerConfig: _router,
+          builder: (context, child) {
+            final waiting =
+                widget.gateConsent &&
+                widget.controller.privacyChoice == PrivacyChoice.unset;
+            return RepaintBoundary(
+              key: const Key('shot'),
+              child: waiting
+                  ? ConsentGate(
+                      onAccept: _acceptConsent,
+                      onBasic: _basicConsent,
+                    )
+                  : (child ?? const SizedBox.shrink()),
+            );
+          },
+        ),
+      ),
+    );
+  }
+}
+
+// lib/core/config/app_config.dart
+enum AppEnv { local, staging, prod }
+
+/// API base URL for the current build.
+///
+/// Switch with `--dart-define=API_ENV=local|staging|prod`.
+/// A full override wins: `--dart-define=API_BASE_URL=http://10.0.2.2:8094`.
+class AppConfig {
+  const AppConfig({this.env = AppEnv.local, this.baseUrlOverride});
+
+  factory AppConfig.fromEnvironment() {
+
+肉垫本软件 V2.17.0                        第 8 页
+    const envName = String.fromEnvironment('API_ENV', defaultValue: 'local');
+    const override = String.fromEnvironment('API_BASE_URL');
+    return AppConfig(
+      env: parseAppEnv(envName),
+      baseUrlOverride: override.isEmpty ? null : override,
+    );
+  }
+
+  final AppEnv env;
+  final String? baseUrlOverride;
+
+  String get apiBaseUrl {
+    final override = baseUrlOverride;
+    if (override != null && override.isNotEmpty) {
+      return override.endsWith('/')
+          ? override.substring(0, override.length - 1)
+          : override;
+    }
+    return switch (env) {
+      AppEnv.local => 'http://10.0.2.2:8094',
+      AppEnv.staging => 'https://staging-api.zhuaji.local',
+      AppEnv.prod => 'https://api.zhuaji.local',
+    };
+  }
+}
+
+AppEnv parseAppEnv(String raw) {
+  return switch (raw) {
+    'staging' => AppEnv.staging,
+    'prod' => AppEnv.prod,
+    _ => AppEnv.local,
+  };
+}
+
+// lib/core/consent_launch.dart
+/// What the process may do before the person has chosen.
+///
+/// Reading the saved choice is local. Notification plugins, cloud sync and
+/// barcode uploads wait until the stored value is accept.
+class LaunchPlan {
+  const LaunchPlan({
+    required this.showConsent,
+    required this.initNotifications,
+    required this.syncCloud,
+  });
+
+  final bool showConsent;
+  final bool initNotifications;
+  final bool syncCloud;
+
+
+肉垫本软件 V2.17.0                        第 9 页
+  static const pending = LaunchPlan(
+    showConsent: true,
+    initNotifications: false,
+    syncCloud: false,
+  );
+
+  static const basic = LaunchPlan(
+    showConsent: false,
+    initNotifications: false,
+    syncCloud: false,
+  );
+
+  static const accepted = LaunchPlan(
+    showConsent: false,
+    initNotifications: true,
+    syncCloud: true,
+  );
+}
+
+/// `1` is accept, `0` is basic mode, anything else still needs a choice.
+LaunchPlan planLaunch(String? privacyConsent) {
+  return switch (privacyConsent) {
+    '1' => LaunchPlan.accepted,
+    '0' => LaunchPlan.basic,
+    _ => LaunchPlan.pending,
+  };
+}
+
+// lib/core/copy.dart
+const kDisclaimer =
+    '疫苗、驱虫、体检和疾病养护提醒只供家庭记录参考，不能替代执业兽医的诊断、处方或个体化建议。仅供参考，请遵医嘱。猫咪如果呕吐、拒食、精神差或呼吸异常，请及时就医。';
+
+const kGuidelineSources =
+    '体检频率和疾病养护依据 AAHA/AAFP《猫生命阶段指南》（2021）、WSAVA 犬猫疫苗指南、ISFM 猫科共识，以及 IRIS 慢性肾病分期。各地法规和每只猫的病情不同，请以执业兽医的方案为准。';
+
+const kBarcodeNote = '条码里没有日期。扫到这袋粮之后，再拍包装上的日期，或者用滚轮点。';
+
+const kSampleFoodNote = '没核实的条码、热量和开封天数先空着，以你手里的包装为准。';
+
+// lib/core/format.dart
+import '../domain/dates.dart';
+import '../domain/models.dart';
+
+String formatDate(DateTime date) => '${date.year}年${date.month}月${date.day}日';
+
+String formatMonthDay(DateTime date) => '${date.month}/${date.day}';
+
+String formatClock(int hour, int minute) =>
+    '${hour.toString().padLeft(2, '0')}:${minute.toString().padLeft(2, '0')}';
+
+
+肉垫本软件 V2.17.0                        第 10 页
+String sexLabel(CatSex sex) => switch (sex) {
+  CatSex.male => '公',
+  CatSex.female => '母',
+  CatSex.unknown => '未知',
+};
+
+String formLabel(FoodForm form) => switch (form) {
+  FoodForm.dry => '干粮',
+  FoodForm.wet => '湿粮',
+  FoodForm.can => '主食罐',
+  FoodForm.freezeDried => '冻干',
+  FoodForm.treat => '零食',
+};
+
+String dewormLabel(DewormKind kind) =>
+    kind == DewormKind.internal ? '体内驱虫' : '体外驱虫';
+
+String slotLabel(MealSlot slot) => switch (slot) {
+  MealSlot.breakfast => '早餐',
+  MealSlot.dinner => '晚餐',
+  MealSlot.extra => '加餐',
+};
+
+String sourceLabel(DateSource source) => switch (source) {
+  DateSource.gs1 => '包装码',
+  DateSource.ocr => '拍照认的',
+  DateSource.manual => '自己点的',
+  DateSource.none => '还没记',
+};
+
+String greetingFor(DateTime now) {
+  if (now.hour < 11) return '上午好';
+  if (now.hour < 18) return '下午好';
+  return '晚上好';
+}
+
+String ageLabel(DateTime? birthday, DateTime now) {
+  if (birthday == null) return '年龄未填';
+  var months = (now.year - birthday.year) * 12 + now.month - birthday.month;
+  if (now.day < birthday.day) months -= 1;
+  if (months < 1) return '未满 1 个月';
+  if (months < 12) return '$months 个月';
+  final years = months ~/ 12;
+  final rest = months % 12;
+  if (rest == 0) return '$years 岁';
+  return '$years 岁 $rest 个月';
+}
+
+String countdownLabel(int days) {
+  if (days < 0) return '已过期 ${-days} 天';
+
+肉垫本软件 V2.17.0                        第 11 页
+  if (days == 0) return '今天到期';
+  return '还剩 $days 天';
+}
+
+String countdownOf(DateTime date, DateTime now) =>
+    countdownLabel(calendarDaysUntil(now, date));
+
+bool isSameDay(DateTime a, DateTime b) =>
+    a.year == b.year && a.month == b.month && a.day == b.day;
+
+bool isKitten(DateTime? birthday, DateTime now) {
+  if (birthday == null) return false;
+  return now.difference(birthday).inDays < 365;
+}
+
+// lib/core/haptics.dart
+import 'package:flutter/services.dart';
+
+/// Light tap. Tests have no vibrator, so a missing plugin is ignored.
+void pawTap() {
+  HapticFeedback.selectionClick().then<void>(
+    (void _) {},
+    onError: (Object _, StackTrace _) {},
+  );
+}
+
+// lib/core/theme/app_fonts.dart
+import 'package:flutter/material.dart';
+
+/// Static Noto Sans SC. The variable font's default instance is Thin, and
+/// those hairline strokes paint as empty boxes. Every requested weight is
+/// mapped onto the Regular or Bold file in pubspec so nothing falls through
+/// to a system font that has no Chinese glyphs.
+const zhuajiFamily = 'NotoSansSC';
+const zhuajiFallback = <String>[zhuajiFamily];
+
+const zhuaji = TextStyle(
+  fontFamily: zhuajiFamily,
+  fontFamilyFallback: zhuajiFallback,
+);
+
+FontWeight zhuajiWeight(FontWeight? weight) {
+  final value = (weight ?? FontWeight.w400).value;
+  return value >= FontWeight.w600.value ? FontWeight.w700 : FontWeight.w400;
+}
+
+TextStyle zhuajiOf(TextStyle? style) {
+  return (style ?? const TextStyle()).copyWith(
+    fontFamily: zhuajiFamily,
+    fontFamilyFallback: zhuajiFallback,
+
+肉垫本软件 V2.17.0                        第 12 页
+    fontWeight: zhuajiWeight(style?.fontWeight),
+  );
+}
+
+// lib/core/theme/app_theme.dart
+import 'package:flutter/material.dart';
+
+import 'app_fonts.dart';
+import 'app_tokens.dart';
+
+ThemeData buildAppTheme(AppColors colors) {
+  final scheme =
+      ColorScheme.fromSeed(
+        seedColor: colors.brand,
+        brightness: colors.brightness,
+      ).copyWith(
+        primary: colors.brand,
+        onPrimary: colors.onBrand,
+        secondary: colors.accent,
+        onSecondary: colors.onBrand,
+        surface: colors.card,
+        onSurface: colors.ink,
+        error: colors.danger,
+        onError: colors.onDanger,
+      );
+  final typography = Typography.material2021(platform: TargetPlatform.android);
+  final faces = colors.brightness == Brightness.dark
+      ? typography.white
+      : typography.black;
+  final text = faces.apply(
+    fontFamily: zhuajiFamily,
+    fontFamilyFallback: zhuajiFallback,
+    bodyColor: colors.ink,
+    displayColor: colors.ink,
+  );
+  final primaryText =
+      (colors.brightness == Brightness.dark
+              ? typography.black
+              : typography.white)
+          .apply(fontFamily: zhuajiFamily, fontFamilyFallback: zhuajiFallback);
+  final body = zhuajiOf(text.bodyMedium);
+  final title = zhuajiOf(text.titleLarge)
+      .copyWith(fontWeight: FontWeight.w700, fontSize: 22);
+  final label = zhuaji.copyWith(fontWeight: FontWeight.w700, fontSize: 15);
+  return ThemeData(
+    useMaterial3: true,
+    brightness: colors.brightness,
+    colorScheme: scheme,
+    extensions: [colors],
+    scaffoldBackgroundColor: colors.background,
+
+肉垫本软件 V2.17.0                        第 13 页
+    canvasColor: colors.background,
+    dividerColor: colors.line,
+    fontFamily: zhuajiFamily,
+    fontFamilyFallback: zhuajiFallback,
+    textTheme: _faces(text),
+    primaryTextTheme: _faces(primaryText),
+    splashFactory: InkRipple.splashFactory,
+    appBarTheme: AppBarTheme(
+      backgroundColor: colors.background,
+      foregroundColor: colors.ink,
+      surfaceTintColor: AppColors.clear,
+      elevation: 0,
+      scrolledUnderElevation: 0,
+      centerTitle: false,
+      titleTextStyle: title,
+      toolbarTextStyle: body,
+      toolbarHeight: 56,
+    ),
+    dividerTheme: DividerThemeData(color: colors.line, thickness: 1, space: 1),
+    progressIndicatorTheme: ProgressIndicatorThemeData(color: colors.brandDeep),
+    filledButtonTheme: FilledButtonThemeData(
+      style: FilledButton.styleFrom(
+        backgroundColor: colors.brand,
+        foregroundColor: colors.onBrand,
+        minimumSize: const Size(0, 48),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+        shape: const StadiumBorder(),
+        textStyle: label.copyWith(color: colors.onBrand),
+        elevation: 0,
+      ),
+    ),
+    outlinedButtonTheme: OutlinedButtonThemeData(
+      style: OutlinedButton.styleFrom(
+        foregroundColor: colors.ink,
+        minimumSize: const Size(0, 48),
+        side: BorderSide(color: colors.line, width: 1.2),
+        shape: const StadiumBorder(),
+        textStyle: label,
+      ),
+    ),
+    textButtonTheme: TextButtonThemeData(
+      style: TextButton.styleFrom(
+        foregroundColor: colors.olive,
+        minimumSize: const Size(48, 48),
+        textStyle: label,
+      ),
+    ),
+    inputDecorationTheme: InputDecorationTheme(
+      filled: true,
+      fillColor: colors.field,
+
+肉垫本软件 V2.17.0                        第 14 页
+      labelStyle: body,
+      hintStyle: body.copyWith(color: colors.muted),
+      floatingLabelStyle: body,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(Radii.m),
+        borderSide: BorderSide.none,
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(Radii.m),
+        borderSide: BorderSide.none,
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(Radii.m),
+        borderSide: BorderSide(color: colors.brandDeep, width: 1.4),
+      ),
+    ),
+    listTileTheme: ListTileThemeData(
+      titleTextStyle: zhuaji.copyWith(
+        fontWeight: FontWeight.w700,
+        fontSize: 16,
+        color: colors.ink,
+      ),
+      subtitleTextStyle: body.copyWith(color: colors.muted),
+    ),
+    chipTheme: ChipThemeData(
+      backgroundColor: colors.card,
+      selectedColor: colors.brandTint,
+      disabledColor: colors.field,
+      labelStyle: zhuaji.copyWith(fontSize: 13, color: colors.ink),
+      secondaryLabelStyle: zhuaji.copyWith(fontSize: 13, color: colors.ink),
+      showCheckmark: false,
+      side: WidgetStateBorderSide.resolveWith((states) {
+        final selected = states.contains(WidgetState.selected);
+        return BorderSide(color: selected ? colors.brandDeep : colors.line);
+      }),
+      shape: const StadiumBorder(),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+    ),
+    dialogTheme: DialogThemeData(
+      backgroundColor: colors.card,
+      titleTextStyle: title.copyWith(fontSize: 18),
+      contentTextStyle: body,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(Radii.xl),
+      ),
+    ),
+    snackBarTheme: SnackBarThemeData(
+      backgroundColor: colors.ink,
+      contentTextStyle: body.copyWith(color: colors.background),
+
+肉垫本软件 V2.17.0                        第 15 页
+      behavior: SnackBarBehavior.floating,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(Radii.m),
+      ),
+    ),
+    navigationBarTheme: NavigationBarThemeData(
+      height: 68,
+      backgroundColor: colors.card,
+      indicatorColor: colors.brandTint,
+      elevation: 0,
+      labelTextStyle: WidgetStateProperty.resolveWith((states) {
+        final selected = states.contains(WidgetState.selected);
+        return zhuaji.copyWith(
+          fontSize: 12,
+          fontWeight: selected ? FontWeight.w700 : FontWeight.w400,
+          color: selected ? colors.brandDeep : colors.muted,
+        );
+      }),
+      iconTheme: WidgetStateProperty.resolveWith((states) {
+        final selected = states.contains(WidgetState.selected);
+        return IconThemeData(
+          color: selected ? colors.brandDeep : colors.muted,
+          size: 24,
+        );
+      }),
+    ),
+    pageTransitionsTheme: const PageTransitionsTheme(
+      builders: {
+        TargetPlatform.android: SoftPageTransition(),
+        TargetPlatform.iOS: SoftPageTransition(),
+        TargetPlatform.linux: SoftPageTransition(),
+        TargetPlatform.macOS: SoftPageTransition(),
+        TargetPlatform.windows: SoftPageTransition(),
+        TargetPlatform.fuchsia: SoftPageTransition(),
+      },
+    ),
+  );
+}
+
+class SoftPageTransition extends PageTransitionsBuilder {
+  const SoftPageTransition();
+
+  @override
+  Widget buildTransitions<T>(
+    PageRoute<T> route,
+    BuildContext context,
+    Animation<double> animation,
+    Animation<double> secondaryAnimation,
+    Widget child,
+  ) {
+
+肉垫本软件 V2.17.0                        第 16 页
+    final curved = CurvedAnimation(
+      parent: animation,
+      curve: Curves.easeOutCubic,
+    );
+    return FadeTransition(
+      opacity: curved,
+      child: SlideTransition(
+        position: Tween<Offset>(
+          begin: const Offset(0, 0.04),
+          end: Offset.zero,
+        ).animate(curved),
+        child: child,
+      ),
+    );
+  }
+}
+
+TextTheme _faces(TextTheme theme) {
+  TextStyle? face(TextStyle? style) => style == null ? null : zhuajiOf(style);
+  return theme.copyWith(
+    displayLarge: face(theme.displayLarge),
+    displayMedium: face(theme.displayMedium),
+    displaySmall: face(theme.displaySmall),
+    headlineLarge: face(theme.headlineLarge),
+    headlineMedium: face(theme.headlineMedium),
+    headlineSmall: face(theme.headlineSmall),
+    titleLarge: face(theme.titleLarge),
+    titleMedium: face(theme.titleMedium),
+    titleSmall: face(theme.titleSmall),
+    bodyLarge: face(theme.bodyLarge),
+    bodyMedium: face(theme.bodyMedium),
+    bodySmall: face(theme.bodySmall),
+    labelLarge: face(theme.labelLarge),
+    labelMedium: face(theme.labelMedium),
+    labelSmall: face(theme.labelSmall),
+  );
+}
+
+// lib/core/theme/app_tokens.dart
+import 'package:flutter/material.dart';
+
+/// Light green and white by day, deep gray-green at night.
+///
+/// Hex values live only in this file. Pages read them with [AppColors.of].
+@immutable
+class AppColors extends ThemeExtension<AppColors> {
+  const AppColors({
+    required this.brightness,
+    required this.background,
+    required this.card,
+
+肉垫本软件 V2.17.0                        第 17 页
+    required this.ink,
+    required this.muted,
+    required this.line,
+    required this.brand,
+    required this.brandDeep,
+    required this.brandTint,
+    required this.accent,
+    required this.sage,
+    required this.olive,
+    required this.warm,
+    required this.field,
+    required this.danger,
+    required this.warning,
+    required this.low,
+    required this.tintDanger,
+    required this.tintWarning,
+    required this.tintLow,
+    required this.tintOlive,
+    required this.tintWarm,
+    required this.onBrand,
+    required this.onDanger,
+    required this.scrim,
+    required this.onScrim,
+    required this.onScrimMuted,
+    required this.scrimSoft,
+    required this.snackAction,
+    required this.shadow,
+  });
+
+  final Brightness brightness;
+  final Color background;
+  final Color card;
+  final Color ink;
+  final Color muted;
+  final Color line;
+  final Color brand;
+  final Color brandDeep;
+  final Color brandTint;
+  final Color accent;
+  final Color sage;
+  final Color olive;
+  final Color warm;
+  final Color field;
+  final Color danger;
+  final Color warning;
+  final Color low;
+  final Color tintDanger;
+  final Color tintWarning;
+  final Color tintLow;
+  final Color tintOlive;
+
+肉垫本软件 V2.17.0                        第 18 页
+  final Color tintWarm;
+  final Color onBrand;
+  final Color onDanger;
+  final Color scrim;
+  final Color onScrim;
+  final Color onScrimMuted;
+  final Color scrimSoft;
+  final Color snackAction;
+  final Color shadow;
+
+  static const clear = Color(0x00000000);
+
+  static const light = AppColors(
+    brightness: Brightness.light,
+    background: Color(0xFFF4F7F3),
+    card: Color(0xFFFFFFFF),
+    ink: Color(0xFF1A2A22),
+    muted: Color(0xFF3E5348),
+    line: Color(0xFFD5E3D8),
+    brand: Color(0xFF2F7D57),
+    brandDeep: Color(0xFF1B5C3C),
+    brandTint: Color(0xFFE5F4EB),
+    accent: Color(0xFF3E9A6A),
+    sage: Color(0xFF7FA08C),
+    olive: Color(0xFF2F6A45),
+    warm: Color(0xFF8A5A28),
+    field: Color(0xFFEAF3EC),
+    danger: Color(0xFFB42318),
+    warning: Color(0xFF8A4B08),
+    low: Color(0xFF155E80),
+    tintDanger: Color(0xFFF8E4E1),
+    tintWarning: Color(0xFFF8F1E4),
+    tintLow: Color(0xFFE4F2F8),
+    tintOlive: Color(0xFFE7F3EB),
+    tintWarm: Color(0xFFF6F0E6),
+    onBrand: Color(0xFFFFFFFF),
+    onDanger: Color(0xFFFFFFFF),
+    scrim: Color(0xFF121A16),
+    onScrim: Color(0xFFF7FBF8),
+    onScrimMuted: Color(0xFFC5D0C8),
+    scrimSoft: Color(0x8C121A16),
+    snackAction: Color(0xFFD8F3E4),
+    shadow: Color(0x141A2A22),
+  );
+
+  static const dark = AppColors(
+    brightness: Brightness.dark,
+    background: Color(0xFF121A16),
+    card: Color(0xFF1C2822),
+    ink: Color(0xFFE8F2EC),
+
+肉垫本软件 V2.17.0                        第 19 页
+    muted: Color(0xFFB7C7BE),
+    line: Color(0xFF314239),
+    brand: Color(0xFF8FD4AE),
+    brandDeep: Color(0xFFC6EBD4),
+    brandTint: Color(0xFF24382C),
+    accent: Color(0xFF7DCEA0),
+    sage: Color(0xFF8EAE9A),
+    olive: Color(0xFFA9D4B8),
+    warm: Color(0xFFE4C7A2),
+    field: Color(0xFF24302A),
+    danger: Color(0xFFFFB4A8),
+    warning: Color(0xFFF0C27A),
+    low: Color(0xFF9AD4EE),
+    tintDanger: Color(0xFF3A2422),
+    tintWarning: Color(0xFF3A3020),
+    tintLow: Color(0xFF1A2C36),
+    tintOlive: Color(0xFF1E3328),
+    tintWarm: Color(0xFF2C241C),
+    onBrand: Color(0xFF102018),
+    onDanger: Color(0xFF2A1210),
+    scrim: Color(0xFF121A16),
+    onScrim: Color(0xFFF7FBF8),
+    onScrimMuted: Color(0xFFC5D0C8),
+    scrimSoft: Color(0x8C121A16),
+    snackAction: Color(0xFF1B5C3C),
+    shadow: Color(0x66000000),
+  );
+
+  static AppColors of(BuildContext context) {
+    return Theme.of(context).extension<AppColors>() ??
+        (Theme.of(context).brightness == Brightness.dark ? dark : light);
+  }
+
+  List<BoxShadow> get softShadow => [
+    BoxShadow(color: shadow, blurRadius: 12, offset: const Offset(0, 4)),
+  ];
+
+  @override
+  AppColors copyWith({
+    Brightness? brightness,
+    Color? background,
+    Color? card,
+    Color? ink,
+    Color? muted,
+    Color? line,
+    Color? brand,
+    Color? brandDeep,
+    Color? brandTint,
+    Color? accent,
+    Color? sage,
+
+肉垫本软件 V2.17.0                        第 20 页
+    Color? olive,
+    Color? warm,
+    Color? field,
+    Color? danger,
+    Color? warning,
+    Color? low,
+    Color? tintDanger,
+    Color? tintWarning,
+    Color? tintLow,
+    Color? tintOlive,
+    Color? tintWarm,
+    Color? onBrand,
+    Color? onDanger,
+    Color? scrim,
+    Color? onScrim,
+    Color? onScrimMuted,
+    Color? scrimSoft,
+    Color? snackAction,
+    Color? shadow,
+  }) {
+    return AppColors(
+      brightness: brightness ?? this.brightness,
+      background: background ?? this.background,
+      card: card ?? this.card,
+      ink: ink ?? this.ink,
+      muted: muted ?? this.muted,
+      line: line ?? this.line,
+      brand: brand ?? this.brand,
+      brandDeep: brandDeep ?? this.brandDeep,
+      brandTint: brandTint ?? this.brandTint,
+      accent: accent ?? this.accent,
+      sage: sage ?? this.sage,
+      olive: olive ?? this.olive,
+      warm: warm ?? this.warm,
+      field: field ?? this.field,
+      danger: danger ?? this.danger,
+      warning: warning ?? this.warning,
+      low: low ?? this.low,
+      tintDanger: tintDanger ?? this.tintDanger,
+      tintWarning: tintWarning ?? this.tintWarning,
+      tintLow: tintLow ?? this.tintLow,
+      tintOlive: tintOlive ?? this.tintOlive,
+      tintWarm: tintWarm ?? this.tintWarm,
+      onBrand: onBrand ?? this.onBrand,
+      onDanger: onDanger ?? this.onDanger,
+      scrim: scrim ?? this.scrim,
+      onScrim: onScrim ?? this.onScrim,
+      onScrimMuted: onScrimMuted ?? this.onScrimMuted,
+      scrimSoft: scrimSoft ?? this.scrimSoft,
+      snackAction: snackAction ?? this.snackAction,
+
+肉垫本软件 V2.17.0                        第 21 页
+      shadow: shadow ?? this.shadow,
+    );
+  }
+
+  @override
+  AppColors lerp(ThemeExtension<AppColors>? other, double t) {
+    if (other is! AppColors) return this;
+    Color mix(Color a, Color b) => Color.lerp(a, b, t)!;
+    return AppColors(
+      brightness: t < 0.5 ? brightness : other.brightness,
+      background: mix(background, other.background),
+      card: mix(card, other.card),
+      ink: mix(ink, other.ink),
+      muted: mix(muted, other.muted),
+      line: mix(line, other.line),
+      brand: mix(brand, other.brand),
+      brandDeep: mix(brandDeep, other.brandDeep),
+      brandTint: mix(brandTint, other.brandTint),
+      accent: mix(accent, other.accent),
+      sage: mix(sage, other.sage),
+      olive: mix(olive, other.olive),
+      warm: mix(warm, other.warm),
+      field: mix(field, other.field),
+      danger: mix(danger, other.danger),
+      warning: mix(warning, other.warning),
+      low: mix(low, other.low),
+      tintDanger: mix(tintDanger, other.tintDanger),
+      tintWarning: mix(tintWarning, other.tintWarning),
+      tintLow: mix(tintLow, other.tintLow),
+      tintOlive: mix(tintOlive, other.tintOlive),
+      tintWarm: mix(tintWarm, other.tintWarm),
+      onBrand: mix(onBrand, other.onBrand),
+      onDanger: mix(onDanger, other.onDanger),
+      scrim: mix(scrim, other.scrim),
+      onScrim: mix(onScrim, other.onScrim),
+      onScrimMuted: mix(onScrimMuted, other.onScrimMuted),
+      scrimSoft: mix(scrimSoft, other.scrimSoft),
+      snackAction: mix(snackAction, other.snackAction),
+      shadow: mix(shadow, other.shadow),
+    );
+  }
+}
+
+/// Saved as the `themeMode` setting. Default is the phone's setting.
+enum ZhuajiThemeMode {
+  system,
+  light,
+  dark;
+
+  static ZhuajiThemeMode fromStorage(String? raw) {
+
+肉垫本软件 V2.17.0                        第 22 页
+    return switch (raw) {
+      'light' => ZhuajiThemeMode.light,
+      'dark' => ZhuajiThemeMode.dark,
+      _ => ZhuajiThemeMode.system,
+    };
+  }
+
+  String get storage => name;
+
+  String get label => switch (this) {
+    ZhuajiThemeMode.system => '跟随系统',
+    ZhuajiThemeMode.light => '浅色',
+    ZhuajiThemeMode.dark => '深色',
+  };
+
+  ThemeMode get material => switch (this) {
+    ZhuajiThemeMode.system => ThemeMode.system,
+    ZhuajiThemeMode.light => ThemeMode.light,
+    ZhuajiThemeMode.dark => ThemeMode.dark,
+  };
+}
+
+class Space {
+  const Space._();
+
+  static const x1 = 4.0;
+  static const x2 = 8.0;
+  static const x3 = 12.0;
+  static const x4 = 16.0;
+  static const x5 = 20.0;
+  static const x6 = 24.0;
+  static const x8 = 32.0;
+}
+
+class Radii {
+  const Radii._();
+
+  static const s = 14.0;
+  static const m = 16.0;
+  static const l = 20.0;
+  static const xl = 24.0;
+}
+
+// lib/core/widgets/care_timeline.dart
+import 'package:flutter/material.dart';
+
+import '../format.dart';
+import '../theme/app_fonts.dart';
+import '../theme/app_tokens.dart';
+import '../../domain/care/care_story.dart';
+
+肉垫本软件 V2.17.0                        第 23 页
+import 'common.dart';
+
+/// A short vertical list: icon, title, and the day on the right.
+class CareTimeline extends StatelessWidget {
+  const CareTimeline({required this.events, required this.empty, super.key});
+
+  final List<CareEvent> events;
+  final String empty;
+
+  IconData _icon(CareKind kind) => switch (kind) {
+    CareKind.vaccine => Icons.vaccines_outlined,
+    CareKind.deworm => Icons.bug_report_outlined,
+    CareKind.visit => Icons.local_hospital_outlined,
+    CareKind.checkup => Icons.fact_check_outlined,
+    CareKind.weight => Icons.monitor_weight_outlined,
+  };
+
+  @override
+  Widget build(BuildContext context) {
+    if (events.isEmpty) {
+      return EmptyHint(title: '还没记录', body: empty);
+    }
+    final colors = AppColors.of(context);
+    return QuietCard(
+      padding: const EdgeInsets.fromLTRB(8, 4, 14, 4),
+      child: Column(
+        children: [
+          for (var i = 0; i < events.length; i++)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              child: Row(
+                children: [
+                  Container(
+                    width: 8,
+                    height: 8,
+                    margin: const EdgeInsets.only(right: 10),
+                    decoration: BoxDecoration(
+                      color: colors.brand,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                  Icon(_icon(events[i].kind), size: 18, color: colors.ink),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      '${events[i].title} · ${events[i].detail}',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: zhuaji.copyWith(fontSize: 15),
+                    ),
+
+肉垫本软件 V2.17.0                        第 24 页
+                  ),
+                  Text(
+                    formatMonthDay(events[i].on),
+                    style: zhuaji.copyWith(fontSize: 12, color: colors.muted),
+                  ),
+                ],
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+// lib/core/widgets/common.dart
+import 'dart:io';
+
+import 'package:flutter/material.dart';
+
+import '../haptics.dart';
+
+import '../../domain/dates.dart';
+import '../format.dart';
+import '../theme/app_fonts.dart';
+import '../theme/app_tokens.dart';
+import 'paw_icon.dart';
+
+class AppScope extends InheritedNotifier<Listenable> {
+  const AppScope({required this.controller, required super.child, super.key})
+    : super(notifier: controller);
+
+  final Listenable controller;
+
+  static T of<T extends Listenable>(BuildContext context) {
+    final scope = context.dependOnInheritedWidgetOfExactType<AppScope>();
+    assert(scope != null, 'AppScope 没有挂上');
+    return scope!.controller as T;
+  }
+}
+
+class SoftCard extends StatelessWidget {
+  const SoftCard({
+    required this.child,
+    this.padding = const EdgeInsets.all(Space.x4),
+    this.color,
+    this.radius = Radii.l,
+    super.key,
+  });
+
+  final Widget child;
+
+肉垫本软件 V2.17.0                        第 25 页
+  final EdgeInsets padding;
+  final Color? color;
+  final double radius;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(radius),
+        border: Border.all(color: colors.line),
+      ),
+      child: Material(
+        color: color ?? colors.card,
+        borderRadius: BorderRadius.circular(radius),
+        clipBehavior: Clip.antiAlias,
+        child: Padding(padding: padding, child: child),
+      ),
+    );
+  }
+}
+
+class TagChip extends StatelessWidget {
+  const TagChip({required this.label, this.tint, this.color, super.key});
+
+  final String label;
+  final Color? tint;
+  final Color? color;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: tint ?? colors.brandTint,
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Text(
+        label,
+        style: zhuaji.copyWith(
+          fontSize: 12,
+          color: color ?? colors.ink,
+          fontWeight: FontWeight.w700,
+        ),
+      ),
+    );
+  }
+}
+
+
+肉垫本软件 V2.17.0                        第 26 页
+class SectionHeader extends StatelessWidget {
+  const SectionHeader({
+    required this.title,
+    this.action,
+    this.onAction,
+    super.key,
+  });
+
+  final String title;
+  final String? action;
+  final VoidCallback? onAction;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Expanded(
+          child: Text(
+            title,
+            style: Theme.of(context).textTheme.titleMedium
+                ?.copyWith(fontWeight: FontWeight.w700),
+          ),
+        ),
+        if (action != null)
+          TextButton(onPressed: onAction, child: Text(action!)),
+      ],
+    );
+  }
+}
+
+AppBar zhuajiBar(String title) {
+  return AppBar(
+    title: Text(title),
+    toolbarHeight: 56,
+    elevation: 0,
+    scrolledUnderElevation: 0,
+  );
+}
+
+class QuietCard extends StatelessWidget {
+  const QuietCard({
+    required this.child,
+    this.padding = const EdgeInsets.all(16),
+    this.onTap,
+    super.key,
+  });
+
+  final Widget child;
+  final EdgeInsets padding;
+  final VoidCallback? onTap;
+
+肉垫本软件 V2.17.0                        第 27 页
+
+  @override
+  Widget build(BuildContext context) {
+    final card = DecoratedBox(
+      decoration: BoxDecoration(
+        color: AppColors.of(context).card,
+        borderRadius: BorderRadius.circular(Radii.l),
+        border: Border.all(color: AppColors.of(context).line),
+      ),
+      child: Padding(padding: padding, child: child),
+    );
+    if (onTap == null) return card;
+    return GestureDetector(
+      onTap: () {
+        pawTap();
+        onTap!();
+      },
+      child: card,
+    );
+  }
+}
+
+class PhotoFrame extends StatelessWidget {
+  const PhotoFrame({required this.path, this.height = 248, super.key});
+
+  final String? path;
+  final double height;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: height,
+      width: double.infinity,
+      clipBehavior: Clip.antiAlias,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(Radii.xl),
+        border: Border.all(color: AppColors.of(context).line),
+      ),
+      child: CatImage(path: path),
+    );
+  }
+}
+
+class HeroCard extends StatelessWidget {
+  const HeroCard({
+    required this.path,
+    required this.title,
+    required this.subtitle,
+    this.height = 252,
+    this.onTitleTap,
+
+肉垫本软件 V2.17.0                        第 28 页
+    super.key,
+  });
+
+  final String? path;
+  final String title;
+  final String subtitle;
+  final double height;
+  final VoidCallback? onTitleTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      clipBehavior: Clip.antiAlias,
+      decoration: BoxDecoration(
+        color: AppColors.of(context).card,
+        borderRadius: BorderRadius.circular(Radii.xl),
+        border: Border.all(color: AppColors.of(context).line),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            height: height,
+            width: double.infinity,
+            child: CatImage(path: path),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                GestureDetector(
+                  onTap: onTitleTap,
+                  behavior: HitTestBehavior.opaque,
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(
+                      minHeight: onTitleTap == null ? 0 : 48,
+                    ),
+                    child: Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        title,
+                        style: zhuaji.copyWith(
+                          fontSize: 22,
+                          fontWeight: FontWeight.w700,
+                          height: 1.2,
+                        ),
+                      ),
+                    ),
+                  ),
+
+肉垫本软件 V2.17.0                        第 29 页
+                ),
+                if (subtitle.isNotEmpty) ...[
+                  const SizedBox(height: 4),
+                  Text(
+                    subtitle,
+                    style: zhuaji.copyWith(
+                      fontSize: 13,
+                      color: AppColors.of(context).muted,
+                      height: 1.35,
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class SectionLabel extends StatelessWidget {
+  const SectionLabel(this.text, {super.key});
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      text,
+      style: zhuaji.copyWith(
+        fontSize: 12,
+        color: AppColors.of(context).muted,
+        height: 1.35,
+      ),
+    );
+  }
+}
+
+class IconWell extends StatelessWidget {
+  const IconWell({required this.icon, super.key});
+
+  final IconData icon;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 40,
+      height: 40,
+      decoration: BoxDecoration(
+
+肉垫本软件 V2.17.0                        第 30 页
+        color: AppColors.of(context).field,
+        borderRadius: BorderRadius.circular(Radii.s),
+      ),
+      child: Icon(icon, size: 22, color: AppColors.of(context).ink),
+    );
+  }
+}
+
+class FadeIn extends StatelessWidget {
+  const FadeIn({required this.child, super.key});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) => child;
+}
+
+class Pressable extends StatefulWidget {
+  const Pressable({required this.child, required this.onTap, super.key});
+
+  final Widget child;
+  final VoidCallback onTap;
+
+  @override
+  State<Pressable> createState() => _PressableState();
+}
+
+class _PressableState extends State<Pressable> {
+  var _down = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTapDown: (_) => setState(() => _down = true),
+      onTapCancel: () => setState(() => _down = false),
+      onTapUp: (_) => setState(() => _down = false),
+      onTap: widget.onTap,
+      child: AnimatedScale(
+        scale: _down ? 0.96 : 1,
+        duration: const Duration(milliseconds: 120),
+        curve: Curves.easeOut,
+        child: widget.child,
+      ),
+    );
+  }
+}
+
+class _EmptyIllustration extends StatelessWidget {
+  const _EmptyIllustration();
+
+
+肉垫本软件 V2.17.0                        第 31 页
+      if (asked == '1') {
+        await _reschedule();
+        return;
+      }
+      final askedExact = await repo.setting('exactAsked');
+      await notifications.requestPermissions(askExactAlarm: askedExact != '1');
+      await repo.setSetting('exactAsked', '1');
+      await repo.setSetting('notifAsked', '1');
+      await _reschedule();
+      permissionNote = '已请求通知权限，提醒会按计划送到';
+    } catch (error, stack) {
+      permissionNote = '通知权限没有打开，记录仍会留在这台手机上';
+      debugPrint('通知权限没有打开：$error\n$stack');
+    }
+    notifyListeners();
+  }
+
+  /// Full features: network barcode lookup, reminders, optional cloud sync.
+  Future<void> acceptPrivacy() async {
+    final first = privacyChoice != PrivacyChoice.accepted;
+    privacyChoice = PrivacyChoice.accepted;
+    await repo.setSetting('privacyConsent', '1');
+    await onFullAccess?.call();
+    notifyListeners();
+    if (!first || loading) return;
+    await enableNotifications();
+    await flushBarcodeShare();
+  }
+
+  /// Local records only. Drops the share queue and cancels reminders.
+  Future<void> useBasicMode() async {
+    privacyChoice = PrivacyChoice.basic;
+    await repo.setSetting('privacyConsent', '0');
+    shareQueue = [];
+    await _storeShareQueue();
+    try {
+      await notifications.replaceAll(const []);
+    } catch (error, stack) {
+      debugPrint('撤回后取消提醒失败：$error\n$stack');
+    }
+    notifyListeners();
+  }
+
+  /// Wipes personal rows, keeps the built-in food table, and asks again.
+  Future<void> erasePersonalData() async {
+    try {
+      await notifications.replaceAll(const []);
+    } catch (error, stack) {
+      debugPrint('删除前取消提醒失败：$error\n$stack');
+    }
+
+肉垫本软件 V2.17.0                        第 32 页
+    await repo.erasePersonalData();
+    await repo.setSetting('demoSeeded', '1');
+    privacyChoice = PrivacyChoice.unset;
+    cats = [];
+    activeCatId = null;
+    vaccines = [];
+    deworms = [];
+    visits = [];
+    weights = [];
+    products = await repo.products();
+    pantry = [];
+    conditions = [];
+    checkups = [];
+    waters = [];
+    labs = [];
+    weightAcks = {};
+    pantryAcks = {};
+    stockSnooze = {};
+    barcodeMemory = {};
+    barcodeCatalog = {};
+    barcodeRevisions = {};
+    shareQueue = [];
+    recentSearches = [];
+    ownerWeightKg = null;
+    permissionNote = null;
+    loading = false;
+    error = null;
+    await _publishWidget();
+    notifyListeners();
+  }
+
+  Future<int> saveCat(CatDraft draft) async {
+    final id = await repo.upsertCat(draft);
+    activeCatId = id;
+    await repo.setSetting('activeCatId', '$id');
+    await _refresh();
+    return id;
+  }
+
+  Future<void> removeCat(int id) async {
+    await repo.deleteCat(id);
+    if (activeCatId == id) activeCatId = null;
+    await _refresh();
+  }
+
+  Future<void> saveVaccine(VaccineDraft draft) async {
+    await repo.upsertVaccine(draft);
+    await _refresh();
+  }
+
+
+肉垫本软件 V2.17.0                        第 33 页
+  Future<void> removeVaccine(int id) async {
+    await repo.deleteVaccine(id);
+    await _refresh();
+  }
+
+  /// Marks this dose done today and moves the next due date forward.
+  Future<DateTime> completeVaccine(VaccineRecord record) async {
+    final given = dateOnly(now);
+    final next = nextVaccineDate(catById(record.catId)?.birthday, given);
+    await repo.upsertVaccine(
+      VaccineDraft(
+        id: record.id,
+        catId: record.catId,
+        name: record.name,
+        givenOn: given,
+        nextDue: next,
+        clinic: record.clinic,
+        notes: record.notes,
+        batch: record.batch,
+      ),
+    );
+    await _refresh();
+    return next;
+  }
+
+  /// Handles 「已完成」 on a due notification. Returns what to tell the user,
+  /// or null when the record is gone (deleted since the reminder was set).
+  Future<String?> completeFromNotification(String? raw) async {
+    final key = DoneKey.parse(raw);
+    if (key == null) return null;
+    if (key.vaccine) {
+      for (final item in vaccines) {
+        if (item.id != key.recordId) continue;
+        final next = await completeVaccine(item);
+        return '${_name(item.catId)}的${item.name}记下了，下次 ${formatDate(next)}';
+      }
+    } else {
+      for (final item in deworms) {
+        if (item.id != key.recordId) continue;
+        final next = await completeDeworm(item);
+        return '${_name(item.catId)}的${item.product}记下了，下次 ${formatDate(next)}';
+      }
+    }
+    return null;
+  }
+
+  /// Puts a record back exactly as it was before a one-tap "done".
+  Future<void> restoreVaccine(VaccineRecord record) => saveVaccine(
+    VaccineDraft(
+      id: record.id,
+
+肉垫本软件 V2.17.0                        第 34 页
+      catId: record.catId,
+      name: record.name,
+      givenOn: record.givenOn,
+      nextDue: record.nextDue,
+      clinic: record.clinic,
+      notes: record.notes,
+      batch: record.batch,
+    ),
+  );
+
+  Future<void> restoreDeworm(DewormRecord record) => saveDeworm(
+    DewormDraft(
+      id: record.id,
+      catId: record.catId,
+      kind: record.kind,
+      product: record.product,
+      givenOn: record.givenOn,
+      nextDue: record.nextDue,
+      notes: record.notes,
+    ),
+  );
+
+  Future<void> saveDeworm(DewormDraft draft) async {
+    await repo.upsertDeworm(draft);
+    await _refresh();
+  }
+
+  Future<void> removeDeworm(int id) async {
+    await repo.deleteDeworm(id);
+    await _refresh();
+  }
+
+  /// Marks this dose done today and schedules the usual 90-day follow-up.
+  Future<DateTime> completeDeworm(DewormRecord record) async {
+    final given = dateOnly(now);
+    final next = given.add(const Duration(days: 90));
+    await repo.upsertDeworm(
+      DewormDraft(
+        id: record.id,
+        catId: record.catId,
+        kind: record.kind,
+        product: record.product,
+        givenOn: given,
+        nextDue: next,
+        notes: record.notes,
+      ),
+    );
+    await _refresh();
+    return next;
+  }
+
+肉垫本软件 V2.17.0                        第 35 页
+
+  Future<void> saveVisit(VetDraft draft) async {
+    await repo.upsertVisit(draft);
+    await _refresh();
+  }
+
+  Future<void> removeVisit(int id) async {
+    await repo.deleteVisit(id);
+    await _refresh();
+  }
+
+  Future<void> addWeight(double kg) async {
+    final cat = active;
+    if (cat == null) return;
+    await repo.addWeight(catId: cat.id, loggedOn: dateOnly(now), weightKg: kg);
+    await _refresh();
+  }
+
+  Future<void> removeWeight(int id) async {
+    await repo.deleteWeight(id);
+    await _refresh();
+  }
+
+  Future<int> saveProduct(FoodDraft draft) async {
+    final id = await repo.upsertProduct(draft);
+    await _refresh();
+    return id;
+  }
+
+  Future<int> savePantry(PantryDraft draft) async {
+    final id = await repo.upsertPantry(draft);
+    await _refresh();
+    return id;
+  }
+
+  /// Puts one homemade card into the pantry and starts its open-date reminder.
+  /// Tapping again updates that same bag instead of adding a second one.
+  Future<int> addFreshToPantry({
+    required String cardId,
+    required int holdDays,
+    double? dailyGrams,
+  }) async {
+    final card = freshById(cardId);
+    if (card == null) return -1;
+    final code = freshBarcode(card.id);
+    final existing = findBarcode(code);
+    final productId = await repo.upsertProduct(
+      FoodDraft(
+        id: existing?.id,
+        barcode: code,
+
+肉垫本软件 V2.17.0                        第 36 页
+        brand: '自制',
+        name: card.pantryName.isEmpty ? card.title : card.pantryName,
+        spec: card.spec,
+        foodForm: card.form,
+        storageMethod: card.storage,
+        afterOpenDays: holdDays,
+        flavor: '鲜食',
+        isCustom: true,
+      ),
+    );
+    PantryEntry? bag;
+    for (final entry in pantry) {
+      if (entry.product.id == productId || entry.product.barcode == code) {
+        bag = entry;
+        break;
+      }
+    }
+    final id = await repo.upsertPantry(
+      PantryDraft(
+        id: bag?.item.id,
+        productId: productId,
+        dateSource: DateSource.manual,
+        openedAt: dateOnly(now),
+        afterOpenDays: holdDays,
+        dailyGrams: dailyGrams,
+      ),
+    );
+    await _refresh();
+    return id;
+  }
+
+  Future<void> markOpened(PantryEntry entry) async {
+    await repo.upsertPantry(
+      PantryDraft(
+        id: entry.item.id,
+        productId: entry.product.id,
+        productionDate: entry.item.productionDate,
+        expiryDate: entry.item.expiryDate,
+        batch: entry.item.batch,
+        dateSource: entry.item.dateSource,
+        openedAt: now,
+        afterOpenDays: entry.openWindowDays,
+        dailyGrams: entry.item.dailyGrams,
+      ),
+    );
+    await _refresh();
+  }
+
+  Future<void> removePantry(int id) async {
+    await repo.deletePantry(id);
+
+肉垫本软件 V2.17.0                        第 37 页
+    await _refresh();
+  }
+
+  ConditionRecord? conditionFor(String diseaseId) {
+    for (final item in catConditions) {
+      if (item.diseaseId == diseaseId) return item;
+    }
+    return null;
+  }
+
+  List<CheckupRecord> checkupsFor(String itemId) =>
+      catCheckups.where((item) => item.itemId == itemId).toList();
+
+  Future<String?> scheduleCheckup({
+    required String itemId,
+    required int intervalDays,
+  }) async {
+    final cat = active;
+    if (cat == null) return '先选择一只猫';
+    final pending = catCheckups.any(
+      (item) =>
+          item.itemId == itemId &&
+          item.nextDue != null &&
+          dateOnly(item.nextDue!).isAfter(dateOnly(now)),
+    );
+    if (pending) return '这项已经有未到的提醒';
+    await repo.upsertCheckup(
+      CheckupDraft(
+        catId: cat.id,
+        itemId: itemId,
+        nextDue: dateOnly(now).add(Duration(days: intervalDays)),
+      ),
+    );
+    await _refresh();
+    return null;
+  }
+
+  Future<void> completeCheckup({
+    required String itemId,
+    required String result,
+    required int intervalDays,
+  }) async {
+    final cat = active;
+    if (cat == null) return;
+    await repo.upsertCheckup(
+      CheckupDraft(
+        catId: cat.id,
+        itemId: itemId,
+        completedOn: dateOnly(now),
+        result: result.trim(),
+
+肉垫本软件 V2.17.0                        第 38 页
+        nextDue: dateOnly(now).add(Duration(days: intervalDays)),
+      ),
+    );
+    await _refresh();
+  }
+
+  LabReport? labById(int id) {
+    for (final report in labs) {
+      if (report.id == id) return report;
+    }
+    return null;
+  }
+
+  Future<int> saveLab(LabDraft draft, {List<LabValue>? values}) async {
+    final id = await repo.upsertLab(draft);
+    if (values != null) await repo.setLabValues(id, values);
+    await _refresh();
+    return id;
+  }
+
+  /// Replaces the value with the same code, or adds it.
+  Future<void> setLabValue(int reportId, LabValue value) async {
+    final report = labById(reportId);
+    if (report == null) return;
+    final next = [
+      for (final item in report.values)
+        if (item.code != value.code) item,
+      value,
+    ];
+    await repo.setLabValues(reportId, next);
+    await _refresh();
+  }
+
+  Future<void> removeLabValue(int reportId, String code) async {
+    final report = labById(reportId);
+    if (report == null) return;
+    await repo.setLabValues(reportId, [
+      for (final item in report.values)
+        if (item.code != code) item,
+    ]);
+    await _refresh();
+  }
+
+  Future<void> removeLab(int id) async {
+    await repo.deleteLab(id);
+    await _refresh();
+  }
+
+  /// One analyte across the active cat's reports, oldest first.
+  List<({DateTime date, int reportId, LabValue value})> labTrend(String code) {
+
+肉垫本软件 V2.17.0                        第 39 页
+    final points = <({DateTime date, int reportId, LabValue value})>[];
+    for (final report in catLabs) {
+      for (final value in report.values) {
+        if (value.code == code) {
+          points.add((date: report.takenOn, reportId: report.id, value: value));
+        }
+      }
+    }
+    points.sort((a, b) => a.date.compareTo(b.date));
+    return points;
+  }
+
+  Future<void> removeCheckup(int id) async {
+    await repo.deleteCheckup(id);
+    await _refresh();
+  }
+
+  Future<void> markDisease({
+    required String diseaseId,
+    String stageLabel = '',
+  }) async {
+    final cat = active;
+    final info = diseaseById(diseaseId);
+    if (cat == null || info == null) return;
+    final existing = conditionFor(diseaseId);
+    await repo.upsertCondition(
+      ConditionDraft(
+        id: existing?.id,
+        catId: cat.id,
+        diseaseId: diseaseId,
+        diagnosedOn: existing?.diagnosedOn ?? dateOnly(now),
+        stageLabel: stageLabel,
+        note: existing?.note ?? '',
+        nextRecheck:
+            existing?.nextRecheck ??
+            dateOnly(now).add(Duration(days: info.recheckDays)),
+      ),
+    );
+    await _refresh();
+  }
+
+  Future<void> setRecheck(int id, DateTime date) async {
+    ConditionRecord? found;
+    for (final item in conditions) {
+      if (item.id == id) found = item;
+    }
+    if (found == null) return;
+    await repo.upsertCondition(
+      ConditionDraft(
+        id: found.id,
+
+肉垫本软件 V2.17.0                        第 40 页
+        catId: found.catId,
+        diseaseId: found.diseaseId,
+        diagnosedOn: found.diagnosedOn,
+        stageLabel: found.stageLabel,
+        note: found.note,
+        nextRecheck: dateOnly(date),
+      ),
+    );
+    await _refresh();
+  }
+
+  Future<void> removeCondition(int id) async {
+    await repo.deleteCondition(id);
+    await _refresh();
+  }
+
+  Future<void> addWater(double milliliters) async {
+    final cat = active;
+    if (cat == null) return;
+    await repo.addWater(catId: cat.id, loggedOn: now, milliliters: milliliters);
+    await _refresh();
+  }
+
+  Future<void> removeWater(int id) async {
+    await repo.deleteWater(id);
+    await _refresh();
+  }
+
+  FoodProduct? productById(int id) {
+    for (final product in products) {
+      if (product.id == id) return product;
+    }
+    return null;
+  }
+
+  FoodProduct? findBarcode(String barcode) {
+    final code = barcode.trim();
+    final key = barcodeKey(code);
+    if (key.isEmpty) return null;
+    final remembered = barcodeMemory[key];
+    final chosen = remembered == null ? null : productById(remembered);
+    if (chosen != null) return chosen;
+    for (final product in products) {
+      final own = product.barcode;
+      if (own == null || own.isEmpty) continue;
+      if (own == code || barcodeKey(own) == key) return product;
+    }
+    return null;
+  }
+
+
+肉垫本软件 V2.17.0                        第 41 页
+  Future<void> saveOwnerWeight(double kg) async {
+    ownerWeightKg = kg;
+    await repo.setSetting('ownerWeightKg', kg.toStringAsFixed(2));
+    notifyListeners();
+  }
+
+  /// Saves a user-made food. A scanned [barcode] is tied to it so the next
+  /// scan finds it straight away.
+  Future<int> saveFood(FoodDraft draft, {String? barcode}) async {
+    final code = barcode?.trim() ?? '';
+    final owner = code.isEmpty ? null : findBarcode(code);
+    final keepOwn = code.isNotEmpty && (owner == null || owner.id == draft.id);
+    final id = await repo.upsertProduct(
+      FoodDraft(
+        id: draft.id,
+        barcode: keepOwn ? code : draft.barcode,
+        brand: draft.brand,
+        name: draft.name,
+        spec: draft.spec,
+        foodForm: draft.foodForm,
+        kcalPer100g: draft.kcalPer100g,
+        storageMethod: draft.storageMethod,
+        afterOpenDays: draft.afterOpenDays,
+        isSample: false,
+        flavor: draft.flavor,
+        isCustom: true,
+        photoPath: draft.photoPath,
+      ),
+    );
+    if (code.isNotEmpty) {
+      final key = barcodeKey(code);
+      if (key.isNotEmpty) barcodeMemory[key] = id;
+      await repo.setSetting('barcodeMemory', jsonEncode(barcodeMemory));
+    }
+    await _refresh();
+    return id;
+  }
+
+  int pantryCountOf(int productId) =>
+      pantry.where((entry) => entry.product.id == productId).length;
+
+  /// Removes a food and every bag of it in the pantry.
+  Future<void> deleteFood(int id) async {
+    final product = productById(id);
+    await repo.deleteProduct(id);
+    final forgotten = [
+      for (final entry in barcodeMemory.entries)
+        if (entry.value == id) entry.key,
+    ];
+    barcodeMemory.removeWhere((_, value) => value == id);
+
+肉垫本软件 V2.17.0                        第 42 页
+    for (final key in forgotten) {
+      barcodeRevisions.remove(key);
+    }
+    final own = product?.barcode;
+    if (own != null && own.isNotEmpty) barcodeRevisions.remove(barcodeKey(own));
+    await repo.setSetting('barcodeMemory', jsonEncode(barcodeMemory));
+    await _storeRevisions();
+    await _refresh();
+  }
+
+  /// Turns a looked-up product into a pantry food and remembers the code.
+  Future<int> adoptBarcode(BarcodeRecord record) async {
+    final existing = findBarcode(record.code);
+    if (existing != null) {
+      await rememberBarcode(record.code, existing.id);
+      return existing.id;
+    }
+    final brand = record.brand.trim().isEmpty ? '未署名' : record.brand.trim();
+    final name = record.name.trim().isEmpty ? brand : record.name.trim();
+    final spec = record.quantity.trim().isEmpty
+        ? '见包装'
+        : record.quantity.trim();
+    final known = localCatFood(record.code);
+    return saveFood(
+      FoodDraft(
+        brand: brand,
+        name: name,
+        spec: spec,
+        foodForm: known == null
+            ? guessLookupForm(name, spec)
+            : localFoodForm(known),
+        storageMethod: '阴凉干燥，封好袋口。',
+        afterOpenDays: 30,
+        kcalPer100g: record.kcalPer100g,
+        isCustom: true,
+      ),
+      barcode: record.code,
+    );
+  }
+
+  BarcodeRecord? cachedBarcode(String code) {
+    final key = barcodeKey(code);
+    if (key.isEmpty) return null;
+    return barcodeCatalog[key];
+  }
+
+  Future<void> saveBarcodeRecord(BarcodeRecord record) async {
+    final key = barcodeKey(record.code);
+    if (key.isEmpty || record.offline) return;
+    barcodeCatalog[key] = record;
+
+肉垫本软件 V2.17.0                        第 43 页
+    await _storeCatalog();
+    notifyListeners();
+  }
+
+  /// Uploads only when a share URL is configured. An injected client with no
+  /// URL can still answer lookups, and does not ask to publish.
+  bool get shareEnabled => share.enabled;
+
+  /// How long a shared-library lookup may block the rest of the chain.
+  Duration shareLookupTimeout = const Duration(seconds: 4);
+
+  BarcodeShareClient? get _shares {
+    if (shareClient != null) return shareClient;
+    if (!share.enabled) return null;
+    return _httpShare ??= HttpBarcodeShareClient(share);
+  }
+
+  /// This phone's correction, then the shared library's newest row, then the
+  /// built-in list, then the public databases. A missing share server is skipped.
+  /// Offline public misses are not stored. A confirmed public miss is stored.
+  Future<BarcodeRecord> resolveBarcode(
+    String code, {
+    bool refresh = false,
+  }) async {
+    final key = barcodeKey(code);
+    if (key.isEmpty) return BarcodeRecord.miss(code);
+    final owned = findBarcode(code);
+    if (owned != null) return _userRecord(owned, code);
+    if (privacyChoice != PrivacyChoice.basic) {
+      final shared = await _readShare(key, code);
+      if (shared != null) return shared;
+    }
+    final local = localCatFood(code);
+    if (local != null) return local.toRecord();
+    if (!refresh) {
+      final cached = barcodeCatalog[key];
+      if (cached != null) return cached;
+    } else {
+      barcodeCatalog.remove(key);
+    }
+    if (privacyChoice == PrivacyChoice.basic) {
+      return BarcodeRecord.miss(code);
+    }
+    final record = await lookupBarcode(
+      code,
+      fetch: barcodeFetch ?? defaultBarcodeFetch(),
+      keys: barcodeKeys,
+    );
+    if (!record.offline && !record.incomplete) {
+      barcodeCatalog[key] = record;
+
+肉垫本软件 V2.17.0                        第 44 页
+      await _storeCatalog();
+    }
+    notifyListeners();
+    return record;
+  }
+
+  BarcodeRecord _userRecord(FoodProduct product, String code) {
+    final revision = barcodeRevisions[barcodeKey(code)];
+    final image = product.photoPath;
+    final publicImage =
+        image != null &&
+            (image.startsWith('https://') || image.startsWith('http://'))
+        ? image
+        : null;
+    String pick(String revised, String stored) {
+      final text = revised.trim();
+      return text.isNotEmpty ? text : stored;
+    }
+
+    return BarcodeRecord(
+      code: code.trim(),
+      found: true,
+      brand: pick(revision?.brand ?? '', product.brand),
+      name: pick(revision?.name ?? '', product.name),
+      quantity: pick(revision?.spec ?? '', product.spec),
+      ingredients: revision?.ingredients ?? '',
+      nutrients: const [],
+      source: 'user',
+      imageUrl: publicImage,
+      kcalPer100g: product.kcalPer100g,
+      createdAt: revision?.createdAt,
+      updatedAt: revision?.updatedAt,
+    );
+  }
+
+  Future<BarcodeRecord?> _readShare(String key, String code) async {
+    final client = _shares;
+    if (client == null) return null;
+    try {
+      final answer = await client
+          .lookup(code)
+          .timeout(
+            shareLookupTimeout,
+            onTimeout: () => const ShareAnswer(ShareStatus.failed),
+          );
+      if (answer.status == ShareStatus.hit && answer.record != null) {
+        barcodeCatalog[key] = answer.record!;
+        await _storeCatalog();
+        return answer.record;
+      }
+
+肉垫本软件 V2.17.0                        第 45 页
+      if (answer.status == ShareStatus.miss) {
+        final cached = barcodeCatalog[key];
+        if (cached != null && cached.source == 'share') {
+          barcodeCatalog.remove(key);
+          await _storeCatalog();
+        }
+      }
+      if (answer.status == ShareStatus.failed) {
+        final cached = barcodeCatalog[key];
+        if (cached != null && cached.source == 'share' && cached.found) {
+          return cached;
+        }
+      }
+    } catch (_) {
+      final cached = barcodeCatalog[key];
+      if (cached != null && cached.source == 'share' && cached.found) {
+        return cached;
+      }
+    }
+    return null;
+  }
+
+  /// Records a correction date on this phone. Uploads only after the person
+  /// has agreed, and only when a share server is configured.
+  Future<void> rememberUserBarcode({
+    required String code,
+    required String brand,
+    required String name,
+    required String spec,
+    String ingredients = '',
+    String? imageUrl,
+    Future<bool> Function()? ask,
+  }) async {
+    final key = barcodeKey(code);
+    if (key.isEmpty) return;
+    final now = _clock().toUtc();
+    final previous = barcodeRevisions[key];
+    final keptIngredients = ingredients.trim().isNotEmpty
+        ? ingredients.trim()
+        : (previous?.ingredients ?? '');
+    final revision = BarcodeRevision(
+      createdAt: previous?.createdAt ?? now,
+      updatedAt: now,
+      brand: brand.trim(),
+      name: name.trim(),
+      spec: spec.trim(),
+      ingredients: keptIngredients,
+    );
+    barcodeRevisions[key] = revision;
+    await _storeRevisions();
+
+肉垫本软件 V2.17.0                        第 46 页
+    if (privacyChoice == PrivacyChoice.basic) return;
+    if (!shareEnabled) return;
+    final consent = await repo.setting('barcodeShareConsent');
+    if (consent == '0') return;
+    if (consent != '1') {
+      if (ask == null) return;
+      final ok = await ask();
+      await repo.setSetting('barcodeShareConsent', ok ? '1' : '0');
+      if (!ok) return;
+    }
+    final client = _shares;
+    if (client == null) return;
+    final contributor = await _contributorId();
+    final image =
+        imageUrl != null &&
+            (imageUrl.startsWith('https://') || imageUrl.startsWith('http://'))
+        ? imageUrl
+        : null;
+    final record = BarcodeRecord(
+      code: code.trim(),
+      found: true,
+      brand: brand,
+      name: name,
+      quantity: spec,
+      ingredients: keptIngredients,
+      nutrients: const [],
+      source: 'user',
+      imageUrl: image,
+      createdAt: revision.createdAt,
+      updatedAt: revision.updatedAt,
+      contributorId: contributor,
+    );
+    final config = await _askConfig(client);
+    if (!config.ready) {
+      await _enqueueShare(record);
+      return;
+    }
+    ShareAnswer answer;
+    try {
+      answer = await client
+          .submit(record)
+          .timeout(
+            shareLookupTimeout,
+            onTimeout: () => const ShareAnswer(ShareStatus.failed),
+          );
+    } catch (_) {
+      answer = const ShareAnswer(ShareStatus.failed);
+    }
+    if (answer.status == ShareStatus.failed) {
+      await _enqueueShare(record);
+
+肉垫本软件 V2.17.0                        第 47 页
+      return;
+    }
+    await _dropQueued(record.code);
+  }
+
+  Future<ShareConfig> _askConfig(BarcodeShareClient client) {
+    return client.config().timeout(
+      shareLookupTimeout,
+      onTimeout: () => ShareConfig.offline,
+    );
+  }
+
+  Future<void> _enqueueShare(BarcodeRecord record) async {
+    shareQueue = enqueueShare(
+      shareQueue,
+      SharePending.fromRecord(record, _clock()),
+    );
+    await _storeShareQueue();
+  }
+
+  Future<void> _dropQueued(String code) async {
+    final next = dropShare(shareQueue, code);
+    if (next.length == shareQueue.length) return;
+    shareQueue = next;
+    await _storeShareQueue();
+  }
+
+  Future<void> _storeShareQueue() {
+    return repo.setSetting('barcodeShareQueue', encodeShareQueue(shareQueue));
+  }
+
+  /// Sends queued corrections when the config endpoint says the server is ready.
+  /// Returns how many rows the server accepted this pass. Failures stay queued.
+  Future<int> flushBarcodeShare() async {
+    try {
+      return await _flushBarcodeShare();
+    } catch (error, stack) {
+      debugPrint('共享条码队列没有发出去：$error\n$stack');
+      return 0;
+    }
+  }
+
+  Future<int> _flushBarcodeShare() async {
+    if (privacyChoice == PrivacyChoice.basic) return 0;
+    if (shareQueue.isEmpty) return 0;
+    if (!shareEnabled && shareClient == null) return 0;
+    final client = _shares;
+    if (client == null) return 0;
+    final config = await _askConfig(client);
+    if (!config.ready) return 0;
+
+肉垫本软件 V2.17.0                        第 48 页
+    final now = _clock().toUtc();
+    final left = <SharePending>[];
+    var sent = 0;
+    for (final item in shareQueue) {
+      final due = item.nextAttemptAt;
+      if (due != null && due.isAfter(now)) {
+        left.add(item);
+        continue;
+      }
+      ShareAnswer answer;
+      try {
+        answer = await client
+            .submit(item.toRecord())
+            .timeout(
+              shareLookupTimeout,
+              onTimeout: () => const ShareAnswer(ShareStatus.failed),
+            );
+      } catch (_) {
+        answer = const ShareAnswer(ShareStatus.failed);
+      }
+      if (answer.status == ShareStatus.failed) {
+        left.add(item.retryAt(now));
+      } else {
+        sent += 1;
+      }
+    }
+    shareQueue = left;
+    await _storeShareQueue();
+    return sent;
+  }
+
+  Future<String> _contributorId() async {
+    final existing = await repo.setting('deviceId');
+    if (existing != null && existing.isNotEmpty) return existing;
+    final id = 'dev-${_clock().microsecondsSinceEpoch}';
+    await repo.setSetting('deviceId', id);
+    return id;
+  }
+
+  Future<void> _storeRevisions() {
+    return repo.setSetting(
+      'barcodeRevisions',
+      jsonEncode({
+        for (final entry in barcodeRevisions.entries)
+          entry.key: entry.value.toJson(),
+      }),
+    );
+  }
+
+  Future<void> pushRecentSearch(String query) async {
+
+肉垫本软件 V2.17.0                        第 49 页
+    final text = query.trim();
+    if (text.isEmpty) return;
+    recentSearches.remove(text);
+    recentSearches.insert(0, text);
+    if (recentSearches.length > 8) {
+      recentSearches = recentSearches.sublist(0, 8);
+    }
+    await repo.setSetting('recentSearches', jsonEncode(recentSearches));
+    notifyListeners();
+  }
+
+  Future<void> _storeCatalog() {
+    return repo.setSetting(
+      'barcodeCatalog',
+      jsonEncode({
+        for (final entry in barcodeCatalog.entries)
+          entry.key: entry.value.toJson(),
+      }),
+    );
+  }
+
+  /// Next scan of [barcode] goes straight to [productId].
+  Future<void> rememberBarcode(String barcode, int productId) async {
+    final key = barcodeKey(barcode);
+    if (key.isEmpty) return;
+    barcodeMemory[key] = productId;
+    await repo.setSetting('barcodeMemory', jsonEncode(barcodeMemory));
+    notifyListeners();
+  }
+
+  PantryEntry? pantryById(int id) {
+    for (final entry in pantry) {
+      if (entry.item.id == id) return entry;
+    }
+    return null;
+  }
+
+  /// A bag already on the shelf for this scan. Unknown codes return null
+  /// so the camera can open the confirm page instead.
+  PantryEntry? bagForBarcode(String raw) {
+    final product = findBarcode(raw);
+    if (product == null) return null;
+    for (final entry in pantry) {
+      if (entry.product.id == product.id) return entry;
+    }
+    return null;
+  }
+
+  CatProfile? catById(int id) {
+    for (final cat in cats) {
+
+肉垫本软件 V2.17.0                        第 50 页
+      if (cat.id == id) return cat;
+    }
+    return null;
+  }
+
+  Future<void> _refresh() async {
+    await _read();
+    await _reschedule();
+    await _publishWidget();
+    notifyListeners();
+  }
+
+  Future<void> _read() async {
+    cats = await repo.cats();
+    final stored = int.tryParse(await repo.setting('activeCatId') ?? '');
+    if (activeCatId != null && cats.any((cat) => cat.id == activeCatId)) {
+      // keep the in-memory selection
+    } else if (stored != null && cats.any((cat) => cat.id == stored)) {
+      activeCatId = stored;
+    } else {
+      activeCatId = cats.isEmpty ? null : cats.first.id;
+    }
+    vaccines = await repo.vaccines();
+    deworms = await repo.deworms();
+    visits = await repo.visits();
+    weights = await repo.weights();
+    products = await repo.products();
+    pantry = await repo.pantry();
+    conditions = await repo.conditions();
+    checkups = await repo.checkups();
+    waters = await repo.waters();
+    labs = await repo.labs();
+    final raw = await repo.setting('weightAcks') ?? '';
+    weightAcks = raw.split(',').where((item) => item.isNotEmpty).toSet();
+    final pantryRaw = await repo.setting('pantryAcks') ?? '';
+    pantryAcks = pantryRaw.split(',').where((item) => item.isNotEmpty).toSet();
+    stockSnooze = _decodeSnooze(await repo.setting('stockSnooze'));
+    widgetEnabled = (await repo.setting('widgetEnabled') ?? '1') != '0';
+    themeMode = ZhuajiThemeMode.fromStorage(await repo.setting('themeMode'));
+    barcodeMemory = _decodeMemory(await repo.setting('barcodeMemory'));
+    barcodeCatalog = _decodeCatalog(await repo.setting('barcodeCatalog'));
+    barcodeRevisions = _decodeRevisions(await repo.setting('barcodeRevisions'));
+    shareQueue = decodeShareQueue(await repo.setting('barcodeShareQueue'));
+    recentSearches = _decodeSearches(await repo.setting('recentSearches'));
+    ownerWeightKg = double.tryParse(await repo.setting('ownerWeightKg') ?? '');
+    privacyChoice = switch (await repo.setting('privacyConsent')) {
+      '1' => PrivacyChoice.accepted,
+      '0' => PrivacyChoice.basic,
+      _ => PrivacyChoice.unset,
+    };
+
+肉垫本软件 V2.17.0                        第 51 页
+  }
+
+  Map<String, BarcodeRevision> _decodeRevisions(String? raw) {
+    if (raw == null || raw.isEmpty) return {};
+    try {
+      final decoded = jsonDecode(raw);
+      if (decoded is! Map) return {};
+      return {
+        for (final entry in decoded.entries)
+          if (entry.value is Map)
+            '${entry.key}': BarcodeRevision.fromJson(entry.value as Map),
+      };
+    } catch (_) {
+      return {};
+    }
+  }
+
+  Map<String, BarcodeRecord> _decodeCatalog(String? raw) {
+    if (raw == null || raw.isEmpty) return {};
+    try {
+      final decoded = jsonDecode(raw);
+      if (decoded is! Map) return {};
+      final out = <String, BarcodeRecord>{};
+      for (final entry in decoded.entries) {
+        if (entry.value is! Map) continue;
+        try {
+          out['${entry.key}'] = BarcodeRecord.fromJson(entry.value as Map);
+        } catch (_) {}
+      }
+      return out;
+    } catch (_) {
+      return {};
+    }
+  }
+
+  List<String> _decodeSearches(String? raw) {
+    if (raw == null || raw.isEmpty) return [];
+    try {
+      final decoded = jsonDecode(raw);
+      if (decoded is! List) return [];
+      return [
+        for (final item in decoded)
+          if (item is String && item.trim().isNotEmpty) item.trim(),
+      ];
+    } catch (_) {
+      return [];
+    }
+  }
+
+  Map<String, int> _decodeMemory(String? raw) {
+
+肉垫本软件 V2.17.0                        第 52 页
+    if (raw == null || raw.isEmpty) return {};
+    try {
+      final decoded = jsonDecode(raw);
+      if (decoded is! Map) return {};
+      return {
+        for (final entry in decoded.entries)
+          if (entry.value is int) '${entry.key}': entry.value as int,
+      };
+    } catch (_) {
+      return {};
+    }
+  }
+
+  String pantryAckKey(PantryEntry entry) => stock.pantryAckKey(entry);
+
+  bool pantryAcked(PantryEntry entry) =>
+      pantryAcks.contains(pantryAckKey(entry));
+
+  Future<void> ackPantry(PantryEntry entry) async {
+    pantryAcks.add(pantryAckKey(entry));
+    await repo.setSetting('pantryAcks', pantryAcks.join(','));
+    notifyListeners();
+  }
+
+  Future<void> unackPantry(PantryEntry entry) async {
+    pantryAcks.remove(pantryAckKey(entry));
+    await repo.setSetting('pantryAcks', pantryAcks.join(','));
+    notifyListeners();
+  }
+
+  List<AgendaItem> agenda() => buildAgenda(
+    now: now,
+    cats: cats,
+    vaccines: vaccines,
+    deworms: deworms,
+    checkups: checkups,
+    conditions: conditions,
+    pantry: pantry,
+    ackedPantryKeys: pantryAcks,
+    stockSnooze: stockSnooze,
+  );
+
+  Future<void> setWidgetEnabled(bool value) async {
+    widgetEnabled = value;
+    await repo.setSetting('widgetEnabled', value ? '1' : '0');
+    await _publishWidget();
+    notifyListeners();
+  }
+
+  Future<void> setThemeMode(ZhuajiThemeMode value) async {
+
+肉垫本软件 V2.17.0                        第 53 页
+    themeMode = value;
+    await repo.setSetting('themeMode', value.storage);
+    await _publishWidget();
+    notifyListeners();
+  }
+
+  Future<void> setDailyGrams(PantryEntry entry, double grams) async {
+    stockSnooze.remove(entry.item.id);
+    await _storeSnooze();
+    await savePantry(_pantryDraft(entry, dailyGrams: grams));
+  }
+
+  Future<void> postponeAgenda(AgendaItem item) async {
+    switch (item.kind) {
+      case AgendaKind.vaccine:
+        final record = _vaccine(item.recordId);
+        final due = record?.nextDue;
+        if (record == null || due == null) return;
+        await saveVaccine(
+          VaccineDraft(
+            id: record.id,
+            catId: record.catId,
+            name: record.name,
+            givenOn: record.givenOn,
+            nextDue: dateOnly(due).add(const Duration(days: 7)),
+            clinic: record.clinic,
+            notes: record.notes,
+            batch: record.batch,
+          ),
+        );
+      case AgendaKind.deworm:
+        final record = _deworm(item.recordId);
+        final due = record?.nextDue;
+        if (record == null || due == null) return;
+        await saveDeworm(
+          DewormDraft(
+            id: record.id,
+            catId: record.catId,
+            kind: record.kind,
+            product: record.product,
+            givenOn: record.givenOn,
+            nextDue: dateOnly(due).add(const Duration(days: 7)),
+            notes: record.notes,
+          ),
+        );
+      case AgendaKind.checkup:
+        final record = _checkup(item.recordId);
+        final due = record?.nextDue;
+        if (record == null || due == null) return;
+        await repo.upsertCheckup(
+
+肉垫本软件 V2.17.0                        第 54 页
+          CheckupDraft(
+            id: record.id,
+            catId: record.catId,
+            itemId: record.itemId,
+            completedOn: record.completedOn,
+            result: record.result,
+            nextDue: dateOnly(due).add(const Duration(days: 7)),
+          ),
+        );
+        await _refresh();
+      case AgendaKind.recheck:
+        final record = _condition(item.recordId);
+        final due = record?.nextRecheck;
+        if (record == null || due == null) return;
+        await setRecheck(record.id, dateOnly(due).add(const Duration(days: 7)));
+      case AgendaKind.expiry:
+        final entry = pantryById(item.recordId);
+        final due = entry?.item.expiryDate;
+        if (entry == null || due == null) return;
+        await savePantry(
+          _pantryDraft(
+            entry,
+            expiryDate: dateOnly(due).add(const Duration(days: 7)),
+          ),
+        );
+      case AgendaKind.opened:
+        final entry = pantryById(item.recordId);
+        if (entry == null) return;
+        await savePantry(
+          _pantryDraft(entry, afterOpenDays: entry.openWindowDays + 7),
+        );
+      case AgendaKind.restock:
+        stockSnooze[item.recordId] = dateOnly(now).add(const Duration(days: 7));
+        await _storeSnooze();
+        await _refresh();
+    }
+  }
+
+  Future<String> completeAgenda(AgendaItem item) async {
+    switch (item.kind) {
+      case AgendaKind.vaccine:
+        final record = _vaccine(item.recordId);
+        if (record == null) return '这条已经不在了';
+        final next = await completeVaccine(record);
+        return '${record.name}记下了，下次 ${formatDate(next)}';
+      case AgendaKind.deworm:
+        final record = _deworm(item.recordId);
+        if (record == null) return '这条已经不在了';
+        final next = await completeDeworm(record);
+        return '${record.product}记下了，下次 ${formatDate(next)}';
+
+肉垫本软件 V2.17.0                        第 55 页
+      case AgendaKind.checkup:
+        final record = _checkup(item.recordId);
+        if (record == null) return '这条已经不在了';
+        final days = _checkupInterval(record);
+        await repo.upsertCheckup(
+          CheckupDraft(
+            catId: record.catId,
+            itemId: record.itemId,
+            completedOn: dateOnly(now),
+            result: record.result,
+            nextDue: dateOnly(now).add(Duration(days: days)),
+          ),
+        );
+        await _refresh();
+        return '体检记下了';
+      case AgendaKind.recheck:
+        final record = _condition(item.recordId);
+        if (record == null) return '这条已经不在了';
+        await repo.upsertCondition(
+          ConditionDraft(
+            id: record.id,
+            catId: record.catId,
+            diseaseId: record.diseaseId,
+            diagnosedOn: record.diagnosedOn,
+            stageLabel: record.stageLabel,
+            note: record.note,
+          ),
+        );
+        await _refresh();
+        return '这次复诊记下了';
+      case AgendaKind.expiry:
+      case AgendaKind.opened:
+        final entry = pantryById(item.recordId);
+        if (entry == null) return '这袋已经不在了';
+        await ackPantry(entry);
+        return '知道了，还在粮仓';
+      case AgendaKind.restock:
+        final entry = pantryById(item.recordId);
+        if (entry == null) return '这袋已经不在了';
+        stockSnooze.remove(entry.item.id);
+        await _storeSnooze();
+        await savePantry(_pantryDraft(entry, openedAt: dateOnly(now)));
+        return '按新开的一袋重新算';
+    }
+  }
+
+  PantryDraft _pantryDraft(
+    PantryEntry entry, {
+    DateTime? expiryDate,
+    DateTime? openedAt,
+
+肉垫本软件 V2.17.0                        第 56 页
+    int? afterOpenDays,
+    double? dailyGrams,
+  }) {
+    return PantryDraft(
+      id: entry.item.id,
+      productId: entry.product.id,
+      productionDate: entry.item.productionDate,
+      expiryDate: expiryDate ?? entry.item.expiryDate,
+      batch: entry.item.batch,
+      dateSource: entry.item.dateSource,
+      openedAt: openedAt ?? entry.item.openedAt,
+      afterOpenDays: afterOpenDays ?? entry.item.afterOpenDays,
+      dailyGrams: dailyGrams ?? entry.item.dailyGrams,
+    );
+  }
+
+  int _checkupInterval(CheckupRecord record) {
+    final item = checkupById(record.itemId);
+    final stage = lifeStageFor(catById(record.catId)?.birthday, now);
+    return item?.byStage[stage]?.intervalDays ?? 365;
+  }
+
+  VaccineRecord? _vaccine(int id) {
+    for (final item in vaccines) {
+      if (item.id == id) return item;
+    }
+    return null;
+  }
+
+  DewormRecord? _deworm(int id) {
+    for (final item in deworms) {
+      if (item.id == id) return item;
+    }
+    return null;
+  }
+
+  CheckupRecord? _checkup(int id) {
+    for (final item in checkups) {
+      if (item.id == id) return item;
+    }
+    return null;
+  }
+
+  ConditionRecord? _condition(int id) {
+    for (final item in conditions) {
+      if (item.id == id) return item;
+    }
+    return null;
+  }
+
+
+肉垫本软件 V2.17.0                        第 57 页
+  Future<void> _storeSnooze() async {
+    await repo.setSetting(
+      'stockSnooze',
+      jsonEncode({
+        for (final entry in stockSnooze.entries)
+          '${entry.key}': dateOnly(entry.value).toIso8601String(),
+      }),
+    );
+  }
+
+  Map<int, DateTime> _decodeSnooze(String? raw) {
+    if (raw == null || raw.isEmpty) return {};
+    try {
+      final decoded = jsonDecode(raw);
+      if (decoded is! Map) return {};
+      final parsed = <int, DateTime>{};
+      for (final entry in decoded.entries) {
+        final id = int.tryParse('${entry.key}');
+        final day = DateTime.tryParse('${entry.value}');
+        if (id != null && day != null) parsed[id] = dateOnly(day);
+      }
+      return parsed;
+    } catch (_) {
+      return {};
+    }
+  }
+
+  Future<void> _publishWidget() async {
+    if (Platform.environment['FLUTTER_TEST'] == 'true') return;
+    final copy = widgetEnabled
+        ? homeWidgetCopy(now: now, items: agenda())
+        : const HomeWidgetCopy(
+            todayLines: ['小组件已关闭'],
+            nextLine: '打开肉垫本查看',
+            route: '/calendar',
+          );
+    await WidgetBridge.publish(copy.toJson(appearance: themeMode.storage));
+  }
+
+  StockInput? _stockInput(PantryEntry entry) {
+    final estimate = stock.estimateStock(
+      spec: entry.product.spec,
+      dailyGrams: entry.item.dailyGrams,
+      openedAt: entry.item.openedAt,
+      today: dateOnly(now),
+    );
+    final runOut = estimate.runOutOn;
+    if (!estimate.low || runOut == null) return null;
+    final held = stockSnooze[entry.item.id];
+    final snoozed = held != null && dateOnly(held).isAfter(dateOnly(now));
+
+肉垫本软件 V2.17.0                        第 58 页
+    return StockInput(
+      id: entry.item.id,
+      productName: entry.product.displayName,
+      runOut: snoozed ? held : runOut,
+      snoozed: snoozed,
+    );
+  }
+
+  String weightAckKey(int catId, WeightChange change) =>
+      '$catId|${change.days}|${change.fromKg}|${change.toKg}';
+
+  bool weightAlertVisible(CatProfile cat) {
+    final change = weightChangeOverMonth(
+      weights.where((item) => item.catId == cat.id).toList(),
+    );
+    if (change == null || !change.notable) return false;
+    return !weightAcks.contains(weightAckKey(cat.id, change));
+  }
+
+  /// Vaccines, deworming and weight alerts due within 30 days for one cat.
+  int dueCountFor(CatProfile cat) {
+    final soon = dateOnly(now).add(const Duration(days: 30));
+    bool due(DateTime? date) => date != null && !dateOnly(date).isAfter(soon);
+    var count = 0;
+    for (final item in vaccines) {
+      if (item.catId == cat.id && due(item.nextDue)) count++;
+    }
+    for (final item in deworms) {
+      if (item.catId == cat.id && due(item.nextDue)) count++;
+    }
+    if (weightAlertVisible(cat)) count++;
+    return count;
+  }
+
+  Future<void> ackWeightAlert(CatProfile cat) async {
+    final change = weightChangeOverMonth(
+      weights.where((item) => item.catId == cat.id).toList(),
+    );
+    if (change == null) return;
+    weightAcks.add(weightAckKey(cat.id, change));
+    await repo.setSetting('weightAcks', weightAcks.join(','));
+    notifyListeners();
+  }
+
+  Future<void> _reschedule() async {
+    try {
+      await notifications.replaceAll(_plan());
+    } catch (error, stack) {
+      debugPrint('提醒同步失败：$error\n$stack');
+    }
+
+肉垫本软件 V2.17.0                        第 59 页
+  }
+
+  List<PlannedNotification> _plan() {
+    return const ReminderPlanner().plan(
+      now: now,
+      dues: [
+        for (final item in vaccines)
+          if (item.nextDue != null)
+            DueInput(
+              id: item.id,
+              catName: _name(item.catId),
+              label: item.name,
+              dueDate: item.nextDue!,
+              vaccine: true,
+            ),
+        for (final item in deworms)
+          if (item.nextDue != null)
+            DueInput(
+              id: item.id,
+              catName: _name(item.catId),
+              label: '${dewormLabel(item.kind)} ${item.product}',
+              dueDate: item.nextDue!,
+              vaccine: false,
+            ),
+      ],
+      expiries: [
+        for (final entry in pantry)
+          if (entry.item.expiryDate != null)
+            ExpiryInput(
+              id: entry.item.id,
+              productName: entry.product.displayName,
+              expiryDate: entry.item.expiryDate!,
+            ),
+      ],
+      opened: [
+        for (final entry in pantry)
+          if (entry.item.openedAt != null)
+            OpenedInput(
+              id: entry.item.id,
+              productName: entry.product.displayName,
+              openedAt: entry.item.openedAt!,
+              afterOpenDays: entry.openWindowDays,
+            ),
+      ],
+      followUps: [
+        for (final item in checkups)
+          if (item.nextDue != null)
+            FollowUpInput(
+              id: item.id,
+              catName: _name(item.catId),
+
+肉垫本软件 V2.17.0                        第 60 页
+              label: checkupById(item.itemId)?.name ?? '体检',
+              dueDate: item.nextDue!,
+              recheck: false,
+            ),
+        for (final item in conditions)
+          if (item.nextRecheck != null)
+            FollowUpInput(
+              id: item.id,
+              catName: _name(item.catId),
+              label: diseaseById(item.diseaseId)?.name ?? '复查',
+              dueDate: item.nextRecheck!,
+              recheck: true,
+            ),
+      ],
+      stocks: [for (final entry in pantry) ?_stockInput(entry)],
+    );
+  }
+
+  String _name(int catId) => catById(catId)?.name ?? '猫咪';
+
+  VaccineRecord? _soonestDue(List<VaccineRecord> records) {
+    final dated = records.where((item) => item.nextDue != null).toList()
+      ..sort((a, b) => a.nextDue!.compareTo(b.nextDue!));
+    return dated.isEmpty ? null : dated.first;
+  }
+
+  DewormRecord? _soonestDeworm(DewormKind kind) {
+    final dated =
+        catDeworms
+            .where((item) => item.kind == kind && item.nextDue != null)
+            .toList()
+          ..sort((a, b) => a.nextDue!.compareTo(b.nextDue!));
+    return dated.isEmpty ? null : dated.first;
+  }
+}
+
+/// One key per product code: a GS1 string and the plain EAN-13 printed under
+/// it both reduce to the same digits, so either scan finds the memory.
+String barcodeKey(String raw) {
+  final code = raw.trim();
+  if (code.isEmpty) return '';
+  final gtin = code.length > 14 ? const Gs1Parser().parse(code).gtin : null;
+  final digits = (gtin ?? code).replaceAll(RegExp(r'\s'), '');
+  if (RegExp(r'^\d+$').hasMatch(digits)) {
+    final trimmed = digits.replaceFirst(RegExp(r'^0+'), '');
+    return trimmed.isEmpty ? '0' : trimmed;
+  }
+  return digits;
+}
+

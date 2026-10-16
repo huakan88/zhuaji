@@ -6,7 +6,9 @@
 
 猫咪喂养与健康记录的本地原型。数据留在手机里，不需要账号和服务器。界面是简体中文。
 
-版本 2.16.1。显示名是肉垫本，英文名 PawPad。包名和 Bundle ID 仍是 `com.maokangji.maokangji`，覆盖安装不会清掉手机里的记录。仓库名仍是 zhuaji。底部四个入口：今天、健康、粮仓、猫咪。今天页顶部左边是全局搜索，右边是相机。粮仓页仍保留本页搜索和相机。除了建档时的猫名、自己添加猫粮时的品牌和名称、今天和粮仓的搜索，其它都用点选或滚轮。浅色是浅绿底和白卡片，深色是深灰绿，默认跟随系统。猫咪页可以改成「跟随系统 / 浅色 / 深色」。照片用大圆角，没有大面积渐变。
+版本 2.17.0。显示名是肉垫本，英文名 PawPad。包名和 Bundle ID 仍是 `com.maokangji.maokangji`，覆盖安装不会清掉手机里的记录。仓库名仍是 zhuaji。底部四个入口：今天、健康、粮仓、猫咪。今天页顶部左边是全局搜索，右边是相机。粮仓页仍保留本页搜索和相机。除了建档时的猫名、自己添加猫粮时的品牌和名称、今天和粮仓的搜索，其它都用点选或滚轮。浅色是浅绿底和白卡片，深色是深灰绿，默认跟随系统。猫咪页可以改成「跟随系统 / 浅色 / 深色」。照片用大圆角，没有大面积渐变。
+
+2.17 为国内应用商店补了首次打开的隐私政策和用户协议。同意之前不初始化通知、扫码和联网，也可以只使用基本功能或退出。相机和相册仍在使用时才申请。猫咪页可以打开协议、撤回同意或删除本机数据。发布签名改读 `android/key.properties`，没有密钥时仍用 debug 签名。说明见 [隐私政策](docs/privacy-policy.md)、[用户协议](docs/user-agreement.md)、[权限说明](docs/permissions.md) 和 [发布签名](docs/release-signing.md)。
 
 2.16.1 定了共享条码的后端：国内阿里云轻量加上现有的 `server/`。提交失败会留在手机队列里，配置接口就绪后再发。扫码会核对应校验位，相机页可以开手电筒，也可以手输条码。粮仓快捷入口、日期行和日历格子的点按收到 48dp。说明见 [共享条码的后端](docs/backend-sync.md)。
 
@@ -98,7 +100,7 @@ Android `AndroidManifest.xml`：
 - `BLUETOOTH_SCAN`（`neverForLocation`）/ `BLUETOOTH_CONNECT`：Android 12+ 读蓝牙秤。打开蓝牙秤页才会申请。
 - `BLUETOOTH` / `BLUETOOTH_ADMIN` / `ACCESS_FINE_LOCATION`（最高到 API 30）：Android 11 及更早扫描蓝牙的系统要求，不读取位置。
 
-隐私政策见 [docs/privacy-policy.md](docs/privacy-policy.md)，应用里在「蓝牙秤 → 隐私政策」。
+隐私政策见 [docs/privacy-policy.md](docs/privacy-policy.md)，应用里在第一次打开和「猫咪 → 隐私政策」。用户协议、权限说明在同一处。
 
 能申请到精确闹钟时按点送达；否则用非精确闹钟，时间可能略有延迟。通知图标是 `res/drawable/ic_stat_paw.xml`。冷启动先画出界面，再打开数据库和通知。
 

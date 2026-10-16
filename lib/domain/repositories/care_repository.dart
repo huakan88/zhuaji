@@ -11,6 +11,9 @@ abstract class CareRepository {
   Future<String?> setting(String key);
   Future<void> setSetting(String key, String value);
 
+  /// Deletes personal rows and restores the built-in food table.
+  Future<void> erasePersonalData();
+
   Future<List<CatPhoto>> photosOf(int catId);
   Future<int> addPhoto({
     required int catId,

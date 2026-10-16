@@ -12,6 +12,7 @@ import '../../core/widgets/weight_trend.dart';
 import '../../domain/care/care_story.dart';
 import '../../domain/models.dart';
 import '../../state/app_controller.dart';
+import '../legal/legal_settings.dart';
 
 class CatsPage extends StatelessWidget {
   const CatsPage({super.key});
@@ -208,6 +209,8 @@ class CatsPage extends StatelessWidget {
                 ),
               ),
             ],
+            const SizedBox(height: 24),
+            const LegalSettings(),
           ],
         ),
       ),

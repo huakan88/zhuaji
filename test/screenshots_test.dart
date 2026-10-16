@@ -170,7 +170,11 @@ Future<void> _capture(
   );
   final scale = _ShotScale();
   await tester.pumpWidget(
-    ZhuajiApp(controller: controller, scaleSource: () => scale),
+    ZhuajiApp(
+      controller: controller,
+      scaleSource: () => scale,
+      gateConsent: false,
+    ),
   );
   await _frames(tester);
   await _shot(tester, folder, 'today');

@@ -22,6 +22,7 @@ Future<void> boot(
       controller: controller,
       initialLocation: location,
       scaleSource: scale,
+      gateConsent: false,
     ),
   );
   await frames(tester);
