@@ -302,7 +302,7 @@ class _ZhuajiAppState extends State<ZhuajiApp> {
       builder: (context, _) => AppScope(
         controller: widget.controller,
         child: MaterialApp.router(
-          title: '肉垫本',
+          title: '花爪',
           scaffoldMessengerKey: zhuajiMessenger,
           debugShowCheckedModeBanner: false,
           theme: buildAppTheme(AppColors.light),

@@ -16,6 +16,15 @@ class LegalSettings extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        const Center(child: BrandMark(size: 72)),
+        const SizedBox(height: 8),
+        Center(
+          child: Text(
+            '花爪',
+            style: zhuaji.copyWith(fontSize: 16, fontWeight: FontWeight.w700),
+          ),
+        ),
+        const SizedBox(height: 12),
         const SectionLabel('协议与数据'),
         const SizedBox(height: 8),
         if (basic) ...[

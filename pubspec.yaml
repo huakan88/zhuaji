@@ -1,5 +1,5 @@
 name: maokangji
-description: "肉垫本（PawPad）：猫咪喂养与健康管理（本地原型）。"
+description: "花爪：猫咪喂养与健康管理（本地原型）。"
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
@@ -78,6 +78,7 @@ flutter:
 
   assets:
     - assets/cats/
+    - assets/brand/
 
   fonts:
     # Static faces only. The same file is registered at every weight the

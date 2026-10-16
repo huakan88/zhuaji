@@ -31,6 +31,8 @@ class LegalBody extends StatelessWidget {
     return ListView(
       padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
       children: [
+        const Center(child: BrandMark(size: 72)),
+        const SizedBox(height: 12),
         Text(
           legalVersionLabel,
           style: zhuaji.copyWith(

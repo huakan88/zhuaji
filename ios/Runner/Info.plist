@@ -7,15 +7,15 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
-	<string>肉垫本</string>
+	<string>花爪</string>
 	<key>NSCameraUsageDescription</key>
-	<string>肉垫本需要使用相机扫描猫粮条码，拍摄包装、化验单和疫苗贴纸，以及为猫咪拍摄头像和体态照片。</string>
+	<string>花爪需要使用相机扫描猫粮条码，拍摄包装、化验单和疫苗贴纸，以及为猫咪拍摄头像和体态照片。</string>
 	<key>NSBluetoothAlwaysUsageDescription</key>
-	<string>肉垫本用蓝牙读取体重秤上的数字，用来记录猫咪体重。只在打开蓝牙秤时使用，不会用来定位，也不会在后台扫描。</string>
+	<string>花爪用蓝牙读取体重秤上的数字，用来记录猫咪体重。只在打开蓝牙秤时使用，不会用来定位，也不会在后台扫描。</string>
 	<key>NSBluetoothPeripheralUsageDescription</key>
-	<string>肉垫本用蓝牙读取体重秤上的数字，用来记录猫咪体重。只在打开蓝牙秤时使用，不会用来定位，也不会在后台扫描。</string>
+	<string>花爪用蓝牙读取体重秤上的数字，用来记录猫咪体重。只在打开蓝牙秤时使用，不会用来定位，也不会在后台扫描。</string>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>肉垫本需要从相册选择猫咪照片、包装照片或化验单。</string>
+	<string>花爪需要从相册选择猫咪照片、包装照片或化验单。</string>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
 	<key>CFBundleURLTypes</key>
@@ -36,7 +36,7 @@
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
-	<string>PawPad</string>
+	<string>花爪</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
