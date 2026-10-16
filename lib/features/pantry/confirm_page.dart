@@ -121,6 +121,16 @@ class _ConfirmPageState extends State<ConfirmPage> {
             _product?.name ?? '先选品牌',
             style: zhuaji.copyWith(fontSize: 22, fontWeight: FontWeight.w700),
           ),
+          if (_product != null && _product!.brand.isNotEmpty) ...[
+            const SizedBox(height: 4),
+            Text(
+              _product!.brand,
+              style: zhuaji.copyWith(
+                fontSize: 13,
+                color: AppColors.of(context).muted,
+              ),
+            ),
+          ],
           const SizedBox(height: 4),
           Text(
             _fromCode

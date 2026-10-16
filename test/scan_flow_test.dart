@@ -42,7 +42,7 @@ void main() {
     },
   );
 
-  test('a 69 barcode hits the local catalog and opens lookup', () async {
+  test('a 69 barcode opens the prefilled bag page, not lookup', () async {
     final database = AppDatabase.memory();
     final controller = AppController(
       repo: DriftCareRepository(database),
@@ -54,14 +54,53 @@ void main() {
       fail('a 69 local hit must not ask the public chain');
     };
     expect(isRetailBarcode('6958862134620'), isTrue);
-    expect(
-      scanDestination(controller, '6958862134620'),
-      '/lookup?code=6958862134620',
-    );
     final record = await controller.resolveBarcode('6958862134620');
     expect(record.source, 'local');
     expect(record.brand, '麦富迪');
     expect(record.name, '三文鱼双拼全价全期猫粮');
+    final route = await scanDestination(controller, '6958862134620');
+    final product = controller.findBarcode('6958862134620');
+    expect(product, isNotNull);
+    expect(product!.brand, '麦富迪');
+    expect(product.name, '三文鱼双拼全价全期猫粮');
+    expect(route, '/confirm?code=6958862134620&product=${product.id}');
+    expect(route.contains('/lookup'), isFalse);
+    await database.close();
+  });
+
+  test('a QR or product link follows the barcode inside it', () async {
+    final database = AppDatabase.memory();
+    final controller = AppController(
+      repo: DriftCareRepository(database),
+      notifications: NoopNotificationService(),
+      recognizer: const MockCoatBreedRecognizer(),
+    );
+    await controller.init();
+    controller.barcodeFetch = (_) async {
+      fail('a local code inside a QR must not ask the public chain');
+    };
+    final session = ScanSession();
+    const link =
+        'https://id.gs1.org/01/06958862134620/10/LOT9?17=270412&11=251012';
+    expect(session.take(link), link);
+    final fromLink = await scanDestination(controller, link);
+    final product = controller.findBarcode('6958862134620');
+    expect(product!.name, '三文鱼双拼全价全期猫粮');
+    expect(fromLink, contains('/confirm?'));
+    expect(fromLink, contains('product=${product.id}'));
+    expect(fromLink, contains(Uri.encodeComponent(link)));
+    expect(fromLink.contains('/lookup'), isFalse);
+
+    final fromPage = await scanDestination(
+      controller,
+      'https://shop.example.com/item/6958862134620',
+    );
+    expect(fromPage, '/confirm?code=6958862134620&product=${product.id}');
+
+    expect(
+      await scanDestination(controller, 'https://id.gs1.org/01/06900000000007'),
+      '/lookup?code=6900000000007',
+    );
     await database.close();
   });
 
@@ -122,6 +161,10 @@ void main() {
     await tester.enterText(find.byType(TextField), '6958862134620');
     await tester.tap(find.text('查看'));
     await frames(tester);
+    expect(find.text('确认'), findsOneWidget);
+    expect(find.text('记下'), findsOneWidget);
+    expect(find.text('商品'), findsNothing);
+    expect(find.text('正在查这个条码'), findsNothing);
     expect(find.text('麦富迪'), findsWidgets);
     expect(find.text('三文鱼双拼全价全期猫粮'), findsWidgets);
 
