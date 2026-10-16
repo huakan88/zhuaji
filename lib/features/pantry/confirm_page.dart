@@ -10,6 +10,7 @@ import '../../domain/parsing/gs1_parser.dart';
 import '../../state/app_controller.dart';
 import '../health/known_or_custom.dart';
 import '../records/record_sheets.dart';
+import 'product_facts.dart';
 
 class ConfirmPage extends StatefulWidget {
   const ConfirmPage({
@@ -138,6 +139,13 @@ class _ConfirmPageState extends State<ConfirmPage> {
                 fontSize: 13,
                 color: AppColors.of(context).muted,
               ),
+            ),
+          ],
+          if (_product != null) ...[
+            const SizedBox(height: 12),
+            ProductFacts(
+              product: _product!,
+              record: shelfRecord(app, _product!),
             ),
           ],
           const SizedBox(height: 4),

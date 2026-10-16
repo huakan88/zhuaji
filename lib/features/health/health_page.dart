@@ -8,6 +8,7 @@ import '../../core/theme/app_tokens.dart';
 import '../../core/widgets/care_timeline.dart';
 import '../../core/widgets/common.dart';
 import '../../domain/care/care_story.dart';
+import '../../domain/care/easy_log.dart';
 import '../../domain/dates.dart';
 import '../../domain/models.dart';
 import '../../state/app_controller.dart';
@@ -122,9 +123,15 @@ class HealthPage extends StatelessWidget {
                 ),
               ],
             ),
-            if (cat != null && app.lastDeworm != null) ...[
+            if (cat != null &&
+                (app.lastDeworm != null || app.lastVaccine != null)) ...[
               const SizedBox(height: 8),
-              _RepeatDeworm(last: app.lastDeworm!, catId: cat.id),
+              if (app.lastDeworm != null)
+                _RepeatDeworm(last: app.lastDeworm!, catId: cat.id),
+              if (app.lastDeworm != null && app.lastVaccine != null)
+                const SizedBox(height: 8),
+              if (app.lastVaccine != null)
+                _RepeatVaccine(last: app.lastVaccine!, catId: cat.id),
             ],
             const SizedBox(height: 16),
             const SectionLabel('近来'),
@@ -272,6 +279,56 @@ class _RepeatDewormState extends State<_RepeatDeworm> {
         side: BorderSide(color: AppColors.of(context).line),
       ),
       child: Text('再记 ${widget.last.product}'),
+    );
+  }
+}
+
+/// One tap records another dose of the last vaccine. No new form.
+class _RepeatVaccine extends StatefulWidget {
+  const _RepeatVaccine({required this.last, required this.catId});
+
+  final VaccineRecord last;
+  final int catId;
+
+  @override
+  State<_RepeatVaccine> createState() => _RepeatVaccineState();
+}
+
+class _RepeatVaccineState extends State<_RepeatVaccine> {
+  var _busy = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final app = AppScope.of<AppController>(context);
+    return OutlinedButton(
+      onPressed: _busy
+          ? null
+          : () async {
+              pawTap();
+              setState(() => _busy = true);
+              final given = dateOnly(app.now);
+              await app.saveVaccine(
+                VaccineDraft(
+                  catId: widget.catId,
+                  name: widget.last.name,
+                  givenOn: given,
+                  nextDue: nextVaccineDate(
+                    app.catById(widget.catId)?.birthday,
+                    given,
+                  ),
+                ),
+              );
+              if (!mounted) return;
+              setState(() => _busy = false);
+              if (!context.mounted) return;
+              showMessage(context, '记下了');
+            },
+      style: OutlinedButton.styleFrom(
+        minimumSize: const Size.fromHeight(48),
+        foregroundColor: AppColors.of(context).ink,
+        side: BorderSide(color: AppColors.of(context).line),
+      ),
+      child: Text('再记 ${widget.last.name}'),
     );
   }
 }

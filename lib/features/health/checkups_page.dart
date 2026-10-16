@@ -126,7 +126,7 @@ class _CheckupsPageState extends State<CheckupsPage> {
                     if (_custom) {
                       final typed = _customText.text.trim();
                       if (typed.isEmpty) {
-                        showMessage(context, '先写上名字');
+                        showMessage(context, '先写上项目');
                         return;
                       }
                       itemId = typed;

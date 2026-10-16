@@ -78,7 +78,7 @@ class _DewormsPageState extends State<DewormsPage> {
         children: [
           if (items.isEmpty)
             Text(
-              '还没记',
+              '还没记驱虫',
               style: zhuaji.copyWith(color: AppColors.of(context).muted),
             )
           else
@@ -147,7 +147,7 @@ class _DewormsPageState extends State<DewormsPage> {
                       selected: product,
                     );
                     if (name == null) {
-                      showMessage(context, '先写上名字');
+                      showMessage(context, '先写上药名');
                       return;
                     }
                     setState(() => _busy = true);

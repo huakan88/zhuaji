@@ -220,25 +220,12 @@ void main() {
       );
       expect(share.submitted, 0);
       expect(controller.shareQueue, hasLength(1));
+      expect(controller.shareQueue.single.nextAttemptAt, isNull);
       expect(await controller.flushBarcodeShare(), 0);
       expect(share.submitted, 0);
 
       share.ready = true;
       share.fail = false;
-      final due = controller.shareQueue.single.nextAttemptAt!;
-      controller.shareQueue = [
-        SharePending(
-          code: controller.shareQueue.single.code,
-          brand: controller.shareQueue.single.brand,
-          name: controller.shareQueue.single.name,
-          spec: controller.shareQueue.single.spec,
-          ingredients: controller.shareQueue.single.ingredients,
-          contributorId: controller.shareQueue.single.contributorId,
-          createdAt: controller.shareQueue.single.createdAt,
-          updatedAt: controller.shareQueue.single.updatedAt,
-          nextAttemptAt: due.subtract(const Duration(minutes: 1)),
-        ),
-      ];
       expect(await controller.flushBarcodeShare(), 1);
       expect(share.rows['6958862134620']?.name, '还没发出去');
       await database.close();

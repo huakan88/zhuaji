@@ -205,7 +205,22 @@ class SharePending {
     );
   }
 
+  /// Queued because the server was not ready. Due immediately: nothing was sent.
+  factory SharePending.waiting(BarcodeRecord record, DateTime now) {
+    return _from(record, now, nextAttemptAt: null);
+  }
+
+  /// Queued after a submit that failed. The first retry waits [shareRetryDelay].
   factory SharePending.fromRecord(BarcodeRecord record, DateTime now) {
+    final when = now.toUtc();
+    return _from(record, now, nextAttemptAt: when.add(shareRetryDelay(1)));
+  }
+
+  static SharePending _from(
+    BarcodeRecord record,
+    DateTime now, {
+    required DateTime? nextAttemptAt,
+  }) {
     final when = now.toUtc();
     return SharePending(
       code: record.code,
@@ -217,7 +232,7 @@ class SharePending {
       createdAt: record.createdAt ?? when,
       updatedAt: record.updatedAt ?? when,
       imageUrl: record.imageUrl,
-      nextAttemptAt: when.add(shareRetryDelay(1)),
+      nextAttemptAt: nextAttemptAt,
     );
   }
 }

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -103,6 +104,14 @@ class AppController extends ChangeNotifier {
 
   DateTime get now => _clock();
 
+  Timer? _shareRetry;
+
+  @override
+  void dispose() {
+    _shareRetry?.cancel();
+    super.dispose();
+  }
+
   CatProfile? get active {
     for (final cat in cats) {
       if (cat.id == activeCatId) return cat;
@@ -132,6 +141,15 @@ class AppController extends ChangeNotifier {
       .fold<double>(0, (sum, item) => sum + item.milliliters);
 
   WeightRecord? get latestWeight => catWeights.isEmpty ? null : catWeights.last;
+
+  /// The most recent shot for this cat, so one tap can record it again.
+  VaccineRecord? get lastVaccine {
+    VaccineRecord? best;
+    for (final item in catVaccines) {
+      if (best == null || item.givenOn.isAfter(best.givenOn)) best = item;
+    }
+    return best;
+  }
 
   /// The most recent dose for this cat, so the form starts on "same as last".
   DewormRecord? get lastDeworm {
@@ -250,6 +268,7 @@ class AppController extends ChangeNotifier {
     privacyChoice = PrivacyChoice.basic;
     await repo.setSetting('privacyConsent', '0');
     shareQueue = [];
+    _cancelShareRetry();
     await _storeShareQueue();
     try {
       await notifications.replaceAll(const []);
@@ -1002,7 +1021,7 @@ class AppController extends ChangeNotifier {
     );
     final config = await _askConfig(client);
     if (!config.ready) {
-      await _enqueueShare(record);
+      await _enqueueShare(record, attempted: false);
       return;
     }
     ShareAnswer answer;
@@ -1017,7 +1036,7 @@ class AppController extends ChangeNotifier {
       answer = const ShareAnswer(ShareStatus.failed);
     }
     if (answer.status == ShareStatus.failed) {
-      await _enqueueShare(record);
+      await _enqueueShare(record, attempted: true);
       return;
     }
     await _dropQueued(record.code);
@@ -1030,12 +1049,50 @@ class AppController extends ChangeNotifier {
     );
   }
 
-  Future<void> _enqueueShare(BarcodeRecord record) async {
-    shareQueue = enqueueShare(
-      shareQueue,
-      SharePending.fromRecord(record, _clock()),
-    );
+  Future<void> _enqueueShare(
+    BarcodeRecord record, {
+    required bool attempted,
+  }) async {
+    final now = _clock();
+    final pending = attempted
+        ? SharePending.fromRecord(record, now)
+        : SharePending.waiting(record, now);
+    shareQueue = enqueueShare(shareQueue, pending);
     await _storeShareQueue();
+    _scheduleShareRetry(shareQueue, now.toUtc());
+  }
+
+  /// Tries again after the soonest queued row is due. Tests advance a fake
+  /// clock and call [flushBarcodeShare] themselves, so they do not arm a timer.
+  void _scheduleShareRetry(List<SharePending> queue, DateTime now) {
+    if (Platform.environment['FLUTTER_TEST'] == 'true') return;
+    if (privacyChoice != PrivacyChoice.accepted || queue.isEmpty) {
+      _cancelShareRetry();
+      return;
+    }
+    _shareRetry?.cancel();
+    Duration? soonest;
+    var dueNow = false;
+    for (final item in queue) {
+      final due = item.nextAttemptAt;
+      if (due == null || !due.isAfter(now)) {
+        dueNow = true;
+        continue;
+      }
+      final gap = due.difference(now);
+      if (soonest == null || gap < soonest) soonest = gap;
+    }
+    var wait = dueNow ? shareRetryDelay(1) : (soonest ?? shareRetryDelay(1));
+    if (wait < const Duration(seconds: 1)) wait = const Duration(seconds: 1);
+    _shareRetry = Timer(wait, () {
+      if (privacyChoice != PrivacyChoice.accepted) return;
+      flushBarcodeShare();
+    });
+  }
+
+  void _cancelShareRetry() {
+    _shareRetry?.cancel();
+    _shareRetry = null;
   }
 
   Future<void> _dropQueued(String code) async {
@@ -1067,7 +1124,10 @@ class AppController extends ChangeNotifier {
     final client = _shares;
     if (client == null) return 0;
     final config = await _askConfig(client);
-    if (!config.ready) return 0;
+    if (!config.ready) {
+      _scheduleShareRetry(shareQueue, _clock().toUtc());
+      return 0;
+    }
     final now = _clock().toUtc();
     final left = <SharePending>[];
     var sent = 0;
@@ -1096,6 +1156,11 @@ class AppController extends ChangeNotifier {
     }
     shareQueue = left;
     await _storeShareQueue();
+    if (left.isEmpty) {
+      _cancelShareRetry();
+    } else {
+      _scheduleShareRetry(left, now);
+    }
     return sent;
   }
 

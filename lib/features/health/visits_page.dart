@@ -110,7 +110,7 @@ class _VisitsPageState extends State<VisitsPage> {
                       selected: _reason,
                     );
                     if (reason == null) {
-                      showMessage(context, '先写上名字');
+                      showMessage(context, '先写上原因');
                       return;
                     }
                     final typedClinic = chosenOrTyped(
@@ -119,7 +119,7 @@ class _VisitsPageState extends State<VisitsPage> {
                       selected: clinic,
                     );
                     if (_clinicCustom && typedClinic == null) {
-                      showMessage(context, '先写上名字');
+                      showMessage(context, '先写上医院');
                       return;
                     }
                     final place = _clinicCustom ? typedClinic : clinic;

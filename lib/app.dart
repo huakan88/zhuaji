@@ -102,7 +102,7 @@ class ZhuajiApp extends StatefulWidget {
   State<ZhuajiApp> createState() => _ZhuajiAppState();
 }
 
-class _ZhuajiAppState extends State<ZhuajiApp> {
+class _ZhuajiAppState extends State<ZhuajiApp> with WidgetsBindingObserver {
   late final GoRouter _router = GoRouter(
     initialLocation: widget.initialLocation,
     routes: [
@@ -243,6 +243,7 @@ class _ZhuajiAppState extends State<ZhuajiApp> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     final choice = widget.controller.privacyChoice;
     if (!widget.gateConsent || choice != PrivacyChoice.unset) {
       _armIntegrations();
@@ -255,6 +256,20 @@ class _ZhuajiAppState extends State<ZhuajiApp> {
     _shortcuts();
     WidgetBridge.listen((route) => openAppRoute(_router, route));
     _openWidgetRoute();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  /// Coming back online should send corrections that were queued offline.
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state != AppLifecycleState.resumed) return;
+    if (widget.controller.privacyChoice != PrivacyChoice.accepted) return;
+    widget.controller.flushBarcodeShare();
   }
 
   Future<void> _acceptConsent() async {

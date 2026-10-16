@@ -62,7 +62,7 @@ void main() {
     expect(find.byType(TextField), findsOneWidget);
     await enter(tester, find.byType(TextField), '   ');
     await tapText(tester, '记下');
-    expect(find.text('先写上名字'), findsOneWidget);
+    expect(find.text('先写上药名'), findsOneWidget);
     expect(controller.catDeworms, hasLength(before));
 
     await enter(tester, find.byType(TextField), '爱沃克');

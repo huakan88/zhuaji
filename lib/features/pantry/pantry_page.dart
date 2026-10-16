@@ -9,6 +9,7 @@ import '../../domain/food/stock.dart';
 import '../../domain/food_options.dart';
 import '../../domain/models.dart';
 import '../../state/app_controller.dart';
+import 'scan_page.dart';
 import '../shell/scan_button.dart';
 
 class PantryPage extends StatefulWidget {
@@ -102,12 +103,7 @@ class _PantryPageState extends State<PantryPage> {
                   const SizedBox(height: 8),
                 ],
             ] else if (stocked.isEmpty && catalog.isEmpty)
-              EmptyHint(
-                title: '没有这款',
-                body: '图鉴里也没有，可以自己添加',
-                action: '自己添加',
-                onAction: () => context.push('/food'),
-              )
+              _PantryMiss(app: app, query: query)
             else ...[
               if (stocked.isNotEmpty) ...[
                 const SectionLabel('粮仓'),
@@ -258,6 +254,38 @@ class _BagRow extends StatelessWidget {
       today: now,
       opened: entry.item.openedAt != null,
     );
+  }
+}
+
+class _PantryMiss extends StatelessWidget {
+  const _PantryMiss({required this.app, required this.query});
+
+  final AppController app;
+  final String query;
+
+  bool get _coded =>
+      productCodeOf(query) != null || rememberedBarcode(app, query);
+
+  @override
+  Widget build(BuildContext context) {
+    return EmptyHint(
+      title: '没有这款',
+      body: _coded ? '手机里没有这串数字，可以再查一次' : '图鉴里也没有，可以自己添加',
+      action: _coded ? '查这个条码' : '自己添加',
+      onAction: () => _open(context),
+      secondary: _coded ? '自己添加' : null,
+      onSecondary: _coded ? () => context.push('/food') : null,
+    );
+  }
+
+  Future<void> _open(BuildContext context) async {
+    if (!_coded) {
+      context.push('/food');
+      return;
+    }
+    final route = await scanDestination(app, query);
+    if (!context.mounted) return;
+    context.push(route);
   }
 }
 

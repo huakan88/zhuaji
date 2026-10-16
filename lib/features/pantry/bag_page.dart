@@ -10,6 +10,7 @@ import '../../domain/food/stock.dart';
 import '../../domain/models.dart';
 import '../../state/app_controller.dart';
 import '../health/known_or_custom.dart';
+import 'product_facts.dart';
 
 class BagPage extends StatelessWidget {
   const BagPage({required this.pantryId, super.key});
@@ -56,6 +57,11 @@ class BagPage extends StatelessWidget {
           Text(
             entry.product.brand,
             style: zhuaji.copyWith(color: AppColors.of(context).muted),
+          ),
+          const SizedBox(height: 12),
+          ProductFacts(
+            product: entry.product,
+            record: shelfRecord(app, entry.product),
           ),
           const SizedBox(height: 12),
           QuietCard(

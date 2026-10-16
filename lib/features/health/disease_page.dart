@@ -112,7 +112,7 @@ class _DiseaseLibraryPageState extends State<DiseaseLibraryPage> {
                               ? _customText.text.trim()
                               : disease.id;
                           if (id.isEmpty) {
-                            showMessage(context, '先写上名字');
+                            showMessage(context, '先写上病名');
                             return;
                           }
                           setState(() => _busy = true);

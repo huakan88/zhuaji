@@ -147,7 +147,7 @@ class _StickerPageState extends State<StickerPage> {
                       selected: name,
                     );
                     if (chosen == null) {
-                      showMessage(context, '先写上名字');
+                      showMessage(context, '先写上疫苗名称');
                       return;
                     }
                     setState(() => _busy = true);

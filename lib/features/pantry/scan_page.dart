@@ -92,8 +92,10 @@ String _confirmRoute(String raw, String matched, int productId) {
 /// A bag already in the pantry opens that bag. A built-in or previously
 /// saved cat food opens the add-bag page with that product filled in.
 /// A QR code or product link that contains the same barcode takes the same
-/// route. An unknown EAN or UPC still opens lookup. A blank scan opens
-/// confirm so the person can pick a brand.
+/// route. An unknown EAN or UPC still opens lookup. A blank scan, or a QR
+/// that is not a product, opens confirm so the person can pick a brand.
+/// Dates and a batch on the code are kept. A saved bag opens even when
+/// its check digit is wrong.
 Future<String> scanDestination(AppController app, String raw) async {
   final value = raw.trim();
   if (value.isEmpty) return '/confirm';
@@ -112,9 +114,20 @@ Future<String> scanDestination(AppController app, String raw) async {
     final id = await app.adoptBarcode(local.toRecord());
     return _confirmRoute(value, local.barcode, id);
   }
+  if (_carryScanPayload(value)) {
+    return '/confirm?code=${Uri.encodeComponent(value)}';
+  }
   final retail = productCodeOf(value);
   if (retail != null) return '/lookup?code=${Uri.encodeComponent(retail)}';
-  return '/confirm?code=${Uri.encodeComponent(value)}';
+  return '/confirm';
+}
+
+/// True when this phone already saved [raw], even if the check digit is wrong.
+bool rememberedBarcode(AppController app, String raw) {
+  final digits = raw.replaceAll(RegExp(r'\D'), '');
+  if (digits.isEmpty) return false;
+  if (app.bagForBarcode(digits) != null) return true;
+  return app.findBarcode(digits) != null;
 }
 
 /// What to say when the camera cannot start. The buttons under the
@@ -147,22 +160,26 @@ class ScanSession {
   var handled = false;
 
   /// The code to open, or null when this read should be ignored.
-  String? take(String? raw) {
+  /// [keepInvalid] accepts a bad check digit the phone already saved.
+  String? take(String? raw, {bool Function(String value)? keepInvalid}) {
     final value = raw?.trim() ?? '';
     if (value.isEmpty) return null;
     if (handled) return null;
-    if (isGtinLength(value) && !hasGtinChecksum(value)) return null;
+    if (isGtinLength(value) && !hasGtinChecksum(value)) {
+      if (keepInvalid == null || !keepInvalid(value)) return null;
+    }
     handled = true;
     return value;
   }
 }
 
 /// Null when [raw] is an EAN-8, UPC-A, EAN-13 or GTIN-14 with a good check digit.
-String? manualBarcodeError(String raw) {
+/// [known] lets a bag already on this phone through, even with a bad digit.
+String? manualBarcodeError(String raw, {bool known = false}) {
   final digits = raw.replaceAll(RegExp(r'\D'), '');
   if (digits.isEmpty) return '写上包装上的数字';
   if (!isGtinLength(digits)) return '需要 8、12、13 或 14 位';
-  if (!hasGtinChecksum(digits)) return '校验没通过，再对一下末位';
+  if (!hasGtinChecksum(digits) && !known) return '校验没通过，再对一下末位';
   return null;
 }
 
@@ -334,7 +351,12 @@ class _ScanPageState extends State<ScanPage> {
             .whereType<String>()
             .where((value) => value.trim().isNotEmpty)
             .firstOrNull;
-        final taken = _session.take(raw);
+        if (!mounted) return;
+        final app = AppScope.of<AppController>(context);
+        final taken = _session.take(
+          raw,
+          keepInvalid: (value) => rememberedBarcode(app, value),
+        );
         if (taken != null) _openConfirm(taken);
       },
     );
@@ -365,7 +387,14 @@ class _ScanPageState extends State<ScanPage> {
       if (_session.handled) return;
       _session.handled = true;
     } else if (!_session.handled) {
-      final taken = _session.take(value);
+      final known = rememberedBarcode(
+        AppScope.of<AppController>(context),
+        value,
+      );
+      final taken = _session.take(
+        value,
+        keepInvalid: known ? (_) => true : null,
+      );
       if (taken == null) return;
       value = taken;
     }
@@ -416,7 +445,12 @@ class _ManualBarcodeDialogState extends State<_ManualBarcodeDialog> {
   }
 
   void _submit() {
-    final error = manualBarcodeError(_code.text);
+    final digits = _code.text.replaceAll(RegExp(r'\D'), '');
+    final known = rememberedBarcode(
+      AppScope.of<AppController>(context),
+      digits,
+    );
+    final error = manualBarcodeError(_code.text, known: known);
     if (error != null) {
       setState(() => _error = error);
       return;

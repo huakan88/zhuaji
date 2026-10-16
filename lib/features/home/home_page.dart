@@ -11,6 +11,7 @@ import '../../domain/dates.dart';
 import '../../domain/models.dart';
 import '../../domain/search/global_search.dart';
 import '../../state/app_controller.dart';
+import '../pantry/scan_page.dart';
 import '../shell/scan_button.dart';
 
 class HomePage extends StatefulWidget {
@@ -104,7 +105,12 @@ class _HomePageState extends State<HomePage> {
             if (query.isNotEmpty) ...[
               const SizedBox(height: 16),
               if (groups.isEmpty)
-                const EmptyHint(title: '没有找到', body: '换个词，或扫包装上的条码')
+                EmptyHint(
+                  title: '没有找到',
+                  body: _canLookup(app, query) ? '这串数字可以拿去对一下' : '换个词，或扫包装上的条码',
+                  action: _canLookup(app, query) ? '查这个条码' : '扫码',
+                  onAction: () => _missedSearch(app, query),
+                )
               else
                 for (final group in groups) ...[
                   SectionLabel(group.label),
@@ -189,7 +195,7 @@ class _HomePageState extends State<HomePage> {
               ),
               const SizedBox(height: 8),
               if (todos.isEmpty)
-                const EmptyHint(title: '今天清静', body: '到期会出现在这里')
+                const EmptyHint(title: '今天清静', body: '疫苗、驱虫和粮到期会出现在这里')
               else if (todayTodos.isEmpty)
                 Text(
                   '今天没有到期',
@@ -216,6 +222,20 @@ class _HomePageState extends State<HomePage> {
         ),
       ),
     );
+  }
+
+  bool _canLookup(AppController app, String query) {
+    return productCodeOf(query) != null || rememberedBarcode(app, query);
+  }
+
+  Future<void> _missedSearch(AppController app, String query) async {
+    if (!_canLookup(app, query)) {
+      context.push('/scan');
+      return;
+    }
+    final route = await scanDestination(app, query);
+    if (!mounted) return;
+    context.push(route);
   }
 
   Future<void> _open(AppController app, SearchHit hit) async {

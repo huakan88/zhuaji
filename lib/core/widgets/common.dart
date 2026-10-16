@@ -374,6 +374,8 @@ class EmptyHint extends StatelessWidget {
     required this.body,
     this.action,
     this.onAction,
+    this.secondary,
+    this.onSecondary,
     super.key,
   });
 
@@ -381,6 +383,8 @@ class EmptyHint extends StatelessWidget {
   final String body;
   final String? action;
   final VoidCallback? onAction;
+  final String? secondary;
+  final VoidCallback? onSecondary;
 
   @override
   Widget build(BuildContext context) {
@@ -409,6 +413,8 @@ class EmptyHint extends StatelessWidget {
             const SizedBox(height: Space.x4),
             FilledButton(onPressed: onAction, child: Text(action!)),
           ],
+          if (secondary != null)
+            TextButton(onPressed: onSecondary, child: Text(secondary!)),
         ],
       ),
     );

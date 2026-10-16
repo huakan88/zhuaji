@@ -24,6 +24,8 @@ void main() {
     expect(manualBarcodeError(''), '写上包装上的数字');
     expect(manualBarcodeError('12345'), '需要 8、12、13 或 14 位');
     expect(manualBarcodeError('6958862134621'), '校验没通过，再对一下末位');
+    expect(manualBarcodeError('6901111222233'), '校验没通过，再对一下末位');
+    expect(manualBarcodeError('6901111222233', known: true), isNull);
     expect(manualBarcodeError('6958 8621 34620'), isNull);
   });
 
@@ -36,9 +38,17 @@ void main() {
       expect(session.handled, isFalse);
       expect(session.take('6958862134621'), isNull);
       expect(session.handled, isFalse);
+      expect(session.take('6901111222233'), isNull);
       expect(session.take('6958862134620'), '6958862134620');
       expect(session.take('036000291452'), isNull);
       expect(session.take('96385074'), isNull);
+      final saved = ScanSession();
+      expect(
+        saved.take('6901111222233', keepInvalid: (_) => true),
+        '6901111222233',
+      );
+      expect(saved.handled, isTrue);
+      expect(saved.take('6958862134620'), isNull);
     },
   );
 
@@ -100,6 +110,14 @@ void main() {
     expect(
       await scanDestination(controller, 'https://id.gs1.org/01/06900000000007'),
       '/lookup?code=6900000000007',
+    );
+    expect(
+      await scanDestination(controller, '(11)251012(17)270412(10)LOT9'),
+      '/confirm?code=${Uri.encodeComponent('(11)251012(17)270412(10)LOT9')}',
+    );
+    expect(
+      await scanDestination(controller, 'https://example.com/not-a-product'),
+      '/confirm',
     );
     await database.close();
   });

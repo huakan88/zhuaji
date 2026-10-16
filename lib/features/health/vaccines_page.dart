@@ -60,7 +60,7 @@ class _VaccinesPageState extends State<VaccinesPage> {
         children: [
           if (shots.isEmpty)
             Text(
-              '还没记',
+              '还没记疫苗',
               style: zhuaji.copyWith(color: AppColors.of(context).muted),
             )
           else
@@ -121,7 +121,7 @@ class _VaccinesPageState extends State<VaccinesPage> {
                       selected: _name,
                     );
                     if (name == null) {
-                      showMessage(context, '先写上名字');
+                      showMessage(context, '先写上疫苗名称');
                       return;
                     }
                     setState(() => _busy = true);
