@@ -313,6 +313,21 @@ class DriftCareRepository implements CareRepository {
   }
 
   @override
+  Future<void> erasePersonalData() async {
+    await _db.customStatement('PRAGMA foreign_keys = OFF');
+    try {
+      await _db.transaction(() async {
+        for (final table in _db.allTables) {
+          await _db.delete(table).go();
+        }
+      });
+    } finally {
+      await _db.customStatement('PRAGMA foreign_keys = ON');
+    }
+    await seedSampleFoods(_db);
+  }
+
+  @override
   Future<List<CatPhoto>> photosOf(int catId) async {
     final rows =
         await (_db.select(_db.catPhotos)
@@ -998,11 +1013,12 @@ class DriftCareRepository implements CareRepository {
 
   @override
   Future<List<LabReport>> labs() async {
-    final reports = await (_db.select(_db.labReports)..orderBy([
-          (t) => OrderingTerm.desc(t.takenOn),
-          (t) => OrderingTerm.desc(t.id),
-        ]))
-        .get();
+    final reports =
+        await (_db.select(_db.labReports)..orderBy([
+              (t) => OrderingTerm.desc(t.takenOn),
+              (t) => OrderingTerm.desc(t.id),
+            ]))
+            .get();
     final values = await (_db.select(
       _db.labValues,
     )..orderBy([(t) => OrderingTerm.asc(t.id)])).get();

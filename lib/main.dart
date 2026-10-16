@@ -7,6 +7,7 @@ import 'package:timezone/timezone.dart' as tz;
 
 import 'app.dart';
 import 'core/config/app_config.dart';
+import 'core/consent_launch.dart';
 import 'data/db/app_database.dart';
 import 'data/repositories/drift_care_repository.dart';
 import 'services/cloud/cloud_bridge.dart';
@@ -32,8 +33,16 @@ Future<void> main() async {
     notifications: notifications,
     recognizer: const ColorCoatRecognizer(),
   );
-  runApp(ZhuajiApp(controller: controller));
-  try {
+  final plan = planLaunch(await repo.setting('privacyConsent'));
+  if (!plan.showConsent) {
+    controller.privacyChoice = plan.initNotifications
+        ? PrivacyChoice.accepted
+        : PrivacyChoice.basic;
+  }
+  var servicesStarted = false;
+  Future<void> startFullServices() async {
+    if (servicesStarted) return;
+    servicesStarted = true;
     tzdata.initializeTimeZones();
     try {
       final info = await FlutterTimezone.getLocalTimezone();
@@ -46,7 +55,6 @@ Future<void> main() async {
     } catch (error, stack) {
       debugPrint('通知初始化失败，记录仍会保存：$error\n$stack');
     }
-    await controller.init();
     notifications.onDone = (key) async {
       final text = await controller.completeFromNotification(key);
       zhuajiMessenger.currentState?.showSnackBar(
@@ -60,6 +68,14 @@ Future<void> main() async {
       config: AppConfig.fromEnvironment(),
       repo: repo,
     ).syncQuietly();
+  }
+
+  controller.onFullAccess = startFullServices;
+  runApp(ZhuajiApp(controller: controller));
+  if (plan.showConsent) return;
+  try {
+    if (plan.initNotifications) await startFullServices();
+    await controller.init();
   } catch (error, stack) {
     debugPrint('启动没有完成：$error\n$stack');
     controller.failStart('本地数据没有打开，可以点重试');
