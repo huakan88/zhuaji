@@ -58,12 +58,39 @@ void main() {
           afterOpenDays: 30,
         ),
       );
-      expect(scanDestination(controller, '6901111222233'), '/bag?id=$bagId');
       expect(
-        scanDestination(controller, '6900000000007'),
+        await scanDestination(controller, '6901111222233'),
+        '/bag?id=$bagId',
+      );
+      expect(
+        await scanDestination(
+          controller,
+          'https://item.example.com/6901111222233.html',
+        ),
+        '/bag?id=$bagId',
+      );
+      expect(
+        await scanDestination(controller, '6900000000007'),
         '/lookup?code=6900000000007',
       );
-      expect(scanDestination(controller, '  '), '/confirm');
+      final loose = await controller.saveFood(
+        const FoodDraft(
+          brand: '山野',
+          name: '冻干双拼',
+          spec: '1.5kg',
+          foodForm: FoodForm.freezeDried,
+          storageMethod: '阴凉干燥，封好袋口。',
+          afterOpenDays: 30,
+          flavor: '鸡肉',
+          isCustom: true,
+        ),
+        barcode: '6901234500004',
+      );
+      expect(
+        await scanDestination(controller, '6901234500004'),
+        '/confirm?code=6901234500004&product=$loose',
+      );
+      expect(await scanDestination(controller, '  '), '/confirm');
     },
   );
 
