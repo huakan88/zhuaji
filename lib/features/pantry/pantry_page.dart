@@ -352,7 +352,7 @@ class _PantryMiss extends StatelessWidget {
         }
         _open(context);
       },
-      secondary: generic ? '扫码' : '自己填写',
+      secondary: generic ? '扫码' : '自己添加',
       onSecondary: () => context.push(
         generic ? '/scan' : createFoodRoute(query),
       ),

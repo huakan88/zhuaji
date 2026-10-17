@@ -126,7 +126,7 @@ class _HomePageState extends State<HomePage> {
                   body: miss.body,
                   action: miss.action,
                   onAction: () => _missedSearch(app, query, miss.lookup),
-                  secondary: '自己填写',
+                  secondary: '自己添加',
                   onSecondary: () => context.push(createFoodRoute(query)),
                 )
               else

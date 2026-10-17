@@ -98,9 +98,12 @@ void main() {
       controller,
       location: '/food?bag=1&code=6900000000007',
     );
-    expect(find.textContaining('没认出到期日，请手写'), findsOneWidget);
-    expect(find.textContaining('不会自动记成一年后'), findsOneWidget);
     expect(find.text('条码 6900000000007'), findsOneWidget);
+    await revealText(tester, '没认出到期日，请手写。不会自动记成一年后。');
+    expect(
+      find.text('没认出到期日，请手写。不会自动记成一年后。'),
+      findsOneWidget,
+    );
     expect(find.textContaining('2027年10月'), findsNothing);
     expect(find.text('请手写'), findsWidgets);
   });
@@ -134,6 +137,7 @@ void main() {
     expect(values, contains('伯纳天纯'));
     expect(values, contains('全价成猫粮'));
     expect(values, contains('鸡肉'));
+    await revealText(tester, '2027年3月15日');
     expect(find.text('2027年3月15日'), findsOneWidget);
   });
 }
