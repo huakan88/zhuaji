@@ -4,9 +4,24 @@
 分支：日常集成在 `develop`，功能用 `feature/*`，修复用 `fix/*`，`main` 只接受合并。
 发版：先改 `pubspec.yaml` 的版本号，用 `release/x.y.z` 合并进 `main`，再打附注标签 `vX.Y.Z`。详见 [Git 工作流](docs/git-workflow.md)。
 
-猫咪喂养与健康记录的本地原型。数据留在手机里，不需要账号和服务器。界面是简体中文。
+猫咪喂养与健康记录的本地原型。数据留在手机里，不需要账号和服务器。界面是简体中文。仓库说明用这一句：花爪：猫健康记录与粮品扫码助手。
 
 版本 2.20.1。显示名是花爪。包名和 Bundle ID 仍是 `com.maokangji.maokangji`，覆盖安装不会清掉手机里的记录。仓库名仍是 zhuaji。底部四个入口：今天、健康、粮仓、猫咪。今天页顶部左边是全局搜索，右边是相机。粮仓页仍保留本页搜索和相机。固定选项旁边可以手写，写上的按原文保存。性别仍是点选。体重按千克记。日期用滚轮。浅色是浅绿底和白卡片，深色是深灰绿，默认跟随系统。猫咪页可以改成「跟随系统 / 浅色 / 深色」。照片用大圆角，没有大面积渐变。
+
+## 版本与进度
+
+当前源码是 **2.20.1**（`pubspec.yaml` 的 `2.20.1+36`）。已经合并进 `main` 并打了附注标签的最新一版是 **v2.19.0**。2.20.0 和 2.20.1 还在拉取请求里，没有打 `v2.20.0` / `v2.20.1`，也没有发 GitHub Release。标签在合并进 `main` 之后才打，见 [Git 工作流](docs/git-workflow.md)。
+
+| 看什么 | 在哪 |
+| --- | --- |
+| 每一版改了什么 | [CHANGELOG.md](CHANGELOG.md) |
+| 准备贴到 Release 的说明 | [发版说明](docs/releases/README.md) |
+| 还在做的事 | [项目板](docs/project-board.md) |
+| 打开中的拉取请求 | [2.20.0](https://github.com/huakan88/zhuaji/pull/1)、[2.20.1](https://github.com/huakan88/zhuaji/pull/2) |
+
+登录 GitHub 后，仓库在头像菜单的 **Your repositories**。还是私有时，用 Private 筛选；没登录或没有权限的人打不开。要出现在个人主页，打开仓库后点 **Pin repository**（主页最多钉 6 个）。
+
+下面从 2.18 起是页面上能看到的变化。完整条目在变更记录里。
 
 2.18 把用户看得到的名字改成花爪。启动图标、启动页、空状态、没有照片时的头像，以及协议页上的标志，都用同一张奶油色绒毛肉垫（粉色肉垫，深绿色底）。包名仍是 `com.maokangji.maokangji`。通知栏小图标仍是白色剪影，避免状态栏显示成彩色方块。
 
@@ -96,6 +111,8 @@ flutter run -d android
 ```bash
 flutter build apk --release --target-platform android-arm64 --no-tree-shake-icons
 ```
+
+没有 `android/key.properties` 时，这个包用 Android debug 签名（证书主体 `CN=Android Debug`）。可以装到自己的手机上看，不能提交应用商店。上架前按 [发布签名](docs/release-signing.md) 换上传密钥，之后的更新必须用同一把密钥。安装包不放进仓库，需要时把打好的 APK 放到仓库外面的临时链接。隐私政策在 [docs/privacy-policy.md](docs/privacy-policy.md)，应用里第一次打开和「猫咪 → 隐私政策」也能看。
 
 iOS 只能在 Mac 上编译。这台 Linux 环境里 `flutter build ios` 不是可用命令，产不出模拟器包，也产不出未签名真机包。步骤、限制和还缺的账号见下面的「iOS」。
 
