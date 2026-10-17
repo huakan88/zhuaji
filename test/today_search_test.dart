@@ -179,7 +179,8 @@ void main() {
       return const BarcodeResponse(404, '{"status":0}');
     };
     await boot(tester, controller, location: '/lookup?code=6970000000000');
-    expect(find.text('公开库里没有这款'), findsOneWidget);
+    expect(find.text('库里没有这款'), findsOneWidget);
+    expect(find.textContaining('手写品牌、名称和规格'), findsOneWidget);
     expect(find.textContaining('国产粮'), findsOneWidget);
     expect(find.text('拍包装识别'), findsOneWidget);
     expect(find.text('选品牌'), findsOneWidget);

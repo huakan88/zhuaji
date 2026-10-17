@@ -114,6 +114,12 @@ Future<String> scanDestination(AppController app, String raw) async {
     final id = await app.adoptBarcode(local.toRecord());
     return _confirmRoute(value, local.barcode, id);
   }
+  for (final key in keys) {
+    final contributed = app.contributedBarcode(key);
+    if (contributed == null) continue;
+    final id = await app.adoptBarcode(contributed);
+    return _confirmRoute(value, contributed.code, id);
+  }
   if (_carryScanPayload(value)) {
     return '/confirm?code=${Uri.encodeComponent(value)}';
   }
@@ -141,7 +147,7 @@ SearchMiss searchMissFor(String query, {required bool remembered}) {
   if (remembered || productCodeOf(query) != null) {
     return const SearchMiss(
       title: '没有找到',
-      body: '手机里没有这串数字，可以再查一次。',
+      body: '库里没有这串数字。可以手写品牌、名称和规格，保存后下次就能认出。',
       lookup: true,
     );
   }
@@ -163,7 +169,22 @@ SearchMiss searchMissFor(String query, {required bool remembered}) {
       lookup: false,
     );
   }
-  return const SearchMiss(title: '没有找到', body: '换个名字，或扫包装上的条码。', lookup: false);
+  return const SearchMiss(
+    title: '没有找到',
+    body: '可以手写品牌、名称和规格并保存，或扫包装上的条码。',
+    lookup: false,
+  );
+}
+
+/// Opens the create form with a barcode, or with the words the person typed.
+String createFoodRoute(String query) {
+  final code = productCodeOf(query);
+  if (code != null) {
+    return '/food?bag=1&code=${Uri.encodeComponent(code)}';
+  }
+  final name = query.trim();
+  if (name.isEmpty) return '/food?bag=1';
+  return '/food?bag=1&name=${Uri.encodeComponent(name)}';
 }
 
 /// True when this phone already saved [raw], even if the check digit is wrong.

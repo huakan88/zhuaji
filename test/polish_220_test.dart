@@ -67,7 +67,8 @@ void main() {
     await enter(tester, find.byType(TextField), '没有这只猫');
     await frames(tester);
     expect(find.text('没有找到'), findsOneWidget);
-    expect(find.text('换个名字，或扫包装上的条码。'), findsOneWidget);
+    expect(find.text('可以手写品牌、名称和规格并保存，或扫包装上的条码。'), findsOneWidget);
+    expect(find.text('自己填写'), findsOneWidget);
 
     await enter(tester, find.byType(TextField), '6958862134621');
     await frames(tester);

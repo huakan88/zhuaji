@@ -6,6 +6,7 @@ import '../../core/theme/app_fonts.dart';
 import '../../core/theme/app_tokens.dart';
 import '../../core/widgets/common.dart';
 import '../../domain/dates.dart';
+import '../../domain/food/recognition_draft.dart';
 import '../../domain/food/stock.dart';
 import '../../domain/food_options.dart';
 import '../../domain/models.dart';
@@ -99,6 +100,14 @@ class _PantryPageState extends State<PantryPage> {
               ],
             ),
             const SizedBox(height: 16),
+            if (query.isEmpty && app.openDrafts.isNotEmpty) ...[
+              const SectionLabel('最近识别'),
+              const SizedBox(height: 8),
+              for (final draft in app.openDrafts.take(3)) ...[
+                _DraftRow(draft: draft),
+                const SizedBox(height: 8),
+              ],
+            ],
             if (query.isEmpty) ...[
               const SectionLabel('先到期的排在上面'),
               const SizedBox(height: 8),
@@ -136,6 +145,50 @@ class _PantryPageState extends State<PantryPage> {
             ],
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _DraftRow extends StatelessWidget {
+  const _DraftRow({required this.draft});
+
+  final RecognitionDraft draft;
+
+  @override
+  Widget build(BuildContext context) {
+    final hint = draft.expiry == null ? '到期日没填，接着写' : '接着填';
+    return QuietCard(
+      onTap: () => context.push(draft.resumeRoute),
+      child: Row(
+        children: [
+          const IconWell(icon: Icons.history),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  draft.title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: zhuaji.copyWith(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  hint,
+                  style: zhuaji.copyWith(
+                    fontSize: 12,
+                    color: AppColors.of(context).muted,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -284,11 +337,13 @@ class _PantryMiss extends StatelessWidget {
     final generic = !miss.lookup && miss.title == '没有找到';
     return EmptyHint(
       title: miss.lookup || generic ? '没有这款' : miss.title,
-      body: generic ? '图鉴里也没有。可以自己添加，或扫包装上的条码。' : miss.body,
+      body: generic
+          ? '图鉴里也没有。可以手写品牌、名称和规格并保存，或扫包装上的条码。'
+          : miss.body,
       action: generic ? '自己添加' : miss.action,
       onAction: () {
         if (generic) {
-          context.push('/food');
+          context.push(createFoodRoute(query));
           return;
         }
         if (!miss.lookup) {
@@ -297,8 +352,10 @@ class _PantryMiss extends StatelessWidget {
         }
         _open(context);
       },
-      secondary: generic ? '扫码' : '自己添加',
-      onSecondary: () => context.push(generic ? '/scan' : '/food'),
+      secondary: generic ? '扫码' : '自己填写',
+      onSecondary: () => context.push(
+        generic ? '/scan' : createFoodRoute(query),
+      ),
     );
   }
 

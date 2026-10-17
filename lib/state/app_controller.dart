@@ -10,6 +10,7 @@ import '../domain/care/agenda.dart';
 import '../domain/care/easy_log.dart';
 import '../domain/dates.dart';
 import '../domain/food/barcode_lookup.dart';
+import '../domain/food/recognition_draft.dart';
 import '../domain/food/fresh_recipes.dart';
 import '../domain/food/local_barcodes.dart';
 import '../domain/food/stock.dart' as stock;
@@ -91,6 +92,9 @@ class AppController extends ChangeNotifier {
 
   /// Consented product corrections the share server has not accepted yet.
   List<SharePending> shareQueue = [];
+
+  /// Unfinished scans and pack photos. Newest first.
+  List<RecognitionDraft> recognitionDrafts = [];
 
   /// The owner's own weight from the last 「抱猫称」, offered again next time.
   double? ownerWeightKg;
@@ -307,6 +311,7 @@ class AppController extends ChangeNotifier {
     barcodeCatalog = {};
     barcodeRevisions = {};
     shareQueue = [];
+    recognitionDrafts = [];
     recentSearches = [];
     ownerWeightKg = null;
     permissionNote = null;
@@ -743,6 +748,90 @@ class AppController extends ChangeNotifier {
     return null;
   }
 
+  /// A correction still on this phone, or waiting to reach the shared library,
+  /// when the product row itself is gone.
+  BarcodeRecord? contributedBarcode(String code) {
+    final key = barcodeKey(code);
+    if (key.isEmpty) return null;
+    SharePending? pending;
+    for (final row in shareQueue) {
+      if (barcodeKey(row.code) == key) pending = row;
+    }
+    if (pending != null &&
+        pending.brand.trim().isNotEmpty &&
+        pending.name.trim().isNotEmpty) {
+      return pending.toRecord();
+    }
+    final revision = barcodeRevisions[key];
+    if (revision == null) return null;
+    if (revision.brand.trim().isEmpty || revision.name.trim().isEmpty) {
+      return null;
+    }
+    return BarcodeRecord(
+      code: code.trim(),
+      found: true,
+      brand: revision.brand,
+      name: revision.name,
+      quantity: revision.spec,
+      ingredients: revision.ingredients,
+      nutrients: const [],
+      source: 'user',
+      createdAt: revision.createdAt,
+      updatedAt: revision.updatedAt,
+    );
+  }
+
+  List<RecognitionDraft> get openDrafts => [
+    for (final draft in recognitionDrafts)
+      if (draft.unfinished) draft,
+  ];
+
+  RecognitionDraft? draftById(String id) {
+    for (final draft in recognitionDrafts) {
+      if (draft.id == id) return draft;
+    }
+    return null;
+  }
+
+  /// The draft for this barcode, or the one opened by [id].
+  RecognitionDraft? draftFor({String? id, String barcode = ''}) {
+    if (id != null && id.isNotEmpty) {
+      final pinned = draftById(id);
+      if (pinned != null) return pinned;
+    }
+    final key = barcode.trim();
+    if (key.isEmpty) return null;
+    return draftById(recognitionDraftId(barcode: key));
+  }
+
+  Future<void> saveRecognitionDraft(
+    RecognitionDraft draft, {
+    bool merge = false,
+  }) async {
+    if (draft.isBlank) return;
+    recognitionDrafts = upsertRecognitionDraft(
+      recognitionDrafts,
+      draft,
+      merge: merge,
+    );
+    await repo.setSetting(
+      recognitionDraftsKey,
+      encodeRecognitionDrafts(recognitionDrafts),
+    );
+    notifyListeners();
+  }
+
+  Future<void> removeRecognitionDraft(String id) async {
+    final next = dropRecognitionDraft(recognitionDrafts, id);
+    if (next.length == recognitionDrafts.length) return;
+    recognitionDrafts = next;
+    await repo.setSetting(
+      recognitionDraftsKey,
+      encodeRecognitionDrafts(recognitionDrafts),
+    );
+    notifyListeners();
+  }
+
   Future<void> saveOwnerWeight(double kg) async {
     ownerWeightKg = kg;
     await repo.setSetting('ownerWeightKg', kg.toStringAsFixed(2));
@@ -878,6 +967,8 @@ class AppController extends ChangeNotifier {
     }
     final local = localCatFood(code);
     if (local != null) return local.toRecord();
+    final contributed = contributedBarcode(code);
+    if (contributed != null) return contributed;
     if (!refresh) {
       final cached = barcodeCatalog[key];
       if (cached != null) return cached;
@@ -1283,6 +1374,9 @@ class AppController extends ChangeNotifier {
     barcodeCatalog = _decodeCatalog(await repo.setting('barcodeCatalog'));
     barcodeRevisions = _decodeRevisions(await repo.setting('barcodeRevisions'));
     shareQueue = decodeShareQueue(await repo.setting('barcodeShareQueue'));
+    recognitionDrafts = decodeRecognitionDrafts(
+      await repo.setting(recognitionDraftsKey),
+    );
     recentSearches = _decodeSearches(await repo.setting('recentSearches'));
     ownerWeightKg = double.tryParse(await repo.setting('ownerWeightKg') ?? '');
     privacyChoice = switch (await repo.setting('privacyConsent')) {

@@ -39,6 +39,7 @@ List<OcrLine> ocrLinesOf(RecognizedText recognized) {
           top: box.top.toDouble(),
           right: box.right.toDouble(),
           bottom: box.bottom.toDouble(),
+          confidence: line.confidence,
         ),
       );
     }

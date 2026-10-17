@@ -1,6 +1,6 @@
 # 花爪商店文案
 
-适用版本：2.20.0（versionCode 35）  
+适用版本：2.20.1（versionCode 36）  
 包名：`com.maokangji.maokangji`  
 软件名称：花爪
 
