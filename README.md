@@ -1,12 +1,40 @@
 # 花爪
 
-主仓是 GitHub：[huakan88/zhuaji](https://github.com/huakan88/zhuaji)。克隆：`git clone https://github.com/huakan88/zhuaji.git`，进入目录后执行 `flutter pub get`。
-分支：日常集成在 `develop`，功能用 `feature/*`，修复用 `fix/*`，`main` 只接受合并。
-发版：先改 `pubspec.yaml` 的版本号，用 `release/x.y.z` 合并进 `main`，再打附注标签 `vX.Y.Z`。详见 [Git 工作流](docs/git-workflow.md)。
+花爪：猫咪健康/粮仓/扫码助手（原肉垫本），包名 `com.maokangji.maokangji`。
 
-猫咪喂养与健康记录的本地原型。数据留在手机里，不需要账号和服务器。界面是简体中文。仓库说明用这一句：花爪：猫健康记录与粮品扫码助手。
+在手机上记下猫咪的口粮、疫苗、驱虫和体重。记录留在这台手机里，不需要账号。界面是简体中文。显示名是花爪，仓库名仍是 zhuaji。覆盖安装不会清掉已经记下的记录。
 
-版本 2.20.1。显示名是花爪。包名和 Bundle ID 仍是 `com.maokangji.maokangji`，覆盖安装不会清掉手机里的记录。仓库名仍是 zhuaji。底部四个入口：今天、健康、粮仓、猫咪。今天页顶部左边是全局搜索，右边是相机。粮仓页仍保留本页搜索和相机。固定选项旁边可以手写，写上的按原文保存。性别仍是点选。体重按千克记。日期用滚轮。浅色是浅绿底和白卡片，深色是深灰绿，默认跟随系统。猫咪页可以改成「跟随系统 / 浅色 / 深色」。照片用大圆角，没有大面积渐变。
+底部四个入口：
+
+- **今天**：这只猫当天要办的事。顶部左边是搜索，右边是相机。
+- **健康**：体重、疫苗、驱虫、就医、体检、看病。
+- **粮仓**：每袋还能吃几天。本页也能搜索和扫码。
+- **猫咪**：档案、照片，以及隐私政策和用户协议。
+
+当前源码版本是 **2.20.1**（`pubspec.yaml` 的 `2.20.1+36`）。已经合并进 `main` 的最新标签是 **v2.19.0**。
+
+主仓：[huakan88/zhuaji](https://github.com/huakan88/zhuaji)。
+
+```bash
+git clone https://github.com/huakan88/zhuaji.git
+cd zhuaji
+flutter pub get
+flutter run -d android
+```
+
+自己安装的 arm64 包用下面这条命令。必须带 `--no-tree-shake-icons`，否则图标字体会被裁成方框。没有 `android/key.properties` 时，包是 Android debug 签名（证书主体 `CN=Android Debug`），可以装到自己的手机，不能提交商店。安装包不放进仓库。上架前按 [发布签名](docs/release-signing.md) 换上传密钥。
+
+```bash
+flutter build apk --release --target-platform android-arm64 --no-tree-shake-icons
+```
+
+隐私政策在 [docs/privacy-policy.md](docs/privacy-policy.md)。应用里第一次打开，以及「猫咪 → 隐私政策」，都能看。用户协议和权限说明在同一处。
+
+拉取请求：日常集成在 `develop`，功能用 `feature/*`，修复用 `fix/*`。`main` 只接受合并。发版先改 `pubspec.yaml`，用 `release/x.y.z` 合并进 `main`，再打附注标签 `vX.Y.Z`。详见 [Git 工作流](docs/git-workflow.md)。
+
+GitHub Projects 和 Issues 这次都建不了（接口 403）。看板写在 [项目板](docs/project-board.md)，三列是待做、进行中、已完成。条码不在表里可以手写、到期日不再默认成一年后，这两项在 2.20.1 里已经做了，还没合并进 `main`。选品牌仍会带出「室内成猫」，留在待做。
+
+固定选项旁边可以手写，写上的按原文保存。性别仍是点选。体重按千克记。日期用滚轮。浅色是浅绿底和白卡片，深色是深灰绿，默认跟随系统。猫咪页可以改成「跟随系统 / 浅色 / 深色」。照片用大圆角，没有大面积渐变。
 
 ## 版本与进度
 
@@ -112,7 +140,7 @@ flutter run -d android
 flutter build apk --release --target-platform android-arm64 --no-tree-shake-icons
 ```
 
-没有 `android/key.properties` 时，这个包用 Android debug 签名（证书主体 `CN=Android Debug`）。可以装到自己的手机上看，不能提交应用商店。上架前按 [发布签名](docs/release-signing.md) 换上传密钥，之后的更新必须用同一把密钥。安装包不放进仓库，需要时把打好的 APK 放到仓库外面的临时链接。隐私政策在 [docs/privacy-policy.md](docs/privacy-policy.md)，应用里第一次打开和「猫咪 → 隐私政策」也能看。
+没有 `android/key.properties` 时仍是 debug 签名，只能自己安装。安装包不放进仓库。上架密钥见 [发布签名](docs/release-signing.md)。
 
 iOS 只能在 Mac 上编译。这台 Linux 环境里 `flutter build ios` 不是可用命令，产不出模拟器包，也产不出未签名真机包。步骤、限制和还缺的账号见下面的「iOS」。
 
