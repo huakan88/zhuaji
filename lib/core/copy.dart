@@ -7,3 +7,9 @@ const kGuidelineSources =
 const kBarcodeNote = '条码里没有日期。扫到这袋粮之后，再拍包装上的日期，或者用滚轮点。';
 
 const kSampleFoodNote = '没核实的条码、热量和开封天数先空着，以你手里的包装为准。';
+
+/// Shown when a barcode correction is waiting to leave this phone.
+String shareQueueNotice(int count) {
+  if (count <= 0) return '';
+  return '有 $count 条条码修正还没发出去。联网后会自动提交。';
+}

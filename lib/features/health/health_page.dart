@@ -33,12 +33,12 @@ class HealthPage extends StatelessWidget {
             now: app.now,
           );
     const tiles = [
-      _Tile('体重', '步进记下', Icons.monitor_weight_outlined, '/weight'),
+      _Tile('体重', '加减 0.05', Icons.monitor_weight_outlined, '/weight'),
       _Tile('疫苗', '猫三联、狂犬', Icons.vaccines_outlined, '/vaccines'),
       _Tile('驱虫', '体内、体外', Icons.bug_report_outlined, '/deworms'),
       _Tile('就医', '体检、呕吐', Icons.local_hospital_outlined, '/visits'),
       _Tile('体检', '按年龄', Icons.fact_check_outlined, '/checkups'),
-      _Tile('看病', '点病名', Icons.healing_outlined, '/diseases'),
+      _Tile('看病', '常见病', Icons.healing_outlined, '/diseases'),
       _Tile('化验', '血常规、生化', Icons.biotech_outlined, '/labs'),
     ];
     return Scaffold(
@@ -125,13 +125,15 @@ class HealthPage extends StatelessWidget {
             ),
             if (cat != null &&
                 (app.lastDeworm != null || app.lastVaccine != null)) ...[
+              const SizedBox(height: 12),
+              const SectionLabel('接着上次'),
               const SizedBox(height: 8),
-              if (app.lastDeworm != null)
-                _RepeatDeworm(last: app.lastDeworm!, catId: cat.id),
-              if (app.lastDeworm != null && app.lastVaccine != null)
-                const SizedBox(height: 8),
               if (app.lastVaccine != null)
                 _RepeatVaccine(last: app.lastVaccine!, catId: cat.id),
+              if (app.lastDeworm != null && app.lastVaccine != null)
+                const SizedBox(height: 8),
+              if (app.lastDeworm != null)
+                _RepeatDeworm(last: app.lastDeworm!, catId: cat.id),
             ],
             const SizedBox(height: 16),
             const SectionLabel('近来'),
@@ -252,13 +254,23 @@ class _RepeatDewormState extends State<_RepeatDeworm> {
   @override
   Widget build(BuildContext context) {
     final app = AppScope.of<AppController>(context);
+    final given = dateOnly(app.now);
+    final done = dewormLoggedOn(
+      app.deworms,
+      catId: widget.catId,
+      product: widget.last.product,
+      day: given,
+    );
     return OutlinedButton(
       onPressed: _busy
           ? null
           : () async {
+              if (done) {
+                showMessage(context, '今天已经记过${widget.last.product}');
+                return;
+              }
               pawTap();
               setState(() => _busy = true);
-              final given = dateOnly(app.now);
               await app.saveDeworm(
                 DewormDraft(
                   catId: widget.catId,
@@ -278,7 +290,9 @@ class _RepeatDewormState extends State<_RepeatDeworm> {
         foregroundColor: AppColors.of(context).ink,
         side: BorderSide(color: AppColors.of(context).line),
       ),
-      child: Text('再记 ${widget.last.product}'),
+      child: Text(
+        done ? '今天已经记过${widget.last.product}' : '今天再记 ${widget.last.product}',
+      ),
     );
   }
 }
@@ -300,13 +314,23 @@ class _RepeatVaccineState extends State<_RepeatVaccine> {
   @override
   Widget build(BuildContext context) {
     final app = AppScope.of<AppController>(context);
+    final given = dateOnly(app.now);
+    final done = vaccineLoggedOn(
+      app.vaccines,
+      catId: widget.catId,
+      name: widget.last.name,
+      day: given,
+    );
     return OutlinedButton(
       onPressed: _busy
           ? null
           : () async {
+              if (done) {
+                showMessage(context, '今天已经记过${widget.last.name}');
+                return;
+              }
               pawTap();
               setState(() => _busy = true);
-              final given = dateOnly(app.now);
               await app.saveVaccine(
                 VaccineDraft(
                   catId: widget.catId,
@@ -328,7 +352,9 @@ class _RepeatVaccineState extends State<_RepeatVaccine> {
         foregroundColor: AppColors.of(context).ink,
         side: BorderSide(color: AppColors.of(context).line),
       ),
-      child: Text('再记 ${widget.last.name}'),
+      child: Text(
+        done ? '今天已经记过${widget.last.name}' : '今天再记 ${widget.last.name}',
+      ),
     );
   }
 }

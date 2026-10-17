@@ -105,7 +105,7 @@ void main() {
 
     await enter(tester, find.byType(TextField), '幼猫慕斯罐');
     expect(find.text('幼猫慕斯罐'), findsWidgets);
-    expect(find.textContaining('未入库'), findsWidgets);
+    expect(find.textContaining('还没放进粮仓'), findsWidgets);
     await tapText(tester, '幼猫慕斯罐', index: 1);
     expect(find.text('确认'), findsWidgets);
     expect(find.text('幼猫慕斯罐'), findsWidgets);

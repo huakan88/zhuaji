@@ -91,7 +91,7 @@ List<SearchGroup> globalSearch({
         SearchHit(
           group: '猫粮库',
           title: item.displayName,
-          subtitle: '未入库',
+          subtitle: '还没放进粮仓',
           route: '/confirm?product=${item.id}',
         ),
     for (final card in freshCards)

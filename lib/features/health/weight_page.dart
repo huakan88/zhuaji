@@ -5,7 +5,10 @@ import '../../core/theme/app_fonts.dart';
 import '../../core/theme/app_tokens.dart';
 import '../../core/widgets/common.dart';
 import '../../core/widgets/weight_trend.dart';
+import '../../domain/dates.dart';
+import '../../domain/models.dart';
 import '../../state/app_controller.dart';
+import 'need_cat.dart';
 
 class WeightPage extends StatefulWidget {
   const WeightPage({super.key});
@@ -22,14 +25,14 @@ class _WeightPageState extends State<WeightPage> {
   Widget build(BuildContext context) {
     final app = AppScope.of<AppController>(context);
     final cat = app.active;
-    if (cat == null) {
-      return Scaffold(
-        backgroundColor: AppColors.of(context).background,
-        appBar: zhuajiBar('体重'),
-        body: const Center(child: Text('先选择一只猫')),
-      );
-    }
+    if (cat == null) return const NeedCatPage(title: '体重');
     final kg = _kg ??= app.latestWeight?.weightKg ?? 4;
+    WeightRecord? todayLog;
+    for (final item in app.catWeights) {
+      if (dateOnly(item.loggedOn) == dateOnly(app.now)) todayLog = item;
+    }
+    final unchanged =
+        todayLog != null && (todayLog.weightKg - kg).abs() < 0.0001;
     return Scaffold(
       backgroundColor: AppColors.of(context).background,
       appBar: zhuajiBar('体重'),
@@ -48,9 +51,16 @@ class _WeightPageState extends State<WeightPage> {
             ),
             const SizedBox(height: 8),
             Text(
-              '点一下，每次 0.05 kg',
+              '点一下，每次 0.05 千克',
               style: zhuaji.copyWith(color: AppColors.of(context).muted),
             ),
+            if (todayLog != null) ...[
+              const SizedBox(height: 4),
+              Text(
+                '今天已经记过 ${todayLog.weightKg.toStringAsFixed(2)} 千克',
+                style: zhuaji.copyWith(color: AppColors.of(context).muted),
+              ),
+            ],
             const SizedBox(height: 24),
             Row(
               children: [
@@ -100,9 +110,10 @@ class _WeightPageState extends State<WeightPage> {
                 ? null
                 : () async {
                     setState(() => _busy = true);
-                    await app.addWeight(kg);
+                    if (!unchanged) await app.addWeight(kg);
                     await app.ackWeightAlert(cat);
                     if (!context.mounted) return;
+                    if (unchanged) showMessage(context, '今天已经记过');
                     if (context.canPop()) {
                       context.pop();
                     } else {

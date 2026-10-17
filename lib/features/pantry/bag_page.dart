@@ -119,6 +119,7 @@ class BagPage extends StatelessWidget {
           const SizedBox(height: 28),
           FilledButton(
             onPressed: () async {
+              if (!await confirmFinishBag(context)) return;
               await app.removePantry(entry.item.id);
               if (!context.mounted) return;
               showMessage(context, '吃完了');

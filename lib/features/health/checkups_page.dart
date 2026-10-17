@@ -10,6 +10,7 @@ import '../../domain/health/lab_catalog.dart';
 import '../../domain/health/life_stage.dart';
 import '../../state/app_controller.dart';
 import 'known_or_custom.dart';
+import 'need_cat.dart';
 
 class CheckupsPage extends StatefulWidget {
   const CheckupsPage({super.key});
@@ -34,13 +35,7 @@ class _CheckupsPageState extends State<CheckupsPage> {
   Widget build(BuildContext context) {
     final app = AppScope.of<AppController>(context);
     final cat = app.active;
-    if (cat == null) {
-      return Scaffold(
-        backgroundColor: AppColors.of(context).background,
-        appBar: zhuajiBar('体检'),
-        body: const Center(child: Text('先选择一只猫')),
-      );
-    }
+    if (cat == null) return const NeedCatPage(title: '体检');
     final plan = recommendCheckups(
       birthday: cat.birthday,
       breed: cat.breed,

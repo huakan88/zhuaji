@@ -204,7 +204,7 @@ void main() {
       scanCameraMessage(MobileScannerErrorCode.unsupported),
       contains('选品牌'),
     );
-    expect(scanCameraMessage(null), '相机没开');
+    expect(scanCameraMessage(null), '相机没打开。可以手输条码，或选品牌。');
   });
 }
 

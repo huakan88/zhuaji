@@ -11,6 +11,7 @@ import '../../domain/models.dart';
 import '../../state/app_controller.dart';
 import '../records/record_sheets.dart';
 import 'known_or_custom.dart';
+import 'need_cat.dart';
 
 class VaccinesPage extends StatefulWidget {
   const VaccinesPage({super.key});
@@ -26,6 +27,21 @@ class _VaccinesPageState extends State<VaccinesPage> {
   var _custom = false;
   DateTime? _given;
   var _busy = false;
+  var _seeded = false;
+
+  void _seed(VaccineRecord? last) {
+    if (_seeded) return;
+    _seeded = true;
+    final lastName = last?.name.trim() ?? '';
+    if (lastName.isEmpty) return;
+    if (!_names.contains(lastName)) {
+      _custom = true;
+      _customText.text = lastName;
+      _name = lastName;
+      return;
+    }
+    _name = lastName;
+  }
 
   @override
   void dispose() {
@@ -37,13 +53,8 @@ class _VaccinesPageState extends State<VaccinesPage> {
   Widget build(BuildContext context) {
     final app = AppScope.of<AppController>(context);
     final cat = app.active;
-    if (cat == null) {
-      return Scaffold(
-        backgroundColor: AppColors.of(context).background,
-        appBar: zhuajiBar('疫苗'),
-        body: const Center(child: Text('先选择一只猫')),
-      );
-    }
+    if (cat == null) return const NeedCatPage(title: '疫苗');
+    _seed(app.lastVaccine);
     final given = _given ??= dateOnly(app.now);
     final next = nextVaccineDate(cat.birthday, given);
     final shots = [...app.catVaccines]
@@ -122,6 +133,15 @@ class _VaccinesPageState extends State<VaccinesPage> {
                     );
                     if (name == null) {
                       showMessage(context, '先写上疫苗名称');
+                      return;
+                    }
+                    if (vaccineLoggedOn(
+                      app.vaccines,
+                      catId: cat.id,
+                      name: name,
+                      day: given,
+                    )) {
+                      showMessage(context, '今天已经记过$name');
                       return;
                     }
                     setState(() => _busy = true);

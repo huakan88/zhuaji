@@ -449,7 +449,14 @@ class AppController extends ChangeNotifier {
   Future<void> addWeight(double kg) async {
     final cat = active;
     if (cat == null) return;
-    await repo.addWeight(catId: cat.id, loggedOn: dateOnly(now), weightKg: kg);
+    final today = dateOnly(now);
+    WeightRecord? todayLog;
+    for (final item in catWeights) {
+      if (dateOnly(item.loggedOn) == today) todayLog = item;
+    }
+    if (todayLog != null && (todayLog.weightKg - kg).abs() < 0.0001) return;
+    if (todayLog != null) await repo.deleteWeight(todayLog.id);
+    await repo.addWeight(catId: cat.id, loggedOn: today, weightKg: kg);
     await _refresh();
   }
 
@@ -553,7 +560,7 @@ class AppController extends ChangeNotifier {
     required int intervalDays,
   }) async {
     final cat = active;
-    if (cat == null) return '先选择一只猫';
+    if (cat == null) return '先点一只猫';
     final pending = catCheckups.any(
       (item) =>
           item.itemId == itemId &&

@@ -17,6 +17,7 @@ import '../../services/vaccine_ocr_service.dart';
 import '../../state/app_controller.dart';
 import '../records/record_sheets.dart';
 import 'known_or_custom.dart';
+import 'need_cat.dart';
 
 class StickerPage extends StatefulWidget {
   const StickerPage({this.initial, super.key});
@@ -59,13 +60,7 @@ class _StickerPageState extends State<StickerPage> {
   Widget build(BuildContext context) {
     final app = AppScope.of<AppController>(context);
     final cat = app.active;
-    if (cat == null) {
-      return Scaffold(
-        backgroundColor: AppColors.of(context).background,
-        appBar: zhuajiBar('疫苗贴纸'),
-        body: const Center(child: Text('先选择一只猫')),
-      );
-    }
+    if (cat == null) return const NeedCatPage(title: '疫苗贴纸');
     final given = _given ??= dateOnly(app.now);
     if (!_seeded) {
       _seeded = true;

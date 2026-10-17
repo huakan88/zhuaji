@@ -51,6 +51,14 @@ void main() {
     expect(find.text('已吃完'), findsOneWidget);
     expect(find.text('删除'), findsOneWidget);
     await tapText(tester, '已吃完');
+    expect(find.text('这袋吃完了？'), findsOneWidget);
+    await tapText(tester, '取消');
+    expect(
+      controller.pantry.any((item) => item.product.name == '室内成猫全价粮'),
+      isTrue,
+    );
+    await tapText(tester, '已吃完');
+    await tapText(tester, '吃完了');
     expect(
       controller.pantry.any((item) => item.product.name == '室内成猫全价粮'),
       isFalse,

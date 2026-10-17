@@ -59,7 +59,7 @@ void main() {
   testWidgets('one tap records the last vaccine again', (tester) async {
     await boot(tester, controller, location: '/health');
     final before = controller.catVaccines.length;
-    await tapText(tester, '再记 猫三联');
+    await tapText(tester, '今天再记 猫三联');
     expect(controller.catVaccines, hasLength(before + 1));
     final saved = controller.catVaccines.reduce(
       (a, b) => a.givenOn.isAfter(b.givenOn) ? a : b,

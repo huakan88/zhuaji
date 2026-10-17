@@ -10,9 +10,12 @@ import '../../core/widgets/care_timeline.dart';
 import '../../core/widgets/common.dart';
 import '../../core/widgets/weight_trend.dart';
 import '../../domain/care/care_story.dart';
+import '../../domain/dates.dart';
 import '../../domain/models.dart';
 import '../../state/app_controller.dart';
 import '../legal/legal_settings.dart';
+import '../records/record_sheets.dart';
+import 'cat_form_page.dart';
 
 class CatsPage extends StatelessWidget {
   const CatsPage({super.key});
@@ -127,23 +130,19 @@ class CatsPage extends StatelessWidget {
                         pawTap();
                         context.push('/cat-form?id=${cat.id}');
                       },
-                      child: Column(
-                        children: [
-                          _ProfileLine(
-                            label: '品种',
-                            value: (cat.breed == null || cat.breed!.isEmpty)
-                                ? '还没写'
-                                : cat.breed!,
-                          ),
-                          Divider(
-                            height: 16,
-                            color: AppColors.of(context).line,
-                          ),
-                          _ProfileLine(
-                            label: '年龄',
-                            value: ageLabel(cat.birthday, app.now),
-                          ),
-                        ],
+                      child: _ProfileLine(
+                        label: '品种',
+                        value: (cat.breed == null || cat.breed!.isEmpty)
+                            ? '还没写'
+                            : cat.breed!,
+                      ),
+                    ),
+                    Divider(height: 16, color: AppColors.of(context).line),
+                    GestureDetector(
+                      onTap: () => _pickBirthday(context, app, cat),
+                      child: _ProfileLine(
+                        label: '年龄',
+                        value: ageLabel(cat.birthday, app.now),
                       ),
                     ),
                     Divider(height: 16, color: AppColors.of(context).line),
@@ -160,6 +159,29 @@ class CatsPage extends StatelessWidget {
                       ),
                     ),
                   ],
+                ),
+              ),
+              const SizedBox(height: 12),
+              const SectionLabel('性别'),
+              const SizedBox(height: 8),
+              CatSexPicker(
+                sex: cat.sex,
+                onChanged: (value) =>
+                    app.saveCat(copyCatDraft(cat, sex: value)),
+              ),
+              const SizedBox(height: 8),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: ChoiceChip(
+                  label: Text(cat.neutered ? '绝育了' : '还没绝育'),
+                  labelPadding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 8,
+                  ),
+                  selected: cat.neutered,
+                  selectedColor: AppColors.of(context).brandTint,
+                  onSelected: (value) =>
+                      app.saveCat(copyCatDraft(cat, neutered: value)),
                 ),
               ),
               if (app.catWeights.length > 1) ...[
@@ -215,6 +237,19 @@ class CatsPage extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  Future<void> _pickBirthday(
+    BuildContext context,
+    AppController app,
+    CatProfile cat,
+  ) async {
+    pawTap();
+    final initial =
+        cat.birthday ?? DateTime(app.now.year - 1, app.now.month, app.now.day);
+    final picked = await pickDate(context, initial);
+    if (picked == null) return;
+    await app.saveCat(copyCatDraft(cat, birthday: dateOnly(picked)));
   }
 
   String _meta(CatProfile cat, DateTime now) {
