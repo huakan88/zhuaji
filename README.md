@@ -1,6 +1,6 @@
 # 花爪
 
-花爪：猫咪健康/粮仓/扫码助手（原肉垫本），包名 `com.maokangji.maokangji`。
+花爪：猫健康记录与粮品扫码助手。包名 `com.maokangji.maokangji`，仓库名 zhuaji。显示名花爪，原先也叫肉垫本。
 
 在手机上记下猫咪的口粮、疫苗、驱虫和体重。记录留在这台手机里，不需要账号。界面是简体中文。显示名是花爪，仓库名仍是 zhuaji。覆盖安装不会清掉已经记下的记录。
 
@@ -48,7 +48,7 @@ GitHub Projects 和 Issues 这次都建不了（接口 403）。看板写在 [�
 | 还在做的事 | [项目板](docs/project-board.md) |
 | 打开中的拉取请求 | [2.20.0](https://github.com/huakan88/zhuaji/pull/1)、[2.20.1](https://github.com/huakan88/zhuaji/pull/2) |
 
-登录 GitHub 后，仓库在头像菜单的 **Your repositories**。还是私有时，用 Private 筛选；没登录或没有权限的人打不开。要出现在个人主页，打开仓库后点 **Pin repository**（主页最多钉 6 个）。
+仓库说明用这一句：花爪：猫健康记录与粮品扫码助手。登录后在仓库页的 About 齿轮里贴上。要让没登录的人也能打开，仓库主人在 **Settings → General → Danger zone → Change repository visibility** 里改成 Public。改成公开之后，打开仓库点 **Pin repository**，主页最多钉 6 个。还是私有时，头像菜单 **Your repositories**，筛选 Private，才能看到。
 
 下面从 2.18 起是页面上能看到的变化。完整条目在变更记录里。
 
