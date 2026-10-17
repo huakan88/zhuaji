@@ -43,7 +43,8 @@ GitHub Projects 和 Issues 这次都建不了（接口 403）。看板写在 [�
 | 看什么 | 在哪 |
 | --- | --- |
 | 每一版改了什么 | [CHANGELOG.md](CHANGELOG.md) |
-| 准备贴到 Release 的说明 | [发版说明](docs/releases/README.md) |
+| 已经打在 `main` 上的 Release | [全部 Release](https://github.com/huakan88/zhuaji/releases)：[v2.19.0](https://github.com/huakan88/zhuaji/releases/tag/v2.19.0)、[v2.18.2](https://github.com/huakan88/zhuaji/releases/tag/v2.18.2)、[v2.18.1](https://github.com/huakan88/zhuaji/releases/tag/v2.18.1)、[v2.18.0](https://github.com/huakan88/zhuaji/releases/tag/v2.18.0) |
+| 2.20 合并进 `main` 之后再贴的说明 | [发版说明](docs/releases/README.md) |
 | 还在做的事 | [项目板](docs/project-board.md) |
 | 打开中的拉取请求 | [2.20.0](https://github.com/huakan88/zhuaji/pull/1)、[2.20.1](https://github.com/huakan88/zhuaji/pull/2) |
 
