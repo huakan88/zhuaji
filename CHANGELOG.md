@@ -1,19 +1,19 @@
 # 变更记录
 
-版本号在 `pubspec.yaml`。`+` 后面是 Android `versionCode`。已经打在 `main` 上的附注标签写在条目标题里。2.20.0 和 2.20.1 还在拉取请求中，没有标签，也没有 GitHub Release。准备贴到 Release 的正文在 [docs/releases/README.md](docs/releases/README.md)。
+版本号在 `pubspec.yaml`。`+` 后面是 Android `versionCode`。已经打在 `main` 上的附注标签写在条目标题里。Release 正文在 [docs/releases/README.md](docs/releases/README.md)。
 
-## 2.20.1 — 未打标签
+## 2.20.1 — [Release v2.20.1](https://github.com/huakan88/zhuaji/releases/tag/v2.20.1)
 
-`2.20.1+36`。拉取请求：[huakan88/zhuaji#2](https://github.com/huakan88/zhuaji/pull/2)。包名、隐私门禁和底栏四个入口没变。
+`2.20.1+36`。已在 `main`。包名、隐私门禁和底栏四个入口没变。
 
 - 条码不在本机表、共享库、待提交修正和免密钥公开库里时，停在填写页，条码已经填上。可以手写品牌、名称和规格，保存进粮仓。
 - 拍包装仍用手机上的 ML Kit 认字。`到期时间`、`保质期`、`EXP`、`EXPIRY`、`生产日期`、`MFG` 对到对应栏。没读到或置信度不够时，到期日留空，提示手写，不再默认成今天加一年。
 - 没写完的扫描和识别写进本机设置。关掉页面后，粮仓和今天的「最近识别」可以接着填。
 - 安装包用 debug 签名，只给自己安装，不放进仓库。
 
-## 2.20.0 — 未打标签
+## 2.20.0 — [Release v2.20.0](https://github.com/huakan88/zhuaji/releases/tag/v2.20.0)
 
-`2.20.0+35`。拉取请求：[huakan88/zhuaji#1](https://github.com/huakan88/zhuaji/pull/1)。
+`2.20.0+35`。已在 `main`。
 
 - 搜不到时把换名字、末位不对、这不是猫粮条码、这串数字可以再查，分开写。
 - 扫到无关二维码会说明这不是猫粮条码，不再套上一款粮。相机打不开、校验没过，页面上直接写下一步。

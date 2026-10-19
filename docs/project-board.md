@@ -1,6 +1,6 @@
 # 项目板
 
-GitHub Projects 和 Issues 都没有建起来：当前令牌对 `huakan88/zhuaji` 返回 403，不能建项目，也不能开 Issue。这一页就是看板。列是待做、进行中、已完成。条目来自已经合并的标签和还开着的拉取请求。
+GitHub Projects 和 Issues 都没有建起来：当前令牌对 `huakan88/zhuaji` 返回 403，不能建项目，也不能开 Issue。这一页就是看板。列是待做、进行中、已完成。条目来自已经合并的标签。
 
 若以后能开 Issue，建议用标签 `enhancement`，标题用下面这几条：
 
@@ -15,18 +15,16 @@ GitHub Projects 和 Issues 都没有建起来：当前令牌对 `huakan88/zhuaji
 - 体重大数字仍写千克，旁边是「千克」。没有单位开关。
 - iPhone 桌面小组件只有源码，还没编进安装包。要付费开发者账号和 App Group。
 - 蓝牙秤按公开协议解析，还没用真秤核对。
-- `v2.20.0`、`v2.20.1` 等拉取请求合并进 `main` 后再打附注标签，并按 [发版说明](releases/README.md) 建 Release。
 - 上架安装包换成自己的上传密钥。仓库里不放密钥，也不放 APK。
 
 ## 进行中
 
-- [2.20.1 扫码手写、包装识别和本机草稿](https://github.com/huakan88/zhuaji/pull/2)。分支 `cursor/scan-ocr-drafts-dd0b`。
-- [2.20.0 搜索、扫码、健康和档案](https://github.com/huakan88/zhuaji/pull/1)。分支 `cursor/ux-2-20-0-9425`。
+- 没有进行中的版本。
 
 ## 已完成
 
-- 条码不在本机表里时，可以手写品牌、名称和规格并保存。到期日没读到就留空。没写完的识别留在本机。（2.20.1，待合并）
-- 搜不到、无关二维码、同一天重复记录、吃完一袋，页面上写下一步。（2.20.0，待合并）
+- v2.20.1 条码不在本机表里时，可以手写品牌、名称和规格并保存。到期日没读到就留空。没写完的识别留在本机。标签和 [Release](https://github.com/huakan88/zhuaji/releases/tag/v2.20.1) 已在 `main`。
+- v2.20.0 搜不到、无关二维码、同一天重复记录、吃完一袋，页面上写下一步。标签和 [Release](https://github.com/huakan88/zhuaji/releases/tag/v2.20.0) 已在 `main`。
 - v2.19.0 扫到的粮在同一页写品牌、品名和规格。标签已在 `main`。
 - v2.18.0 显示名改为花爪。v2.18.1 扫到就打开。v2.18.2 固定选项可以手写。标签已在 `main`。
 - v2.17.0 第一次打开先征得同意。标签已在 `main`。
