@@ -11,7 +11,7 @@
 - **粮仓**：每袋还能吃几天。本页也能搜索和扫码。
 - **猫咪**：档案、照片，以及隐私政策和用户协议。
 
-当前源码版本是 **2.20.2**（`pubspec.yaml` 的 `2.20.2+37`）。已经合并进 `main` 的最新标签仍是 **v2.20.1**。2.20.2 的标签在这一版合并进 `main` 之后再打。
+当前源码版本是 **2.20.2**（`pubspec.yaml` 的 `2.20.2+37`）。已经合并进 `main` 的最新标签是 **[v2.20.2](https://github.com/huakan88/zhuaji/releases/tag/v2.20.2)**。
 
 主仓：[huakan88/zhuaji](https://github.com/huakan88/zhuaji)。
 
@@ -32,18 +32,18 @@ flutter build apk --release --target-platform android-arm64 --no-tree-shake-icon
 
 拉取请求：日常集成在 `develop`，功能用 `feature/*`，修复用 `fix/*`。`main` 只接受合并。发版先改 `pubspec.yaml`，用 `release/x.y.z` 合并进 `main`，再打附注标签 `vX.Y.Z`。详见 [Git 工作流](docs/git-workflow.md)。
 
-GitHub Projects 和 Issues 这次都建不了（接口 403）。看板写在 [项目板](docs/project-board.md)，三列是待做、进行中、已完成。2.20.2 在做拍包装后的核对页。条码不在表里可以手写、到期日不再默认成一年后，这两项在 2.20.1 里已经合并进 `main`。选品牌仍会带出「室内成猫」，留在待做。
+GitHub Projects 和 Issues 这次都建不了（接口 403）。看板写在 [项目板](docs/project-board.md)，三列是待做、进行中、已完成。2.20.2 拍包装后先核对再存进粮仓，已经合并进 `main`。条码不在表里可以手写、到期日不再默认成一年后，这两项在 2.20.1 里已经合并进 `main`。选品牌仍会带出「室内成猫」，留在待做。
 
 固定选项旁边可以手写，写上的按原文保存。性别仍是点选。体重按千克记。日期用滚轮。浅色是浅绿底和白卡片，深色是深灰绿，默认跟随系统。猫咪页可以改成「跟随系统 / 浅色 / 深色」。照片用大圆角，没有大面积渐变。
 
 ## 版本与进度
 
-当前源码是 **2.20.2**（`pubspec.yaml` 的 `2.20.2+37`）。已经合并进 `main` 并打了附注标签的最新一版是 **v2.20.1**。[v2.20.0](https://github.com/huakan88/zhuaji/releases/tag/v2.20.0) 和 [v2.20.1](https://github.com/huakan88/zhuaji/releases/tag/v2.20.1) 都已发出。2.20.2 还没打标签。发版步骤见 [Git 工作流](docs/git-workflow.md)。
+当前源码是 **2.20.2**（`pubspec.yaml` 的 `2.20.2+37`）。已经合并进 `main` 并打了附注标签的最新一版是 **[v2.20.2](https://github.com/huakan88/zhuaji/releases/tag/v2.20.2)**。[v2.20.0](https://github.com/huakan88/zhuaji/releases/tag/v2.20.0)、[v2.20.1](https://github.com/huakan88/zhuaji/releases/tag/v2.20.1) 和 [v2.20.2](https://github.com/huakan88/zhuaji/releases/tag/v2.20.2) 都已发出。发版步骤见 [Git 工作流](docs/git-workflow.md)。
 
 | 看什么 | 在哪 |
 | --- | --- |
 | 每一版改了什么 | [CHANGELOG.md](CHANGELOG.md) |
-| 已经打在 `main` 上的 Release | [全部 Release](https://github.com/huakan88/zhuaji/releases)：[v2.20.1](https://github.com/huakan88/zhuaji/releases/tag/v2.20.1)、[v2.20.0](https://github.com/huakan88/zhuaji/releases/tag/v2.20.0)、[v2.19.0](https://github.com/huakan88/zhuaji/releases/tag/v2.19.0)、[v2.18.2](https://github.com/huakan88/zhuaji/releases/tag/v2.18.2) |
+| 已经打在 `main` 上的 Release | [全部 Release](https://github.com/huakan88/zhuaji/releases)：[v2.20.2](https://github.com/huakan88/zhuaji/releases/tag/v2.20.2)、[v2.20.1](https://github.com/huakan88/zhuaji/releases/tag/v2.20.1)、[v2.20.0](https://github.com/huakan88/zhuaji/releases/tag/v2.20.0)、[v2.19.0](https://github.com/huakan88/zhuaji/releases/tag/v2.19.0) |
 | 发版说明 | [docs/releases/README.md](docs/releases/README.md) |
 | 还在做的事 | [项目板](docs/project-board.md) |
 
