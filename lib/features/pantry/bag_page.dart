@@ -99,7 +99,7 @@ class BagPage extends StatelessWidget {
           _line(
             '到期',
             entry.item.expiryDate == null
-                ? '没填'
+                ? '没读到，不会提醒临期'
                 : formatDate(entry.item.expiryDate!),
           ),
           _line('开封', opened == null ? '没开' : formatDate(opened)),

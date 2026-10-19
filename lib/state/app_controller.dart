@@ -10,6 +10,7 @@ import '../domain/care/agenda.dart';
 import '../domain/care/easy_log.dart';
 import '../domain/dates.dart';
 import '../domain/food/barcode_lookup.dart';
+import '../domain/food/expiry_policy.dart';
 import '../domain/food/recognition_draft.dart';
 import '../domain/food/fresh_recipes.dart';
 import '../domain/food/local_barcodes.dart';
@@ -1809,15 +1810,7 @@ class AppController extends ChangeNotifier {
               vaccine: false,
             ),
       ],
-      expiries: [
-        for (final entry in pantry)
-          if (entry.item.expiryDate != null)
-            ExpiryInput(
-              id: entry.item.id,
-              productName: entry.product.displayName,
-              expiryDate: entry.item.expiryDate!,
-            ),
-      ],
+      expiries: expiryReminders(pantry),
       opened: [
         for (final entry in pantry)
           if (entry.item.openedAt != null)

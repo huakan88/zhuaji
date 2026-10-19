@@ -36,7 +36,9 @@ void main() {
     expect(find.text('健康'), findsOneWidget);
     expect(find.text('粮仓'), findsOneWidget);
     expect(find.text('猫咪'), findsOneWidget);
+    await revealText(tester, '到期粮');
     expect(_homeText('到期粮'), findsOneWidget);
+    await revealText(tester, '疫苗');
     expect(_homeText('疫苗'), findsOneWidget);
     await revealText(tester, '示例体外驱虫');
     expect(_homeText('驱虫'), findsNWidgets(2));

@@ -428,7 +428,7 @@ class _Miss extends StatelessWidget {
         ),
         const SizedBox(height: 8),
         OutlinedButton(
-          onPressed: () => context.push('/food?shot=1&bag=1&code=$encoded'),
+          onPressed: () => context.push('/pack?shot=1&code=$encoded'),
           child: const Text('拍包装识别'),
         ),
         const SizedBox(height: 8),

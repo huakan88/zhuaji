@@ -208,219 +208,215 @@ class _FoodFormPageState extends State<FoodFormPage> {
     return PopScope(
       canPop: true,
       onPopInvokedWithResult: (didPop, result) {
-        if (didPop && result == null) _captureDraft(materialize: true);
+        if (didPop && result == null) _captureDraft();
       },
       child: Scaffold(
-      backgroundColor: AppColors.of(context).background,
-      appBar: zhuajiBar(editing ? '改这款' : '自己添加'),
-      body: ListView(
-        padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
-        children: [
-          if (_photo != null) ...[
-            ClipRRect(
-              borderRadius: BorderRadius.circular(Radii.l),
-              child: Image.file(
-                File(_photo!),
-                height: 160,
-                width: double.infinity,
-                fit: BoxFit.cover,
-              ),
-            ),
-            const SizedBox(height: 12),
-          ],
-          Row(
-            children: [
-              Expanded(
-                child: OutlinedButton(
-                  onPressed: _busy ? null : () => _readPack(ImageSource.camera),
-                  child: const Text('拍包装正面'),
+        backgroundColor: AppColors.of(context).background,
+        appBar: zhuajiBar(editing ? '改这款' : '自己添加'),
+        body: ListView(
+          padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
+          children: [
+            if (_photo != null) ...[
+              ClipRRect(
+                borderRadius: BorderRadius.circular(Radii.l),
+                child: Image.file(
+                  File(_photo!),
+                  height: 160,
+                  width: double.infinity,
+                  fit: BoxFit.cover,
                 ),
               ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: OutlinedButton(
-                  onPressed: _busy
-                      ? null
-                      : () => _readPack(ImageSource.gallery),
-                  child: const Text('相册'),
-                ),
-              ),
+              const SizedBox(height: 12),
             ],
-          ),
-          const SizedBox(height: 8),
-          Text(
-            '拍完会填上品牌和名称，核对一下就行',
-            style: zhuaji.copyWith(
-              fontSize: 12,
-              color: AppColors.of(context).muted,
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: _busy ? null : () => _openPack(camera: true),
+                    child: const Text('拍包装正面'),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: _busy ? null : () => _openPack(camera: false),
+                    child: const Text('相册'),
+                  ),
+                ),
+              ],
             ),
-          ),
-          const SizedBox(height: 12),
-          TextField(
-            controller: _brand,
-            textInputAction: TextInputAction.next,
-            decoration: const InputDecoration(labelText: '品牌'),
-          ),
-          TextField(
-            controller: _name,
-            textInputAction: TextInputAction.done,
-            decoration: const InputDecoration(labelText: '名称'),
-          ),
-          if (widget.barcode.trim().isNotEmpty) ...[
             const SizedBox(height: 8),
             Text(
-              '条码 ${widget.barcode.trim()}',
-              style: zhuaji.copyWith(
-                fontSize: 13,
-                color: AppColors.of(context).muted,
-              ),
-            ),
-          ],
-          const SizedBox(height: 12),
-          TextField(
-            controller: _ingredients,
-            minLines: 1,
-            maxLines: 4,
-            decoration: const InputDecoration(labelText: '配料'),
-          ),
-          const SizedBox(height: 16),
-          const SectionLabel('形态'),
-          const SizedBox(height: 8),
-          KnownOrCustom(
-            known: [for (final form in FoodForm.values) formLabel(form)],
-            selected: formLabel(_form),
-            custom: _formCustom,
-            controller: _formText,
-            hint: '形态',
-            onKnown: (label) => setState(() {
-              _formCustom = false;
-              _form = _formForLabel(label);
-            }),
-            onCustom: () => setState(() => _formCustom = true),
-          ),
-          const SizedBox(height: 16),
-          const SectionLabel('口味'),
-          const SizedBox(height: 8),
-          KnownOrCustom(
-            known: flavors,
-            selected: _flavor,
-            custom: _flavorCustom,
-            controller: _flavorText,
-            hint: '口味',
-            onKnown: (label) => setState(() {
-              if (!_flavorCustom && _flavor == label) {
-                _flavor = '';
-              } else {
-                _flavorCustom = false;
-                _flavor = label;
-              }
-            }),
-            onCustom: () => setState(() => _flavorCustom = true),
-          ),
-          const SizedBox(height: 16),
-          const SectionLabel('规格'),
-          const SizedBox(height: 8),
-          KnownOrCustom(
-            known: foodSpecs,
-            selected: _spec,
-            custom: _specCustom,
-            controller: _specText,
-            hint: '规格',
-            onKnown: (label) => setState(() {
-              if (!_specCustom && _spec == label) {
-                _spec = '';
-              } else {
-                _specCustom = false;
-                _spec = label;
-              }
-            }),
-            onCustom: () => setState(() => _specCustom = true),
-          ),
-          if (showDates) ...[
-            const SizedBox(height: 16),
-            const SectionLabel('这袋的日期'),
-            const SizedBox(height: 8),
-            Text(
-              _expiry == null
-                  ? '没认出到期日，请手写。不会自动记成一年后。'
-                  : '核对一下到期日',
+              '拍完会填上品牌和名称，核对一下就行',
               style: zhuaji.copyWith(
                 fontSize: 12,
                 color: AppColors.of(context).muted,
               ),
             ),
-            const SizedBox(height: 8),
-            QuietCard(
-              child: Column(
-                children: [
-                  DateLine(
-                    label: '生产',
-                    date: _production,
-                    placeholder: '请手写',
-                    onTap: () async {
-                      final picked = await pickDate(
-                        context,
-                        _production ??
-                            dateOnly(AppScope.of<AppController>(context).now),
-                      );
-                      if (picked == null) return;
-                      setState(() => _production = dateOnly(picked));
-                      _captureDraft();
-                    },
-                  ),
-                  DateLine(
-                    label: '到期',
-                    date: _expiry,
-                    placeholder: '请手写',
-                    onTap: () async {
-                      final picked = await pickDate(
-                        context,
-                        _expiry ??
-                            dateOnly(AppScope.of<AppController>(context).now),
-                      );
-                      if (picked == null) return;
-                      setState(() {
-                        _expiry = dateOnly(picked);
-                        _dateFromPhoto = false;
-                      });
-                      _captureDraft();
-                    },
-                  ),
-                ],
-              ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: _brand,
+              textInputAction: TextInputAction.next,
+              decoration: const InputDecoration(labelText: '品牌'),
             ),
-            Align(
-              alignment: Alignment.centerLeft,
-              child: TextButton(
-                onPressed: _busy ? null : _readExpiry,
-                child: const Text('拍保质期'),
-              ),
+            TextField(
+              controller: _name,
+              textInputAction: TextInputAction.done,
+              decoration: const InputDecoration(labelText: '名称'),
             ),
-          ],
-        ],
-      ),
-      bottomNavigationBar: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 8, 20, 12),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              FilledButton(
-                onPressed: _busy ? null : _save,
-                style: FilledButton.styleFrom(
-                  minimumSize: const Size.fromHeight(52),
+            if (widget.barcode.trim().isNotEmpty) ...[
+              const SizedBox(height: 8),
+              Text(
+                '条码 ${widget.barcode.trim()}',
+                style: zhuaji.copyWith(
+                  fontSize: 13,
+                  color: AppColors.of(context).muted,
                 ),
-                child: const Text('保存'),
               ),
-              if (editing)
-                TextButton(
-                  onPressed: _busy ? null : _delete,
-                  child: const Text('删除'),
-                ),
             ],
+            const SizedBox(height: 12),
+            TextField(
+              controller: _ingredients,
+              minLines: 1,
+              maxLines: 4,
+              decoration: const InputDecoration(labelText: '配料'),
+            ),
+            const SizedBox(height: 16),
+            const SectionLabel('形态'),
+            const SizedBox(height: 8),
+            KnownOrCustom(
+              known: [for (final form in FoodForm.values) formLabel(form)],
+              selected: formLabel(_form),
+              custom: _formCustom,
+              controller: _formText,
+              hint: '形态',
+              onKnown: (label) => setState(() {
+                _formCustom = false;
+                _form = _formForLabel(label);
+              }),
+              onCustom: () => setState(() => _formCustom = true),
+            ),
+            const SizedBox(height: 16),
+            const SectionLabel('口味'),
+            const SizedBox(height: 8),
+            KnownOrCustom(
+              known: flavors,
+              selected: _flavor,
+              custom: _flavorCustom,
+              controller: _flavorText,
+              hint: '口味',
+              onKnown: (label) => setState(() {
+                if (!_flavorCustom && _flavor == label) {
+                  _flavor = '';
+                } else {
+                  _flavorCustom = false;
+                  _flavor = label;
+                }
+              }),
+              onCustom: () => setState(() => _flavorCustom = true),
+            ),
+            const SizedBox(height: 16),
+            const SectionLabel('规格'),
+            const SizedBox(height: 8),
+            KnownOrCustom(
+              known: foodSpecs,
+              selected: _spec,
+              custom: _specCustom,
+              controller: _specText,
+              hint: '规格',
+              onKnown: (label) => setState(() {
+                if (!_specCustom && _spec == label) {
+                  _spec = '';
+                } else {
+                  _specCustom = false;
+                  _spec = label;
+                }
+              }),
+              onCustom: () => setState(() => _specCustom = true),
+            ),
+            if (showDates) ...[
+              const SizedBox(height: 16),
+              const SectionLabel('这袋的日期'),
+              const SizedBox(height: 8),
+              Text(
+                _expiry == null ? '没认出到期日，请手写。不会自动记成一年后。' : '核对一下到期日',
+                style: zhuaji.copyWith(
+                  fontSize: 12,
+                  color: AppColors.of(context).muted,
+                ),
+              ),
+              const SizedBox(height: 8),
+              QuietCard(
+                child: Column(
+                  children: [
+                    DateLine(
+                      label: '生产',
+                      date: _production,
+                      placeholder: '请手写',
+                      onTap: () async {
+                        final picked = await pickDate(
+                          context,
+                          _production ??
+                              dateOnly(AppScope.of<AppController>(context).now),
+                        );
+                        if (picked == null) return;
+                        setState(() => _production = dateOnly(picked));
+                        _captureDraft();
+                      },
+                    ),
+                    DateLine(
+                      label: '到期',
+                      date: _expiry,
+                      placeholder: '请手写',
+                      onTap: () async {
+                        final picked = await pickDate(
+                          context,
+                          _expiry ??
+                              dateOnly(AppScope.of<AppController>(context).now),
+                        );
+                        if (picked == null) return;
+                        setState(() {
+                          _expiry = dateOnly(picked);
+                          _dateFromPhoto = false;
+                        });
+                        _captureDraft();
+                      },
+                    ),
+                  ],
+                ),
+              ),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: TextButton(
+                  onPressed: _busy ? null : _readExpiry,
+                  child: const Text('拍保质期'),
+                ),
+              ),
+            ],
+          ],
+        ),
+        bottomNavigationBar: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 8, 20, 12),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                FilledButton(
+                  onPressed: _busy ? null : _save,
+                  style: FilledButton.styleFrom(
+                    minimumSize: const Size.fromHeight(52),
+                  ),
+                  child: const Text('保存'),
+                ),
+                if (editing)
+                  TextButton(
+                    onPressed: _busy ? null : _delete,
+                    child: const Text('删除'),
+                  ),
+              ],
+            ),
           ),
         ),
-      ),
       ),
     );
   }
@@ -503,7 +499,8 @@ class _FoodFormPageState extends State<FoodFormPage> {
     });
     _silent = false;
     final missedExpiry = read.expiryDate == null;
-    final missedName = (read.brand == null || read.brand!.isEmpty) &&
+    final missedName =
+        (read.brand == null || read.brand!.isEmpty) &&
         (read.name == null || read.name!.isEmpty);
     final message = missedName && missedExpiry
         ? '没认出字。品牌、名称和到期日都可以手写。'
@@ -511,7 +508,7 @@ class _FoodFormPageState extends State<FoodFormPage> {
         ? (read.expiryUncertain ? '日期看不清，请手写到期日' : '没认出到期日，请手写')
         : '认出来了，核对一下';
     showMessage(context, message);
-    _captureDraft(materialize: !missedName);
+    _captureDraft();
   }
 
   Future<void> _readExpiry() async {
@@ -528,10 +525,7 @@ class _FoodFormPageState extends State<FoodFormPage> {
       if (!mounted) return;
       final expiry = result.expiryDate;
       if (expiry == null) {
-        showMessage(
-          context,
-          result.uncertain ? '日期看不清，请手写到期日' : '没认出到期日，请手写',
-        );
+        showMessage(context, result.uncertain ? '日期看不清，请手写到期日' : '没认出到期日，请手写');
         _captureDraft();
         return;
       }
@@ -543,7 +537,7 @@ class _FoodFormPageState extends State<FoodFormPage> {
         _dateFromPhoto = true;
       });
       showMessage(context, '日期填上了，核对一下');
-      _captureDraft(materialize: true);
+      _captureDraft();
     } catch (_) {
       if (!mounted) return;
       showMessage(context, '没打开相机');
@@ -673,12 +667,22 @@ class _FoodFormPageState extends State<FoodFormPage> {
     context.pop();
   }
 
-  void _captureDraft({bool materialize = false}) {
-    if (!_ready) return;
-    _draftTail = _draftTail.then((_) => _writeDraft(materialize: materialize));
+  void _openPack({required bool camera}) {
+    if (widget.productId != null) {
+      _readPack(camera ? ImageSource.camera : ImageSource.gallery);
+      return;
+    }
+    final code = Uri.encodeComponent(widget.barcode.trim());
+    final shot = camera ? 'shot=1' : 'album=1';
+    context.push('/pack?$shot&code=$code');
   }
 
-  Future<void> _writeDraft({required bool materialize}) async {
+  void _captureDraft() {
+    if (!_ready) return;
+    _draftTail = _draftTail.then((_) => _writeDraft());
+  }
+
+  Future<void> _writeDraft() async {
     if (!mounted) return;
     final app = AppScope.of<AppController>(context);
     final brand = _brand.text.trim();
@@ -686,43 +690,6 @@ class _FoodFormPageState extends State<FoodFormPage> {
     final spec = _specCustom ? _specText.text.trim() : _spec;
     final flavor = _flavorCustom ? _flavorText.text.trim() : _flavor;
     final code = widget.barcode.trim();
-    if (materialize &&
-        widget.productId == null &&
-        brand.isNotEmpty &&
-        name.isNotEmpty) {
-      final id = await app.saveFood(
-        FoodDraft(
-          id: _productId,
-          brand: brand,
-          name: name,
-          spec: spec,
-          foodForm: _form,
-          customForm: _formCustom ? _formText.text.trim() : null,
-          storageMethod: _storage(_form),
-          afterOpenDays: _days(_form),
-          flavor: flavor,
-          isCustom: true,
-          photoPath: _photo,
-        ),
-        barcode: code,
-      );
-      _productId = id;
-      if (widget.addBag) {
-        _pantryId = await app.savePantry(
-          PantryDraft(
-            id: _pantryId,
-            productId: id,
-            productionDate: _production,
-            expiryDate: _expiry,
-            dateSource: _expiry == null
-                ? DateSource.none
-                : (_dateFromPhoto ? DateSource.ocr : DateSource.manual),
-            afterOpenDays: _days(_form),
-          ),
-        );
-      }
-    }
-    if (!mounted) return;
     final draft = RecognitionDraft(
       id: recognitionDraftId(barcode: code, photoPath: _photo),
       kind: _photo == null ? 'scan' : 'ocr',
