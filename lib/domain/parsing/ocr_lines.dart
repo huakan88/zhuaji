@@ -6,6 +6,7 @@ class OcrLine {
     this.top = 0,
     this.right = 0,
     this.bottom = 0,
+    this.confidence,
   });
 
   final String text;
@@ -13,6 +14,9 @@ class OcrLine {
   final double top;
   final double right;
   final double bottom;
+
+  /// 0–1 from the recognizer. Null means the engine did not score the line.
+  final double? confidence;
 
   double get height => bottom - top;
   double get centerY => (top + bottom) / 2;

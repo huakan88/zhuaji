@@ -9,6 +9,7 @@ import '../../core/theme/app_fonts.dart';
 import '../../core/theme/app_tokens.dart';
 import '../../core/widgets/common.dart';
 import '../../domain/dates.dart';
+import '../../domain/food/recognition_draft.dart';
 import '../../domain/food_options.dart';
 import '../../domain/models.dart';
 import '../../domain/parsing/pack_front_parser.dart';
@@ -23,6 +24,8 @@ class FoodFormPage extends StatefulWidget {
   const FoodFormPage({
     this.productId,
     this.barcode = '',
+    this.initialName = '',
+    this.draftId,
     this.openCamera = false,
     this.addBag = false,
     super.key,
@@ -30,6 +33,8 @@ class FoodFormPage extends StatefulWidget {
 
   final int? productId;
   final String barcode;
+  final String initialName;
+  final String? draftId;
   final bool openCamera;
 
   /// True when this bag should also land in the pantry. Catalog edits do not.
@@ -45,6 +50,7 @@ class _FoodFormPageState extends State<FoodFormPage> {
   final _flavorText = TextEditingController();
   final _specText = TextEditingController();
   final _formText = TextEditingController();
+  final _ingredients = TextEditingController();
   final _photos = PhotoStore();
   String? _photo;
   String _flavor = '';
@@ -53,20 +59,42 @@ class _FoodFormPageState extends State<FoodFormPage> {
   var _formCustom = false;
   String _spec = '';
   var _specCustom = false;
+  DateTime? _production;
   DateTime? _expiry;
   var _dateFromPhoto = false;
+  int? _productId;
+  int? _pantryId;
   var _ready = false;
   var _busy = false;
   var _askedCamera = false;
+  var _silent = false;
+  Future<void> _draftTail = Future<void>.value();
+
+  @override
+  void initState() {
+    super.initState();
+    for (final controller in [
+      _brand,
+      _name,
+      _flavorText,
+      _specText,
+      _formText,
+      _ingredients,
+    ]) {
+      controller.addListener(_onField);
+    }
+  }
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     if (_ready) return;
     final app = AppScope.of<AppController>(context);
-    final existing = widget.productId == null
-        ? null
-        : app.productById(widget.productId!);
+    final draft = app.draftFor(id: widget.draftId, barcode: widget.barcode);
+    final existingId = widget.productId ?? draft?.productId;
+    final existing = existingId == null ? null : app.productById(existingId);
+    _productId = existing?.id ?? draft?.productId;
+    _pantryId = draft?.pantryId;
     if (existing != null && existing.isCustom) {
       _brand.text = existing.brand;
       _name.text = existing.name;
@@ -88,10 +116,64 @@ class _FoodFormPageState extends State<FoodFormPage> {
       }
       _photo = existing.photoPath;
     }
-    if (widget.addBag && widget.productId == null) {
-      _expiry = dateOnly(app.now).add(const Duration(days: 365));
+    if (draft != null && (existing == null || existing.isCustom)) {
+      _silent = true;
+      if (draft.brand.isNotEmpty) _brand.text = draft.brand;
+      if (draft.name.isNotEmpty) _name.text = draft.name;
+      if (draft.spec.isNotEmpty && _specText.text.isEmpty && _spec.isEmpty) {
+        if (_knownSpec(draft.spec)) {
+          _spec = draft.spec;
+        } else {
+          _specCustom = true;
+          _specText.text = draft.spec;
+          _spec = draft.spec;
+        }
+      }
+      if (draft.flavor.isNotEmpty && _flavor.isEmpty) {
+        if (_knownFlavor(draft.flavor)) {
+          _flavor = draft.flavor;
+        } else {
+          _flavorCustom = true;
+          _flavorText.text = draft.flavor;
+          _flavor = draft.flavor;
+        }
+      }
+      if (draft.ingredients.isNotEmpty) _ingredients.text = draft.ingredients;
+      if (draft.photoPath != null && draft.photoPath!.isNotEmpty) {
+        _photo = draft.photoPath;
+      }
+      _production = draft.production;
+      _expiry = draft.expiry;
+      _dateFromPhoto = draft.expiryFromOcr && draft.expiry != null;
+      if (draft.formKey.isNotEmpty) _form = formFromDraft(draft);
+      if (draft.customForm.isNotEmpty) {
+        _formCustom = true;
+        _formText.text = draft.customForm;
+      }
+      _silent = false;
+    } else if (widget.initialName.isNotEmpty && _name.text.isEmpty) {
+      _silent = true;
+      _name.text = widget.initialName;
+      _silent = false;
+    }
+    final facts = _productId == null
+        ? null
+        : app.draftById('facts:$_productId');
+    if (facts != null && _ingredients.text.isEmpty) {
+      _silent = true;
+      _ingredients.text = facts.ingredients;
+      _silent = false;
     }
     _ready = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      if (widget.barcode.trim().isEmpty &&
+          _brand.text.trim().isEmpty &&
+          _name.text.trim().isEmpty) {
+        return;
+      }
+      _captureDraft();
+    });
     if (widget.openCamera && !_askedCamera) {
       _askedCamera = true;
       if (Platform.environment['FLUTTER_TEST'] != 'true') {
@@ -109,14 +191,26 @@ class _FoodFormPageState extends State<FoodFormPage> {
     _flavorText.dispose();
     _specText.dispose();
     _formText.dispose();
+    _ingredients.dispose();
     super.dispose();
+  }
+
+  void _onField() {
+    if (_silent || !_ready) return;
+    _captureDraft();
   }
 
   @override
   Widget build(BuildContext context) {
     final editing = widget.productId != null;
     final flavors = foodFlavors.where((item) => item != '鱼').toList();
-    return Scaffold(
+    final showDates = widget.addBag || _photo != null || _expiry != null;
+    return PopScope(
+      canPop: true,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop && result == null) _captureDraft(materialize: true);
+      },
+      child: Scaffold(
       backgroundColor: AppColors.of(context).background,
       appBar: zhuajiBar(editing ? '改这款' : '自己添加'),
       body: ListView(
@@ -172,6 +266,23 @@ class _FoodFormPageState extends State<FoodFormPage> {
             textInputAction: TextInputAction.done,
             decoration: const InputDecoration(labelText: '名称'),
           ),
+          if (widget.barcode.trim().isNotEmpty) ...[
+            const SizedBox(height: 8),
+            Text(
+              '条码 ${widget.barcode.trim()}',
+              style: zhuaji.copyWith(
+                fontSize: 13,
+                color: AppColors.of(context).muted,
+              ),
+            ),
+          ],
+          const SizedBox(height: 12),
+          TextField(
+            controller: _ingredients,
+            minLines: 1,
+            maxLines: 4,
+            decoration: const InputDecoration(labelText: '配料'),
+          ),
           const SizedBox(height: 16),
           const SectionLabel('形态'),
           const SizedBox(height: 8),
@@ -225,22 +336,57 @@ class _FoodFormPageState extends State<FoodFormPage> {
             }),
             onCustom: () => setState(() => _specCustom = true),
           ),
-          if (_expiry != null) ...[
+          if (showDates) ...[
             const SizedBox(height: 16),
-            const SectionLabel('这袋的保质期'),
+            const SectionLabel('这袋的日期'),
+            const SizedBox(height: 8),
+            Text(
+              _expiry == null
+                  ? '没认出到期日，请手写。不会自动记成一年后。'
+                  : '核对一下到期日',
+              style: zhuaji.copyWith(
+                fontSize: 12,
+                color: AppColors.of(context).muted,
+              ),
+            ),
             const SizedBox(height: 8),
             QuietCard(
-              child: DateLine(
-                label: '到期',
-                date: _expiry!,
-                onTap: () async {
-                  final picked = await pickDate(context, _expiry!);
-                  if (picked == null) return;
-                  setState(() {
-                    _expiry = dateOnly(picked);
-                    _dateFromPhoto = false;
-                  });
-                },
+              child: Column(
+                children: [
+                  DateLine(
+                    label: '生产',
+                    date: _production,
+                    placeholder: '请手写',
+                    onTap: () async {
+                      final picked = await pickDate(
+                        context,
+                        _production ??
+                            dateOnly(AppScope.of<AppController>(context).now),
+                      );
+                      if (picked == null) return;
+                      setState(() => _production = dateOnly(picked));
+                      _captureDraft();
+                    },
+                  ),
+                  DateLine(
+                    label: '到期',
+                    date: _expiry,
+                    placeholder: '请手写',
+                    onTap: () async {
+                      final picked = await pickDate(
+                        context,
+                        _expiry ??
+                            dateOnly(AppScope.of<AppController>(context).now),
+                      );
+                      if (picked == null) return;
+                      setState(() {
+                        _expiry = dateOnly(picked);
+                        _dateFromPhoto = false;
+                      });
+                      _captureDraft();
+                    },
+                  ),
+                ],
               ),
             ),
             Align(
@@ -275,6 +421,7 @@ class _FoodFormPageState extends State<FoodFormPage> {
           ),
         ),
       ),
+      ),
     );
   }
 
@@ -308,12 +455,25 @@ class _FoodFormPageState extends State<FoodFormPage> {
   }
 
   void _applyRead(String path, PackRead read) {
+    _silent = true;
     setState(() {
       _photo = path;
       if (read.brand != null && read.brand!.isNotEmpty) {
         _brand.text = read.brand!;
       }
       if (read.name != null && read.name!.isNotEmpty) _name.text = read.name!;
+      if (read.ingredients != null && read.ingredients!.isNotEmpty) {
+        _ingredients.text = read.ingredients!;
+      }
+      if (read.productionDate != null) {
+        _production = dateOnly(read.productionDate!);
+      }
+      if (read.expiryDate != null) {
+        _expiry = dateOnly(read.expiryDate!);
+        _dateFromPhoto = true;
+      } else {
+        _dateFromPhoto = false;
+      }
       if (read.flavor != null) {
         final flavor = read.flavor!;
         if (_knownFlavor(flavor)) {
@@ -341,10 +501,17 @@ class _FoodFormPageState extends State<FoodFormPage> {
         }
       }
     });
-    showMessage(
-      context,
-      read.brand == null && read.name == null ? '没认出字，补一下品牌' : '认出来了，核对一下',
-    );
+    _silent = false;
+    final missedExpiry = read.expiryDate == null;
+    final missedName = (read.brand == null || read.brand!.isEmpty) &&
+        (read.name == null || read.name!.isEmpty);
+    final message = missedName && missedExpiry
+        ? '没认出字。品牌、名称和到期日都可以手写。'
+        : missedExpiry
+        ? (read.expiryUncertain ? '日期看不清，请手写到期日' : '没认出到期日，请手写')
+        : '认出来了，核对一下';
+    showMessage(context, message);
+    _captureDraft(materialize: !missedName);
   }
 
   Future<void> _readExpiry() async {
@@ -361,14 +528,22 @@ class _FoodFormPageState extends State<FoodFormPage> {
       if (!mounted) return;
       final expiry = result.expiryDate;
       if (expiry == null) {
-        showMessage(context, '没认出日期，用滚轮选');
+        showMessage(
+          context,
+          result.uncertain ? '日期看不清，请手写到期日' : '没认出到期日，请手写',
+        );
+        _captureDraft();
         return;
       }
       setState(() {
         _expiry = dateOnly(expiry);
+        if (result.productionDate != null) {
+          _production = dateOnly(result.productionDate!);
+        }
         _dateFromPhoto = true;
       });
       showMessage(context, '日期填上了，核对一下');
+      _captureDraft(materialize: true);
     } catch (_) {
       if (!mounted) return;
       showMessage(context, '没打开相机');
@@ -401,18 +576,17 @@ class _FoodFormPageState extends State<FoodFormPage> {
     }
     final app = AppScope.of<AppController>(context);
     final code = widget.barcode.trim();
-    if (_barcodeTaken(app, code, widget.productId)) {
+    final editingId = _productId ?? widget.productId;
+    if (_barcodeTaken(app, code, editingId)) {
       showMessage(context, '这个条码已经绑在别的猫粮上');
       return;
     }
     setState(() => _busy = true);
     try {
-      final existing = widget.productId == null
-          ? null
-          : app.productById(widget.productId!);
+      final existing = editingId == null ? null : app.productById(editingId);
       final id = await app.saveFood(
         FoodDraft(
-          id: widget.productId,
+          id: editingId,
           barcode: existing?.barcode,
           brand: brand,
           name: name,
@@ -427,27 +601,56 @@ class _FoodFormPageState extends State<FoodFormPage> {
         ),
         barcode: code.isEmpty ? existing?.barcode : code,
       );
-      if (widget.addBag && widget.productId == null && _expiry != null) {
-        await app.savePantry(
+      _productId = id;
+      if (widget.addBag && widget.productId == null) {
+        _pantryId = await app.savePantry(
           PantryDraft(
+            id: _pantryId,
             productId: id,
+            productionDate: _production,
             expiryDate: _expiry,
-            dateSource: _dateFromPhoto ? DateSource.ocr : DateSource.manual,
+            dateSource: _expiry == null
+                ? DateSource.none
+                : (_dateFromPhoto ? DateSource.ocr : DateSource.manual),
             afterOpenDays: _days(_form),
           ),
         );
       }
       final saved = app.productById(id);
       final savedCode = code.isEmpty ? (existing?.barcode ?? '') : code;
+      final ingredients = _ingredients.text.trim();
       if (saved != null && savedCode.isNotEmpty) {
         await app.rememberUserBarcode(
           code: savedCode,
           brand: saved.brand,
           name: saved.name,
           spec: saved.spec,
+          ingredients: ingredients,
           imageUrl: saved.photoPath,
           ask: () => confirmBarcodeShare(context),
         );
+      }
+      if (ingredients.isNotEmpty) {
+        await app.saveRecognitionDraft(
+          RecognitionDraft(
+            id: 'facts:$id',
+            kind: 'facts',
+            updatedAt: app.now.toUtc(),
+            barcode: savedCode,
+            brand: brand,
+            name: name,
+            spec: spec,
+            ingredients: ingredients,
+            productId: id,
+          ),
+        );
+      }
+      await app.removeRecognitionDraft(
+        recognitionDraftId(barcode: savedCode, photoPath: _photo),
+      );
+      if (savedCode.isEmpty) {
+        await app.removeRecognitionDraft(recognitionDraftId(photoPath: _photo));
+        await app.removeRecognitionDraft('latest');
       }
       if (!mounted) return;
       context.pop(id);
@@ -468,6 +671,80 @@ class _FoodFormPageState extends State<FoodFormPage> {
     await app.deleteFood(id);
     if (!mounted) return;
     context.pop();
+  }
+
+  void _captureDraft({bool materialize = false}) {
+    if (!_ready) return;
+    _draftTail = _draftTail.then((_) => _writeDraft(materialize: materialize));
+  }
+
+  Future<void> _writeDraft({required bool materialize}) async {
+    if (!mounted) return;
+    final app = AppScope.of<AppController>(context);
+    final brand = _brand.text.trim();
+    final name = _name.text.trim();
+    final spec = _specCustom ? _specText.text.trim() : _spec;
+    final flavor = _flavorCustom ? _flavorText.text.trim() : _flavor;
+    final code = widget.barcode.trim();
+    if (materialize &&
+        widget.productId == null &&
+        brand.isNotEmpty &&
+        name.isNotEmpty) {
+      final id = await app.saveFood(
+        FoodDraft(
+          id: _productId,
+          brand: brand,
+          name: name,
+          spec: spec,
+          foodForm: _form,
+          customForm: _formCustom ? _formText.text.trim() : null,
+          storageMethod: _storage(_form),
+          afterOpenDays: _days(_form),
+          flavor: flavor,
+          isCustom: true,
+          photoPath: _photo,
+        ),
+        barcode: code,
+      );
+      _productId = id;
+      if (widget.addBag) {
+        _pantryId = await app.savePantry(
+          PantryDraft(
+            id: _pantryId,
+            productId: id,
+            productionDate: _production,
+            expiryDate: _expiry,
+            dateSource: _expiry == null
+                ? DateSource.none
+                : (_dateFromPhoto ? DateSource.ocr : DateSource.manual),
+            afterOpenDays: _days(_form),
+          ),
+        );
+      }
+    }
+    if (!mounted) return;
+    final draft = RecognitionDraft(
+      id: recognitionDraftId(barcode: code, photoPath: _photo),
+      kind: _photo == null ? 'scan' : 'ocr',
+      updatedAt: app.now.toUtc(),
+      barcode: code,
+      brand: brand,
+      name: name,
+      spec: spec,
+      flavor: flavor,
+      formKey: foodFormKey(_form),
+      customForm: _formCustom ? _formText.text.trim() : '',
+      ingredients: _ingredients.text.trim(),
+      photoPath: _photo,
+      production: _production,
+      expiry: _expiry,
+      expiryFromOcr: _dateFromPhoto && _expiry != null,
+      productId: _productId,
+      pantryId: _pantryId,
+      addBag: widget.addBag,
+    );
+    if (draft.isBlank) return;
+    await app.saveRecognitionDraft(draft);
   }
 }
 

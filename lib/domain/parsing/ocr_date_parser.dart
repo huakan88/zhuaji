@@ -1,4 +1,5 @@
 import '../dates.dart';
+import 'ocr_lines.dart';
 
 class OcrDateParseResult {
   const OcrDateParseResult({
@@ -6,12 +7,17 @@ class OcrDateParseResult {
     this.expiryDate,
     this.shelfLifeText,
     this.expiryInferred = false,
+    this.uncertain = false,
   });
 
   final DateTime? productionDate;
   final DateTime? expiryDate;
   final String? shelfLifeText;
   final bool expiryInferred;
+
+  /// A date-like line was seen next to an expiry label, but the recognizer
+  /// scored it too low to trust. Callers must leave the field empty.
+  final bool uncertain;
 
   bool get hasDate => productionDate != null || expiryDate != null;
 }
@@ -76,32 +82,61 @@ class OcrDateParser {
 
   static const _productionLabels = ['生产日期', '制造日期', 'MFG', 'MFD', '生产'];
   static const _expiryLabels = [
+    '到期时间',
+    '到期日期',
+    '到期日',
     '保质期至',
     '有效期至',
+    '有效期限',
     '失效日期',
-    '到期日期',
     '最佳赏味期',
     '此日期前最佳',
     'BEST BEFORE',
     'BEST BY',
     'USE BY',
+    'EXPIRY DATE',
     'EXPIRY',
+    'EXP DATE',
+    'EXP. DATE',
     'BBE',
     'BBD',
     'EXP',
   ];
 
+  /// Below this, a scored line is not turned into a date. Unscored lines
+  /// (confidence == null) stay eligible when the label and the digits agree.
+  static const confidenceFloor = 0.5;
+
   OcrDateParseResult parse(String raw) {
     final text = _normalize(raw);
+    final lines = [
+      for (final line in text.split(RegExp(r'\r?\n')))
+        if (line.trim().isNotEmpty) OcrLine(line.trim()),
+    ];
+    if (lines.isEmpty) return const OcrDateParseResult();
+    return parseLines(lines);
+  }
+
+  OcrDateParseResult parseLines(List<OcrLine> lines) {
+    final segments = [
+      for (final line in lines)
+        if (line.text.trim().isNotEmpty)
+          _Segment(_normalize(line.text.trim()), line.confidence),
+    ];
+    if (segments.isEmpty) return const OcrDateParseResult();
+    final text = segments.map((segment) => segment.text).join('\n');
+    var uncertain = false;
     final production = _findLabeledDate(
-      text,
+      segments,
       _productionLabels,
       dayFirst: false,
+      onUncertain: () => uncertain = true,
     );
     final explicitExpiry = _findLabeledDate(
-      text,
+      segments,
       _expiryLabels,
       dayFirst: true,
+      onUncertain: () => uncertain = true,
     );
     final shelf = _shelfLife.firstMatch(text);
     String? shelfText;
@@ -119,6 +154,7 @@ class OcrDateParser {
       expiryDate: explicitExpiry ?? inferred,
       shelfLifeText: shelfText,
       expiryInferred: explicitExpiry == null && inferred != null,
+      uncertain: uncertain && explicitExpiry == null && inferred == null,
     );
   }
 
@@ -156,27 +192,82 @@ class OcrDateParser {
   }
 
   DateTime? _findLabeledDate(
-    String text,
+    List<_Segment> segments,
     List<String> labels, {
     required bool dayFirst,
+    required void Function() onUncertain,
   }) {
-    final upper = text.toUpperCase();
     for (final label in labels) {
-      var from = 0;
       final needle = label.toUpperCase();
-      while (true) {
-        final index = upper.indexOf(needle, from);
-        if (index < 0) break;
-        final rest = text.substring(index + label.length);
-        final lineBreak = rest.indexOf('\n');
-        final line = lineBreak == -1 ? rest : rest.substring(0, lineBreak);
-        final window = line.length > 64 ? line.substring(0, 64) : line;
-        final date = _readDate(window, dayFirst: dayFirst);
-        if (date != null) return date;
-        from = index + needle.length;
+      for (var i = 0; i < segments.length; i++) {
+        final segment = segments[i];
+        final upper = segment.text.toUpperCase();
+        var from = 0;
+        while (true) {
+          final index = upper.indexOf(needle, from);
+          if (index < 0) break;
+          final after = index + needle.length;
+          if (_insideWord(upper, index, after)) {
+            from = after;
+            continue;
+          }
+          final rest = segment.text.substring(after);
+          final onLine = _readDate(_window(rest), dayFirst: dayFirst);
+          if (onLine != null) {
+            if (!segment.trusted) {
+              onUncertain();
+              from = after;
+              continue;
+            }
+            return onLine;
+          }
+          if (i + 1 < segments.length &&
+              !_startsWithAnyLabel(segments[i + 1].text)) {
+            final next = segments[i + 1];
+            final nextDate = _readDate(
+              _window(next.text),
+              dayFirst: dayFirst,
+            );
+            if (nextDate != null) {
+              if (!segment.trusted || !next.trusted) {
+                onUncertain();
+                from = after;
+                continue;
+              }
+              return nextDate;
+            }
+          }
+          from = after;
+        }
       }
     }
     return null;
+  }
+
+  bool _insideWord(String upper, int start, int end) {
+    if (end >= upper.length) return false;
+    final next = upper.codeUnitAt(end);
+    final letter = next >= 65 && next <= 90;
+    if (!letter) return false;
+    if (start > 0) {
+      final prev = upper.codeUnitAt(start - 1);
+      if (prev >= 65 && prev <= 90) return true;
+    }
+    return end - start <= 4;
+  }
+
+  bool _startsWithAnyLabel(String text) {
+    final trimmed = text.trim().toUpperCase();
+    const labels = [..._productionLabels, ..._expiryLabels, '保质期', 'SHELF LIFE'];
+    for (final label in labels) {
+      if (trimmed.startsWith(label.toUpperCase())) return true;
+    }
+    return false;
+  }
+
+  String _window(String line) {
+    final trimmed = line.trim();
+    return trimmed.length > 64 ? trimmed.substring(0, 64) : trimmed;
   }
 
   DateTime? _readDate(String window, {required bool dayFirst}) {
@@ -251,4 +342,14 @@ class OcrDateParser {
     if (year >= 100) return year;
     return year >= 70 ? 1900 + year : 2000 + year;
   }
+}
+
+class _Segment {
+  const _Segment(this.text, this.confidence);
+
+  final String text;
+  final double? confidence;
+
+  bool get trusted =>
+      confidence == null || confidence! >= OcrDateParser.confidenceFloor;
 }

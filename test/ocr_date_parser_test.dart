@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:maokangji/domain/parsing/ocr_date_parser.dart';
+import 'package:maokangji/domain/parsing/ocr_lines.dart';
 
 void main() {
   const parser = OcrDateParser();
@@ -60,6 +61,32 @@ void main() {
     final english = parser.parse('MFG 2025-01-01 shelf life 18 months');
     expect(english.productionDate, DateTime(2025, 1, 1));
     expect(english.expiryDate, DateTime(2026, 7, 1));
+  });
+
+  test('reads 到期时间 and EXPIRY, including a date on the next line', () {
+    expect(
+      parser.parse('到期时间：2027年3月15日').expiryDate,
+      DateTime(2027, 3, 15),
+    );
+    expect(
+      parser.parse('到期时间\n2027-03-15').expiryDate,
+      DateTime(2027, 3, 15),
+    );
+    expect(parser.parse('EXPIRY 15/03/2027').expiryDate, DateTime(2027, 3, 15));
+    expect(parser.parse('EXP DATE 15.03.2027').expiryDate, DateTime(2027, 3, 15));
+    final missed = parser.parse('净含量 2kg\n电话 4001234567');
+    expect(missed.expiryDate, isNull);
+    expect(missed.uncertain, isFalse);
+  });
+
+  test('a low-confidence expiry line is not turned into a date', () {
+    final result = parser.parseLines(const [
+      OcrLine('到期时间', confidence: 0.95),
+      OcrLine('2027-03-15', confidence: 0.2),
+    ]);
+    expect(result.expiryDate, isNull);
+    expect(result.productionDate, isNull);
+    expect(result.uncertain, isTrue);
   });
 
   test('reads EXP, BBE and a month-only expiry as day first', () {

@@ -107,7 +107,7 @@ void main() {
       (item) => item.product.name == '室内成猫干粮',
     );
     expect(bag.item.openedAt, isNotNull);
-    expect(bag.item.expiryDate, isNotNull);
+    expect(bag.item.expiryDate, isNull);
 
     await tapText(tester, '室内成猫干粮');
     expect(find.textContaining('还在粮仓'), findsWidgets);

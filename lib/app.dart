@@ -141,6 +141,7 @@ class _ZhuajiAppState extends State<ZhuajiApp> with WidgetsBindingObserver {
         path: '/confirm',
         builder: (context, state) => ConfirmPage(
           code: state.uri.queryParameters['code'] ?? '',
+          draftId: state.uri.queryParameters['draft'],
           productId: int.tryParse(state.uri.queryParameters['product'] ?? ''),
           blank: state.uri.queryParameters['blank'] == '1',
           plain: state.uri.queryParameters['plain'] == '1',
@@ -225,6 +226,8 @@ class _ZhuajiAppState extends State<ZhuajiApp> with WidgetsBindingObserver {
           return FoodFormPage(
             productId: int.tryParse(query['id'] ?? ''),
             barcode: query['code'] ?? '',
+            initialName: query['name'] ?? '',
+            draftId: query['draft'],
             openCamera: query['shot'] == '1',
             addBag: query['bag'] == '1',
           );

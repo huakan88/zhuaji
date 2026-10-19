@@ -7,6 +7,8 @@ import '../../core/theme/app_fonts.dart';
 import '../../core/theme/app_tokens.dart';
 import '../../core/widgets/common.dart';
 import '../../domain/food/barcode_lookup.dart';
+import '../../domain/food/recognition_draft.dart';
+import '../../domain/models.dart';
 import '../../state/app_controller.dart';
 
 class LookupPage extends StatefulWidget {
@@ -23,12 +25,62 @@ class _LookupPageState extends State<LookupPage> {
   var _loading = true;
   var _saving = false;
   var _started = false;
+  var _hydrating = false;
+  final _brand = TextEditingController();
+  final _name = TextEditingController();
+  final _spec = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    for (final controller in [_brand, _name, _spec]) {
+      controller.addListener(_remember);
+    }
+  }
+
+  @override
+  void dispose() {
+    _brand.dispose();
+    _name.dispose();
+    _spec.dispose();
+    super.dispose();
+  }
+
+  void _remember() {
+    if (_hydrating || !mounted || widget.code.trim().isEmpty) return;
+    final app = AppScope.of<AppController>(context);
+    app.saveRecognitionDraft(
+      RecognitionDraft(
+        id: recognitionDraftId(barcode: widget.code),
+        kind: 'scan',
+        updatedAt: app.now.toUtc(),
+        barcode: widget.code.trim(),
+        brand: _brand.text.trim(),
+        name: _name.text.trim(),
+        spec: _spec.text.trim(),
+        addBag: true,
+      ),
+      merge: true,
+    );
+  }
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     if (_started) return;
     _started = true;
+    final app = AppScope.of<AppController>(context);
+    final draft = app.draftFor(barcode: widget.code);
+    _hydrating = true;
+    if (draft != null) {
+      _brand.text = draft.brand;
+      _name.text = draft.name;
+      _spec.text = draft.spec;
+    }
+    _hydrating = false;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _remember();
+    });
     _load();
   }
 
@@ -73,6 +125,11 @@ class _LookupPageState extends State<LookupPage> {
               incomplete: record.incomplete,
               onRetry: () => _load(refresh: true),
               code: widget.code,
+              brand: _brand,
+              name: _name,
+              spec: _spec,
+              saving: _saving,
+              onCreate: _create,
             ),
     );
   }
@@ -86,6 +143,52 @@ class _LookupPageState extends State<LookupPage> {
     if (!mounted) return;
     final code = Uri.encodeComponent(widget.code.trim());
     context.pushReplacement('/confirm?code=$code&product=$id');
+  }
+
+  Future<void> _create() async {
+    final brand = _brand.text.trim();
+    final name = _name.text.trim();
+    if (brand.isEmpty || name.isEmpty) {
+      showMessage(context, '先写上品牌和名称');
+      return;
+    }
+    if (_saving) return;
+    setState(() => _saving = true);
+    final app = AppScope.of<AppController>(context);
+    final spec = _spec.text.trim();
+    try {
+      final id = await app.saveFood(
+        FoodDraft(
+          brand: brand,
+          name: name,
+          spec: spec,
+          foodForm: guessLookupForm(name, spec),
+          storageMethod: '阴凉干燥，封好袋口。',
+          afterOpenDays: 30,
+          isCustom: true,
+        ),
+        barcode: widget.code,
+      );
+      await app.savePantry(
+        PantryDraft(
+          productId: id,
+          dateSource: DateSource.none,
+          afterOpenDays: 30,
+        ),
+      );
+      await app.rememberUserBarcode(
+        code: widget.code,
+        brand: brand,
+        name: name,
+        spec: spec,
+        ask: () => confirmBarcodeShare(context),
+      );
+      await app.removeRecognitionDraft(recognitionDraftId(barcode: widget.code));
+      if (!mounted) return;
+      context.go('/home');
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
   }
 }
 
@@ -254,12 +357,22 @@ class _Miss extends StatelessWidget {
     required this.incomplete,
     required this.onRetry,
     required this.code,
+    required this.brand,
+    required this.name,
+    required this.spec,
+    required this.saving,
+    required this.onCreate,
   });
 
   final bool offline;
   final bool incomplete;
   final VoidCallback onRetry;
   final String code;
+  final TextEditingController brand;
+  final TextEditingController name;
+  final TextEditingController spec;
+  final bool saving;
+  final VoidCallback onCreate;
 
   @override
   Widget build(BuildContext context) {
@@ -268,16 +381,16 @@ class _Miss extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(20, 24, 20, 32),
       children: [
         Text(
-          offline ? '没连上公开商品库' : '公开库里没有这款',
+          offline ? '没连上公开商品库' : '库里没有这款',
           style: zhuaji.copyWith(fontSize: 22, fontWeight: FontWeight.w700),
         ),
         const SizedBox(height: 8),
         Text(
           offline
-              ? '可以再试一次。也可以拍包装上的字，或点选品牌，记下后下次扫到就能认出。'
+              ? '可以手写品牌、名称和规格并保存，也可以再查一次。'
               : incomplete
-              ? '已经回应的库里没有这款，还有库这次没连上。国产粮经常要拍包装。可以再查一次，或点选品牌，结果会记在这台手机上。'
-              : '进口粮多半能查到。国产粮经常不在这些免密钥的库里。拍包装认品牌和配料，或点选品牌，结果会记在这台手机上。',
+              ? '已经回应的库里没有这款。可以手写品牌、名称和规格，保存后记在这台手机上。'
+              : '国产粮经常不在这些免密钥的库里。可以手写品牌、名称和规格，保存后下次扫到就能认出。',
           style: zhuaji.copyWith(
             fontSize: 14,
             height: 1.45,
@@ -293,7 +406,28 @@ class _Miss extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 24),
+        TextField(
+          controller: brand,
+          textInputAction: TextInputAction.next,
+          decoration: const InputDecoration(labelText: '品牌'),
+        ),
+        TextField(
+          controller: name,
+          textInputAction: TextInputAction.next,
+          decoration: const InputDecoration(labelText: '名称'),
+        ),
+        TextField(
+          controller: spec,
+          textInputAction: TextInputAction.done,
+          decoration: const InputDecoration(labelText: '规格'),
+        ),
+        const SizedBox(height: 16),
         FilledButton(
+          onPressed: saving ? null : onCreate,
+          child: const Text('保存到粮仓'),
+        ),
+        const SizedBox(height: 8),
+        OutlinedButton(
           onPressed: () => context.push('/food?shot=1&bag=1&code=$encoded'),
           child: const Text('拍包装识别'),
         ),

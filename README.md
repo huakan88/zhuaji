@@ -1,16 +1,62 @@
 # 花爪
 
-主仓是 GitHub：[huakan88/zhuaji](https://github.com/huakan88/zhuaji)。克隆：`git clone https://github.com/huakan88/zhuaji.git`，进入目录后执行 `flutter pub get`。
-分支：日常集成在 `develop`，功能用 `feature/*`，修复用 `fix/*`，`main` 只接受合并。
-发版：先改 `pubspec.yaml` 的版本号，用 `release/x.y.z` 合并进 `main`，再打附注标签 `vX.Y.Z`。详见 [Git 工作流](docs/git-workflow.md)。
+花爪：猫健康记录与粮品扫码助手。包名 `com.maokangji.maokangji`，仓库名 zhuaji。显示名花爪，原先也叫肉垫本。
 
-猫咪喂养与健康记录的本地原型。数据留在手机里，不需要账号和服务器。界面是简体中文。
+在手机上记下猫咪的口粮、疫苗、驱虫和体重。记录留在这台手机里，不需要账号。界面是简体中文。显示名是花爪，仓库名仍是 zhuaji。覆盖安装不会清掉已经记下的记录。
 
-版本 2.20.0。显示名是花爪。包名和 Bundle ID 仍是 `com.maokangji.maokangji`，覆盖安装不会清掉手机里的记录。仓库名仍是 zhuaji。底部四个入口：今天、健康、粮仓、猫咪。今天页顶部左边是全局搜索，右边是相机。粮仓页仍保留本页搜索和相机。固定选项旁边可以手写，写上的按原文保存。性别仍是点选。体重按千克记。日期用滚轮。浅色是浅绿底和白卡片，深色是深灰绿，默认跟随系统。猫咪页可以改成「跟随系统 / 浅色 / 深色」。照片用大圆角，没有大面积渐变。
+底部四个入口：
+
+- **今天**：这只猫当天要办的事。顶部左边是搜索，右边是相机。
+- **健康**：体重、疫苗、驱虫、就医、体检、看病。
+- **粮仓**：每袋还能吃几天。本页也能搜索和扫码。
+- **猫咪**：档案、照片，以及隐私政策和用户协议。
+
+当前源码版本是 **2.20.1**（`pubspec.yaml` 的 `2.20.1+36`）。已经合并进 `main` 的最新标签是 **v2.19.0**。
+
+主仓：[huakan88/zhuaji](https://github.com/huakan88/zhuaji)。
+
+```bash
+git clone https://github.com/huakan88/zhuaji.git
+cd zhuaji
+flutter pub get
+flutter run -d android
+```
+
+自己安装的 arm64 包用下面这条命令。必须带 `--no-tree-shake-icons`，否则图标字体会被裁成方框。没有 `android/key.properties` 时，包是 Android debug 签名（证书主体 `CN=Android Debug`），可以装到自己的手机，不能提交商店。安装包不放进仓库。上架前按 [发布签名](docs/release-signing.md) 换上传密钥。
+
+```bash
+flutter build apk --release --target-platform android-arm64 --no-tree-shake-icons
+```
+
+隐私政策在 [docs/privacy-policy.md](docs/privacy-policy.md)。应用里第一次打开，以及「猫咪 → 隐私政策」，都能看。用户协议和权限说明在同一处。
+
+拉取请求：日常集成在 `develop`，功能用 `feature/*`，修复用 `fix/*`。`main` 只接受合并。发版先改 `pubspec.yaml`，用 `release/x.y.z` 合并进 `main`，再打附注标签 `vX.Y.Z`。详见 [Git 工作流](docs/git-workflow.md)。
+
+GitHub Projects 和 Issues 这次都建不了（接口 403）。看板写在 [项目板](docs/project-board.md)，三列是待做、进行中、已完成。条码不在表里可以手写、到期日不再默认成一年后，这两项在 2.20.1 里已经做了，还没合并进 `main`。选品牌仍会带出「室内成猫」，留在待做。
+
+固定选项旁边可以手写，写上的按原文保存。性别仍是点选。体重按千克记。日期用滚轮。浅色是浅绿底和白卡片，深色是深灰绿，默认跟随系统。猫咪页可以改成「跟随系统 / 浅色 / 深色」。照片用大圆角，没有大面积渐变。
+
+## 版本与进度
+
+当前源码是 **2.20.1**（`pubspec.yaml` 的 `2.20.1+36`）。已经合并进 `main` 并打了附注标签的最新一版是 **v2.19.0**。2.20.0 和 2.20.1 还在拉取请求里，没有打 `v2.20.0` / `v2.20.1`，也没有发 GitHub Release。标签在合并进 `main` 之后才打，见 [Git 工作流](docs/git-workflow.md)。
+
+| 看什么 | 在哪 |
+| --- | --- |
+| 每一版改了什么 | [CHANGELOG.md](CHANGELOG.md) |
+| 已经打在 `main` 上的 Release | [全部 Release](https://github.com/huakan88/zhuaji/releases)：[v2.19.0](https://github.com/huakan88/zhuaji/releases/tag/v2.19.0)、[v2.18.2](https://github.com/huakan88/zhuaji/releases/tag/v2.18.2)、[v2.18.1](https://github.com/huakan88/zhuaji/releases/tag/v2.18.1)、[v2.18.0](https://github.com/huakan88/zhuaji/releases/tag/v2.18.0) |
+| 2.20 合并进 `main` 之后再贴的说明 | [发版说明](docs/releases/README.md) |
+| 还在做的事 | [项目板](docs/project-board.md) |
+| 打开中的拉取请求 | [2.20.0](https://github.com/huakan88/zhuaji/pull/1)、[2.20.1](https://github.com/huakan88/zhuaji/pull/2) |
+
+仓库说明用这一句：花爪：猫健康记录与粮品扫码助手。登录后在仓库页的 About 齿轮里贴上。要让没登录的人也能打开，仓库主人在 **Settings → General → Danger zone → Change repository visibility** 里改成 Public。改成公开之后，打开仓库点 **Pin repository**，主页最多钉 6 个。还是私有时，头像菜单 **Your repositories**，筛选 Private，才能看到。
+
+下面从 2.18 起是页面上能看到的变化。完整条目在变更记录里。
 
 2.18 把用户看得到的名字改成花爪。启动图标、启动页、空状态、没有照片时的头像，以及协议页上的标志，都用同一张奶油色绒毛肉垫（粉色肉垫，深绿色底）。包名仍是 `com.maokangji.maokangji`。通知栏小图标仍是白色剪影，避免状态栏显示成彩色方块。
 
 2.18.1 扫到本机猫粮表里的商品，或已经在粮仓里的那一袋，直接打开确认页或这袋粮，不再先停在商品列表。本机表里有、粮仓还没有的，确认页会带上品牌和名称。二维码里如果写着条码或商品链接，和扫那个条码走同一条路。今天页顶部仍是搜索和扫码挨在一起，搜索覆盖猫咪、健康记录、猫粮和食谱。底栏还是今天、健康、粮仓、猫咪。
+
+2.20.1 条码不在本机表里时，可以手写品牌、名称和规格并保存。拍包装用手机上的 ML Kit 认字，到期日没读到就留空，不再默认成一年后。没写完的扫描和识别留在本机，关掉页面还能从「最近识别」接着填。
 
 2.20 搜不到时把条码、末位不对和网址分开说。扫到无关二维码会说明这不是猫粮条码，不再套上一款粮。相机打不开、校验没过，页面上直接写下一步。健康页「接着上次」可以今天再记疫苗或驱虫，同一天再点不会多记一条。没有猫时，健康录入会请你去建档。猫咪页可以点性别、绝育和生日。同一天的体重改的是这一条，不会再叠一条。粮仓空的时候写清楚，吃完一袋会先确认。共享库没发出去的修正，今天和粮仓都能看见。
 
@@ -94,6 +140,8 @@ flutter run -d android
 ```bash
 flutter build apk --release --target-platform android-arm64 --no-tree-shake-icons
 ```
+
+没有 `android/key.properties` 时仍是 debug 签名，只能自己安装。安装包不放进仓库。上架密钥见 [发布签名](docs/release-signing.md)。
 
 iOS 只能在 Mac 上编译。这台 Linux 环境里 `flutter build ios` 不是可用命令，产不出模拟器包，也产不出未签名真机包。步骤、限制和还缺的账号见下面的「iOS」。
 

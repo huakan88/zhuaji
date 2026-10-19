@@ -120,15 +120,18 @@ class DateLine extends StatelessWidget {
     required this.label,
     required this.date,
     required this.onTap,
+    this.placeholder = '请选择',
     super.key,
   });
 
   final String label;
-  final DateTime date;
+  final DateTime? date;
   final VoidCallback onTap;
+  final String placeholder;
 
   @override
   Widget build(BuildContext context) {
+    final missing = date == null;
     return InkWell(
       onTap: onTap,
       child: ConstrainedBox(
@@ -146,8 +149,11 @@ class DateLine extends StatelessWidget {
               ),
               Expanded(
                 child: Text(
-                  formatDate(date),
-                  style: zhuaji.copyWith(fontSize: 16),
+                  missing ? placeholder : formatDate(date!),
+                  style: zhuaji.copyWith(
+                    fontSize: 16,
+                    color: missing ? AppColors.of(context).muted : null,
+                  ),
                 ),
               ),
               Text(

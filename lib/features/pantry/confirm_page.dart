@@ -5,6 +5,7 @@ import '../../core/theme/app_fonts.dart';
 import '../../core/theme/app_tokens.dart';
 import '../../core/widgets/common.dart';
 import '../../domain/dates.dart';
+import '../../domain/food/recognition_draft.dart';
 import '../../domain/models.dart';
 import '../../domain/parsing/gs1_parser.dart';
 import '../../state/app_controller.dart';
@@ -15,6 +16,7 @@ import 'product_facts.dart';
 class ConfirmPage extends StatefulWidget {
   const ConfirmPage({
     required this.code,
+    this.draftId,
     this.productId,
     this.blank = false,
     this.plain = false,
@@ -22,6 +24,7 @@ class ConfirmPage extends StatefulWidget {
   });
 
   final String code;
+  final String? draftId;
 
   /// Set when the person picked this food from search instead of a scan.
   final int? productId;
@@ -58,14 +61,17 @@ class _ConfirmPageState extends State<ConfirmPage> {
     final app = AppScope.of<AppController>(context);
     final today = dateOnly(app.now);
     final known = widget.code.isEmpty ? null : app.findBarcode(widget.code);
-    final pinned = widget.productId == null
-        ? null
-        : app.productById(widget.productId!);
+    final draft = app.draftFor(id: widget.draftId, barcode: widget.code);
+    final pinnedId = widget.productId ?? draft?.productId;
+    final pinned = pinnedId == null ? null : app.productById(pinnedId);
     final parsed = const Gs1Parser().parse(widget.code);
     _fromCode = parsed.recognized;
     _production =
-        parsed.productionDate ?? today.subtract(const Duration(days: 30));
-    _expiry = parsed.suggestedExpiry ?? today.add(const Duration(days: 365));
+        parsed.productionDate ??
+        draft?.production ??
+        today.subtract(const Duration(days: 30));
+    // A missing GS1 date stays empty. Never invent “today + 1 year”.
+    _expiry = parsed.suggestedExpiry ?? draft?.expiry;
     _opened = today;
     _batch = parsed.batch;
     if ((widget.blank || widget.plain) && pinned == null && known == null) {
@@ -74,6 +80,9 @@ class _ConfirmPageState extends State<ConfirmPage> {
       _apply(pinned ?? known ?? _fallback(app));
     }
     _ready = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _persistDraft();
+    });
   }
 
   FoodProduct? _fallback(AppController app) {
@@ -156,6 +165,8 @@ class _ConfirmPageState extends State<ConfirmPage> {
           Text(
             widget.plain
                 ? '这不是猫粮条码。选一个品牌，或返回重扫。'
+                : _expiry == null
+                ? '没读到到期日，请手写。不会记成一年后。也可以手写品牌、名称和规格。'
                 : _fromCode
                 ? '日期已填上，核对后记下'
                 : matched
@@ -228,6 +239,7 @@ class _ConfirmPageState extends State<ConfirmPage> {
                             }
                           }
                           setState(() => _apply(first));
+                          _persistDraft();
                         },
                       ),
                     ),
@@ -256,7 +268,10 @@ class _ConfirmPageState extends State<ConfirmPage> {
                           label: Text(item.name),
                           selected: item.id == _product?.id,
                           selectedColor: AppColors.of(context).brandTint,
-                          onSelected: (_) => setState(() => _apply(item)),
+                          onSelected: (_) {
+                            setState(() => _apply(item));
+                            _persistDraft();
+                          },
                         ),
                       ),
                   ],
@@ -289,8 +304,9 @@ class _ConfirmPageState extends State<ConfirmPage> {
                 ),
                 DateLine(
                   label: '到期',
-                  date: _expiry!,
-                  onTap: () => _pick(_expiry!, (value) => _expiry = value),
+                  date: _expiry,
+                  placeholder: '请手写',
+                  onTap: () => _pick(_expiry, (value) => _expiry = value),
                 ),
                 DateLine(
                   label: '开封',
@@ -333,10 +349,33 @@ class _ConfirmPageState extends State<ConfirmPage> {
     );
   }
 
-  Future<void> _pick(DateTime current, void Function(DateTime) assign) async {
-    final picked = await pickDate(context, current);
+  Future<void> _pick(DateTime? current, void Function(DateTime) assign) async {
+    final today = dateOnly(AppScope.of<AppController>(context).now);
+    final picked = await pickDate(context, current ?? today);
     if (picked == null) return;
     setState(() => assign(dateOnly(picked)));
+    _persistDraft();
+  }
+
+  void _persistDraft() {
+    final code = widget.code.trim();
+    final product = _product;
+    if (code.isEmpty && product == null) return;
+    final app = AppScope.of<AppController>(context);
+    final draft = RecognitionDraft(
+      id: recognitionDraftId(barcode: code),
+      kind: 'confirm',
+      updatedAt: app.now.toUtc(),
+      barcode: code,
+      brand: product?.brand ?? '',
+      name: product?.name ?? '',
+      spec: product?.spec ?? '',
+      production: _production,
+      expiry: _expiry,
+      productId: product?.id,
+      addBag: true,
+    );
+    app.saveRecognitionDraft(draft);
   }
 
   String _shortBrand(String brand) {
@@ -402,6 +441,8 @@ class _ConfirmPageState extends State<ConfirmPage> {
           afterOpenDays: days,
         ),
       );
+      if (!mounted) return;
+      await app.removeRecognitionDraft(recognitionDraftId(barcode: code));
       if (!mounted) return;
       context.go('/home');
     } finally {

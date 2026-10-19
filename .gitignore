@@ -62,9 +62,18 @@ secrets/
 **/*.keystore
 **/*.jks
 
-# Build outputs and installable packages
+# Build outputs and installable packages. Install the APK from an external link, not from git.
 **/build/
+/artifacts/
 *.apk
 *.aab
 *.ipa
 *.dSYM.zip
+
+# Intermediate files. Keep source, README, CHANGELOG, and release notes.
+docs/store-listing/screenshots/
+docs/store-listing/*.png
+docs/ruanzhu/*.docx
+docs/ruanzhu/source-excerpt.txt
+ocr-samples/
+*.tmp

@@ -126,6 +126,8 @@ class _HomePageState extends State<HomePage> {
                   body: miss.body,
                   action: miss.action,
                   onAction: () => _missedSearch(app, query, miss.lookup),
+                  secondary: '自己添加',
+                  onSecondary: () => context.push(createFoodRoute(query)),
                 )
               else
                 for (final group in groups) ...[
@@ -163,6 +165,42 @@ class _HomePageState extends State<HomePage> {
                   ],
                 ],
             ] else ...[
+              if (app.openDrafts.isNotEmpty) ...[
+                const SizedBox(height: 12),
+                QuietCard(
+                  onTap: () => context.push(app.openDrafts.first.resumeRoute),
+                  child: Row(
+                    children: [
+                      const IconWell(icon: Icons.history),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              '最近识别',
+                              style: zhuaji.copyWith(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              app.openDrafts.first.title,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: zhuaji.copyWith(
+                                fontSize: 12,
+                                color: AppColors.of(context).muted,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
               if (app.cats.length > 1) ...[
                 _CatSwitch(app: app, activeCount: todos.length),
                 const SizedBox(height: 12),
