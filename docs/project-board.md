@@ -19,10 +19,11 @@ GitHub Projects 和 Issues 都没有建起来：当前令牌对 `huakan88/zhuaji
 
 ## 进行中
 
-- v2.20.2 拍包装后先核对再存进粮仓。字段标识别、请核对或未识别。到期日没读到不提醒。端侧识别，不设会员，不上传照片。标签还没打。
+- 这一列空着。
 
 ## 已完成
 
+- v2.20.2 拍包装后先核对再存进粮仓。字段标识别、请核对或未识别。到期日没读到不提醒。端侧识别，不设会员，不上传照片。标签和 [Release](https://github.com/huakan88/zhuaji/releases/tag/v2.20.2) 已在 `main`。
 - v2.20.1 条码不在本机表里时，可以手写品牌、名称和规格并保存。到期日没读到就留空。没写完的识别留在本机。标签和 [Release](https://github.com/huakan88/zhuaji/releases/tag/v2.20.1) 已在 `main`。
 - v2.20.0 搜不到、无关二维码、同一天重复记录、吃完一袋，页面上写下一步。标签和 [Release](https://github.com/huakan88/zhuaji/releases/tag/v2.20.0) 已在 `main`。
 - v2.19.0 扫到的粮在同一页写品牌、品名和规格。标签已在 `main`。
