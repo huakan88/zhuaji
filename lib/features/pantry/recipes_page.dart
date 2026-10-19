@@ -318,7 +318,7 @@ class _EnergyBlock extends StatelessWidget {
 }
 
 String energySentence({required CatProfile? cat, required double? kilograms}) {
-  if (cat == null) return '先选择一只猫，再估算每天千卡。';
+  if (cat == null) return '先点一只猫，再估算每天吃多少。';
   if (kilograms == null || kilograms <= 0) {
     return '${cat.name}还没有体重。先在健康里记一次，再回来看每天多少千卡。';
   }

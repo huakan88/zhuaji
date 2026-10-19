@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../core/theme/app_fonts.dart';
 import '../../core/theme/app_tokens.dart';
@@ -100,7 +101,24 @@ class _DiseaseLibraryPageState extends State<DiseaseLibraryPage> {
         ],
       ),
       bottomNavigationBar: cat == null
-          ? null
+          ? SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(20, 8, 20, 12),
+                child: FilledButton(
+                  onPressed: () {
+                    if (app.cats.isEmpty) {
+                      context.push('/cat-form');
+                    } else {
+                      context.go('/cats');
+                    }
+                  },
+                  style: FilledButton.styleFrom(
+                    minimumSize: const Size.fromHeight(56),
+                  ),
+                  child: Text(app.cats.isEmpty ? '先建档案' : '去点一只猫'),
+                ),
+              ),
+            )
           : SafeArea(
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(20, 8, 20, 12),

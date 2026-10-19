@@ -1,4 +1,36 @@
+import '../dates.dart';
 import '../models.dart';
+
+/// True when this cat already has [name] on [day]. Stops a second tap
+/// from writing the same shot again.
+bool vaccineLoggedOn(
+  Iterable<VaccineRecord> shots, {
+  required int catId,
+  required String name,
+  required DateTime day,
+}) {
+  final target = dateOnly(day);
+  for (final item in shots) {
+    if (item.catId != catId || item.name != name) continue;
+    if (dateOnly(item.givenOn) == target) return true;
+  }
+  return false;
+}
+
+/// True when this cat already has [product] on [day].
+bool dewormLoggedOn(
+  Iterable<DewormRecord> doses, {
+  required int catId,
+  required String product,
+  required DateTime day,
+}) {
+  final target = dateOnly(day);
+  for (final item in doses) {
+    if (item.catId != catId || item.product != product) continue;
+    if (dateOnly(item.givenOn) == target) return true;
+  }
+  return false;
+}
 
 /// Core vaccines: kittens get a short booster window, adults a year.
 DateTime nextVaccineDate(DateTime? birthday, DateTime givenOn) {

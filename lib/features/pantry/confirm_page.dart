@@ -17,6 +17,7 @@ class ConfirmPage extends StatefulWidget {
     required this.code,
     this.productId,
     this.blank = false,
+    this.plain = false,
     super.key,
   });
 
@@ -27,6 +28,9 @@ class ConfirmPage extends StatefulWidget {
 
   /// A retail code the public databases did not know. Do not invent a product.
   final bool blank;
+
+  /// A scan that was not a cat-food code. Do not pretend a brand matched.
+  final bool plain;
 
   @override
   State<ConfirmPage> createState() => _ConfirmPageState();
@@ -64,7 +68,7 @@ class _ConfirmPageState extends State<ConfirmPage> {
     _expiry = parsed.suggestedExpiry ?? today.add(const Duration(days: 365));
     _opened = today;
     _batch = parsed.batch;
-    if (widget.blank && pinned == null && known == null) {
+    if ((widget.blank || widget.plain) && pinned == null && known == null) {
       _product = null;
     } else {
       _apply(pinned ?? known ?? _fallback(app));
@@ -150,7 +154,9 @@ class _ConfirmPageState extends State<ConfirmPage> {
           ],
           const SizedBox(height: 4),
           Text(
-            _fromCode
+            widget.plain
+                ? '这不是猫粮条码。选一个品牌，或返回重扫。'
+                : _fromCode
                 ? '日期已填上，核对后记下'
                 : matched
                 ? '日期用滚轮改'
@@ -258,16 +264,17 @@ class _ConfirmPageState extends State<ConfirmPage> {
               ),
           ],
           const SizedBox(height: 16),
-          Text(
-            _storage,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-            style: zhuaji.copyWith(
-              fontSize: 13,
-              height: 1.35,
-              color: AppColors.of(context).muted,
+          if (_product != null)
+            Text(
+              _storage,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: zhuaji.copyWith(
+                fontSize: 13,
+                height: 1.35,
+                color: AppColors.of(context).muted,
+              ),
             ),
-          ),
           const SizedBox(height: 20),
           const SectionLabel('日期'),
           const SizedBox(height: 8),

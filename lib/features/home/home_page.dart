@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/copy.dart';
 import '../../core/format.dart';
 import '../../core/haptics.dart';
 import '../../core/theme/app_fonts.dart';
@@ -44,6 +45,10 @@ class _HomePageState extends State<HomePage> {
       for (final item in todos)
         if (!item.today) item,
     ];
+    final miss = searchMissFor(
+      query,
+      remembered: rememberedBarcode(app, query),
+    );
     final groups = query.isEmpty
         ? const <SearchGroup>[]
         : globalSearch(
@@ -85,6 +90,17 @@ class _HomePageState extends State<HomePage> {
                 const ScanCameraButton(),
               ],
             ),
+            if (app.shareQueue.isNotEmpty) ...[
+              const SizedBox(height: 8),
+              Text(
+                shareQueueNotice(app.shareQueue.length),
+                style: zhuaji.copyWith(
+                  fontSize: 13,
+                  height: 1.35,
+                  color: AppColors.of(context).muted,
+                ),
+              ),
+            ],
             if (query.isEmpty && app.recentSearches.isNotEmpty) ...[
               const SizedBox(height: 8),
               Wrap(
@@ -106,10 +122,10 @@ class _HomePageState extends State<HomePage> {
               const SizedBox(height: 16),
               if (groups.isEmpty)
                 EmptyHint(
-                  title: '没有找到',
-                  body: _canLookup(app, query) ? '这串数字可以拿去对一下' : '换个词，或扫包装上的条码',
-                  action: _canLookup(app, query) ? '查这个条码' : '扫码',
-                  onAction: () => _missedSearch(app, query),
+                  title: miss.title,
+                  body: miss.body,
+                  action: miss.action,
+                  onAction: () => _missedSearch(app, query, miss.lookup),
                 )
               else
                 for (final group in groups) ...[
@@ -224,12 +240,12 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  bool _canLookup(AppController app, String query) {
-    return productCodeOf(query) != null || rememberedBarcode(app, query);
-  }
-
-  Future<void> _missedSearch(AppController app, String query) async {
-    if (!_canLookup(app, query)) {
+  Future<void> _missedSearch(
+    AppController app,
+    String query,
+    bool lookup,
+  ) async {
+    if (!lookup) {
       context.push('/scan');
       return;
     }

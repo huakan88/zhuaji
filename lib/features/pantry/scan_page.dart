@@ -92,10 +92,10 @@ String _confirmRoute(String raw, String matched, int productId) {
 /// A bag already in the pantry opens that bag. A built-in or previously
 /// saved cat food opens the add-bag page with that product filled in.
 /// A QR code or product link that contains the same barcode takes the same
-/// route. An unknown EAN or UPC still opens lookup. A blank scan, or a QR
-/// that is not a product, opens confirm so the person can pick a brand.
-/// Dates and a batch on the code are kept. A saved bag opens even when
-/// its check digit is wrong.
+/// route. An unknown EAN or UPC still opens lookup. A blank scan opens
+/// confirm with a suggested brand. A QR that is not a product opens confirm
+/// with no brand filled in. Dates and a batch on the code are kept. A saved
+/// bag opens even when its check digit is wrong.
 Future<String> scanDestination(AppController app, String raw) async {
   final value = raw.trim();
   if (value.isEmpty) return '/confirm';
@@ -119,7 +119,51 @@ Future<String> scanDestination(AppController app, String raw) async {
   }
   final retail = productCodeOf(value);
   if (retail != null) return '/lookup?code=${Uri.encodeComponent(retail)}';
-  return '/confirm';
+  return '/confirm?plain=1';
+}
+
+/// What to say when a search or a pantry search misses.
+class SearchMiss {
+  const SearchMiss({
+    required this.title,
+    required this.body,
+    required this.lookup,
+  });
+
+  final String title;
+  final String body;
+  final bool lookup;
+
+  String get action => lookup ? '查这个条码' : '扫码';
+}
+
+SearchMiss searchMissFor(String query, {required bool remembered}) {
+  if (remembered || productCodeOf(query) != null) {
+    return const SearchMiss(
+      title: '没有找到',
+      body: '手机里没有这串数字，可以再查一次。',
+      lookup: true,
+    );
+  }
+  final digits = query.replaceAll(RegExp(r'\D'), '');
+  if (isGtinLength(digits) && !hasGtinChecksum(digits)) {
+    return const SearchMiss(
+      title: '末位对不上',
+      body: '再对一下包装上的最后一位。改完再查，或直接扫码。',
+      lookup: false,
+    );
+  }
+  final lower = query.toLowerCase();
+  if (lower.contains('http://') ||
+      lower.contains('https://') ||
+      lower.contains('www.')) {
+    return const SearchMiss(
+      title: '这不是猫粮条码',
+      body: '搜名字，或扫包装上的条码。',
+      lookup: false,
+    );
+  }
+  return const SearchMiss(title: '没有找到', body: '换个名字，或扫包装上的条码。', lookup: false);
 }
 
 /// True when this phone already saved [raw], even if the check digit is wrong.
@@ -136,8 +180,15 @@ String scanCameraMessage(MobileScannerErrorCode? code) {
   return switch (code) {
     MobileScannerErrorCode.permissionDenied => '没有相机权限。可以在系统设置里打开，也可以选品牌或拍包装。',
     MobileScannerErrorCode.unsupported => '这台手机扫不了码。可以选品牌，或拍包装。',
-    _ => '相机没开',
+    _ => '相机没打开。可以手输条码，或选品牌。',
   };
+}
+
+/// A barcode-length read whose check digit failed. Other reads stay quiet.
+String? scanRejectHint(String? raw) {
+  final value = raw?.trim() ?? '';
+  if (!isGtinLength(value) || hasGtinChecksum(value)) return null;
+  return '校验没通过，再对一下末位';
 }
 
 /// Formats the camera is asked to read. EAN and UPC are the barcodes on
@@ -194,6 +245,7 @@ class _ScanPageState extends State<ScanPage> {
   MobileScannerController? _camera;
   final _session = ScanSession();
   var _torchOn = false;
+  String? _hint;
 
   @override
   void dispose() {
@@ -250,70 +302,89 @@ class _ScanPageState extends State<ScanPage> {
             child: SafeArea(
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      '条形码、二维码都能扫',
-                      style: zhuaji.copyWith(
-                        color: AppColors.of(context).onScrim,
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (_hint != null) ...[
+                        Text(
+                          _hint!,
+                          textAlign: TextAlign.center,
+                          style: zhuaji.copyWith(
+                            color: AppColors.of(context).onScrim,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                      ],
+                      Text(
+                        '条形码、二维码都能扫',
+                        style: zhuaji.copyWith(
+                          color: AppColors.of(context).onScrim,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'EAN、UPC、GS1 和二维码',
-                      style: zhuaji.copyWith(
-                        color: AppColors.of(context).onScrimMuted,
-                        fontSize: 12,
+                      const SizedBox(height: 4),
+                      Text(
+                        '包装上的条码，或印着商品码的二维码',
+                        textAlign: TextAlign.center,
+                        style: zhuaji.copyWith(
+                          color: AppColors.of(context).onScrimMuted,
+                          fontSize: 12,
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 12),
-                    FilledButton(
-                      onPressed: () => context.push('/food?shot=1&bag=1'),
-                      style: FilledButton.styleFrom(
-                        minimumSize: const Size.fromHeight(48),
+                      const SizedBox(height: 12),
+                      FilledButton(
+                        onPressed: () => context.push('/food?shot=1&bag=1'),
+                        style: FilledButton.styleFrom(
+                          minimumSize: const Size.fromHeight(48),
+                        ),
+                        child: const Text('拍包装识别'),
                       ),
-                      child: const Text('拍包装识别'),
-                    ),
-                    const SizedBox(height: 8),
-                    OutlinedButton(
-                      onPressed: () => context.push('/food?bag=1'),
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: AppColors.of(context).onScrim,
-                        side: BorderSide(color: AppColors.of(context).onScrim),
-                        minimumSize: const Size.fromHeight(48),
+                      const SizedBox(height: 8),
+                      OutlinedButton(
+                        onPressed: () => context.push('/food?bag=1'),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: AppColors.of(context).onScrim,
+                          side: BorderSide(
+                            color: AppColors.of(context).onScrim,
+                          ),
+                          minimumSize: const Size.fromHeight(48),
+                        ),
+                        child: const Text('自己添加'),
                       ),
-                      child: const Text('自己添加'),
-                    ),
-                    const SizedBox(height: 8),
-                    OutlinedButton(
-                      onPressed: _typeCode,
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: AppColors.of(context).onScrim,
-                        side: BorderSide(color: AppColors.of(context).onScrim),
-                        minimumSize: const Size.fromHeight(48),
+                      const SizedBox(height: 8),
+                      OutlinedButton(
+                        onPressed: _typeCode,
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: AppColors.of(context).onScrim,
+                          side: BorderSide(
+                            color: AppColors.of(context).onScrim,
+                          ),
+                          minimumSize: const Size.fromHeight(48),
+                        ),
+                        child: const Text('手输条码'),
                       ),
-                      child: const Text('手输条码'),
-                    ),
-                    Text(
-                      '扫包装上的条码时才使用相机',
-                      style: zhuaji.copyWith(
-                        fontSize: 13,
-                        color: AppColors.of(context).onScrimMuted,
+                      Text(
+                        '扫包装上的条码时才使用相机',
+                        style: zhuaji.copyWith(
+                          fontSize: 13,
+                          color: AppColors.of(context).onScrimMuted,
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 8),
-                    TextButton(
-                      onPressed: () => _openConfirm(''),
-                      style: TextButton.styleFrom(
-                        foregroundColor: AppColors.of(context).onScrim,
-                        minimumSize: const Size(48, 48),
+                      const SizedBox(height: 8),
+                      TextButton(
+                        onPressed: () => _openConfirm(''),
+                        style: TextButton.styleFrom(
+                          foregroundColor: AppColors.of(context).onScrim,
+                          minimumSize: const Size(48, 48),
+                        ),
+                        child: const Text('选品牌'),
                       ),
-                      child: const Text('选品牌'),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -325,9 +396,13 @@ class _ScanPageState extends State<ScanPage> {
 
   Widget _cameraPane() {
     final fallback = Center(
-      child: Text(
-        '相机没开',
-        style: zhuaji.copyWith(color: AppColors.of(context).onScrim),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 32),
+        child: Text(
+          scanCameraMessage(null),
+          textAlign: TextAlign.center,
+          style: zhuaji.copyWith(color: AppColors.of(context).onScrim),
+        ),
       ),
     );
     if (Platform.environment['FLUTTER_TEST'] == 'true') return fallback;
@@ -357,7 +432,12 @@ class _ScanPageState extends State<ScanPage> {
           raw,
           keepInvalid: (value) => rememberedBarcode(app, value),
         );
-        if (taken != null) _openConfirm(taken);
+        if (taken != null) {
+          _openConfirm(taken);
+          return;
+        }
+        final hint = scanRejectHint(raw);
+        if (hint != null && hint != _hint) setState(() => _hint = hint);
       },
     );
   }

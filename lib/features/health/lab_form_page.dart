@@ -17,6 +17,7 @@ import '../../services/photo_store.dart';
 import '../../state/app_controller.dart';
 import '../records/record_sheets.dart';
 import 'known_or_custom.dart';
+import 'need_cat.dart';
 
 class LabFormPage extends StatefulWidget {
   const LabFormPage({this.reportId, this.kind, this.checkupItemId, super.key});
@@ -66,13 +67,7 @@ class _LabFormPageState extends State<LabFormPage> {
   Widget build(BuildContext context) {
     final app = AppScope.of<AppController>(context);
     final cat = app.active;
-    if (cat == null || _date == null) {
-      return Scaffold(
-        backgroundColor: AppColors.of(context).background,
-        appBar: zhuajiBar('化验单'),
-        body: const Center(child: Text('先选择一只猫')),
-      );
-    }
+    if (cat == null || _date == null) return const NeedCatPage(title: '化验单');
     final known = {for (final value in _values) value.code};
     final offer = _offerKinds();
     final missing = [

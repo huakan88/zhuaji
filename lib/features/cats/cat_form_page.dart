@@ -2,12 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 
+import '../../core/format.dart';
 import '../../core/theme/app_tokens.dart';
 import '../../core/widgets/common.dart';
+import '../../domain/dates.dart';
 import '../../domain/models.dart';
 import '../../services/photo_store.dart';
 import '../../state/app_controller.dart';
 import '../health/known_or_custom.dart';
+import '../records/record_sheets.dart';
 
 class CatFormPage extends StatefulWidget {
   const CatFormPage({this.catId, super.key});
@@ -36,6 +39,9 @@ class _CatFormPageState extends State<CatFormPage> {
   String? _avatar;
   String _breed = '';
   var _breedCustom = false;
+  var _sex = CatSex.unknown;
+  var _neutered = false;
+  DateTime? _birthday;
   var _loaded = false;
   var _busy = false;
 
@@ -49,6 +55,9 @@ class _CatFormPageState extends State<CatFormPage> {
     if (existing != null) {
       _name.text = existing.name;
       _avatar = existing.avatarPath;
+      _sex = existing.sex;
+      _neutered = existing.neutered;
+      _birthday = existing.birthday;
       final breed = existing.breed?.trim() ?? '';
       if (breed.isNotEmpty && !_breeds.contains(breed)) {
         _breedCustom = true;
@@ -71,7 +80,7 @@ class _CatFormPageState extends State<CatFormPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.of(context).background,
-      appBar: zhuajiBar(widget.catId == null ? '建档' : '改名'),
+      appBar: zhuajiBar(widget.catId == null ? '建档' : '档案'),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
         children: [
@@ -104,6 +113,40 @@ class _CatFormPageState extends State<CatFormPage> {
             controller: _name,
             textInputAction: TextInputAction.done,
             decoration: const InputDecoration(labelText: '名字'),
+          ),
+          const SizedBox(height: 16),
+          const SectionLabel('性别'),
+          const SizedBox(height: 8),
+          CatSexPicker(
+            sex: _sex,
+            onChanged: (value) => setState(() => _sex = value),
+          ),
+          if (widget.catId != null) ...[
+            const SizedBox(height: 8),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: ChoiceChip(
+                label: const Text('已绝育'),
+                labelPadding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
+                selected: _neutered,
+                selectedColor: AppColors.of(context).brandTint,
+                onSelected: (value) => setState(() => _neutered = value),
+              ),
+            ),
+          ],
+          const SizedBox(height: 8),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: TextButton(
+              onPressed: _pickBirthday,
+              style: TextButton.styleFrom(minimumSize: const Size(48, 48)),
+              child: Text(
+                _birthday == null ? '填写生日' : '生日 ${formatDate(_birthday!)}',
+              ),
+            ),
           ),
           const SizedBox(height: 16),
           const SectionLabel('品种'),
@@ -156,6 +199,15 @@ class _CatFormPageState extends State<CatFormPage> {
     setState(() => _avatar = 'asset:assets/cats/cat-orange.jpg');
   }
 
+  Future<void> _pickBirthday() async {
+    final app = AppScope.of<AppController>(context);
+    final initial =
+        _birthday ?? DateTime(app.now.year - 1, app.now.month, app.now.day);
+    final picked = await pickDate(context, initial);
+    if (picked == null) return;
+    setState(() => _birthday = dateOnly(picked));
+  }
+
   Future<void> _save() async {
     final name = _name.text.trim();
     if (name.isEmpty) {
@@ -180,16 +232,20 @@ class _CatFormPageState extends State<CatFormPage> {
         CatDraft(
           id: existing?.id,
           name: name,
-          sex: existing?.sex ?? CatSex.unknown,
-          neutered: existing?.neutered ?? false,
-          birthday: existing?.birthday,
+          sex: _sex,
+          neutered: widget.catId == null
+              ? (existing?.neutered ?? false)
+              : _neutered,
+          birthday: _birthday,
           coatColor: existing?.coatColor,
           breed: breed,
           goal: existing?.goal ?? CareGoal.maintain,
           notes: existing?.notes ?? '',
           avatarPath: _avatar,
+          isSample: existing?.isSample ?? false,
           recognitionDetail: existing?.recognitionDetail,
           recognitionSource: existing?.recognitionSource,
+          recognitionConfidence: existing?.recognitionConfidence,
         ),
       );
       if (!mounted) return;
@@ -197,5 +253,63 @@ class _CatFormPageState extends State<CatFormPage> {
     } finally {
       if (mounted) setState(() => _busy = false);
     }
+  }
+}
+
+/// Keeps the rest of the profile when one field changes from the cat page.
+CatDraft copyCatDraft(
+  CatProfile cat, {
+  CatSex? sex,
+  bool? neutered,
+  DateTime? birthday,
+}) {
+  return CatDraft(
+    id: cat.id,
+    name: cat.name,
+    sex: sex ?? cat.sex,
+    neutered: neutered ?? cat.neutered,
+    birthday: birthday ?? cat.birthday,
+    coatColor: cat.coatColor,
+    breed: cat.breed,
+    goal: cat.goal,
+    notes: cat.notes,
+    avatarPath: cat.avatarPath,
+    isSample: cat.isSample,
+    recognitionDetail: cat.recognitionDetail,
+    recognitionSource: cat.recognitionSource,
+    recognitionConfidence: cat.recognitionConfidence,
+  );
+}
+
+class CatSexPicker extends StatelessWidget {
+  const CatSexPicker({required this.sex, required this.onChanged, super.key});
+
+  final CatSex sex;
+  final ValueChanged<CatSex> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    const options = <(CatSex, String)>[
+      (CatSex.male, '公'),
+      (CatSex.female, '母'),
+      (CatSex.unknown, '还不确定'),
+    ];
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: [
+        for (final option in options)
+          ChoiceChip(
+            label: Text(option.$2),
+            labelPadding: const EdgeInsets.symmetric(
+              horizontal: 12,
+              vertical: 8,
+            ),
+            selected: sex == option.$1,
+            selectedColor: AppColors.of(context).brandTint,
+            onSelected: (_) => onChanged(option.$1),
+          ),
+      ],
+    );
   }
 }

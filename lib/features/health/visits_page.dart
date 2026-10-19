@@ -9,6 +9,7 @@ import '../../domain/models.dart';
 import '../../state/app_controller.dart';
 import '../records/record_sheets.dart';
 import 'known_or_custom.dart';
+import 'need_cat.dart';
 
 class VisitsPage extends StatefulWidget {
   const VisitsPage({super.key});
@@ -39,13 +40,7 @@ class _VisitsPageState extends State<VisitsPage> {
   Widget build(BuildContext context) {
     final app = AppScope.of<AppController>(context);
     final cat = app.active;
-    if (cat == null) {
-      return Scaffold(
-        backgroundColor: AppColors.of(context).background,
-        appBar: zhuajiBar('就医'),
-        body: const Center(child: Text('先选择一只猫')),
-      );
-    }
+    if (cat == null) return const NeedCatPage(title: '就医');
     final date = _date ??= dateOnly(app.now);
     final visits = app.catVisits;
     final clinics = app.knownClinics;

@@ -4,11 +4,13 @@ import '../../core/format.dart';
 import '../../core/theme/app_fonts.dart';
 import '../../core/theme/app_tokens.dart';
 import '../../core/widgets/common.dart';
+import '../../domain/care/easy_log.dart';
 import '../../domain/dates.dart';
 import '../../domain/models.dart';
 import '../../state/app_controller.dart';
 import '../records/record_sheets.dart';
 import 'known_or_custom.dart';
+import 'need_cat.dart';
 
 class DewormsPage extends StatefulWidget {
   const DewormsPage({super.key});
@@ -51,13 +53,7 @@ class _DewormsPageState extends State<DewormsPage> {
   Widget build(BuildContext context) {
     final app = AppScope.of<AppController>(context);
     final cat = app.active;
-    if (cat == null) {
-      return Scaffold(
-        backgroundColor: AppColors.of(context).background,
-        appBar: zhuajiBar('驱虫'),
-        body: const Center(child: Text('先选择一只猫')),
-      );
-    }
+    if (cat == null) return const NeedCatPage(title: '驱虫');
     final last = app.lastDeworm;
     _seed(last);
     final kind = _kind ?? DewormKind.internal;
@@ -148,6 +144,15 @@ class _DewormsPageState extends State<DewormsPage> {
                     );
                     if (name == null) {
                       showMessage(context, '先写上药名');
+                      return;
+                    }
+                    if (dewormLoggedOn(
+                      app.deworms,
+                      catId: cat.id,
+                      product: name,
+                      day: given,
+                    )) {
+                      showMessage(context, '今天已经记过$name');
                       return;
                     }
                     setState(() => _busy = true);

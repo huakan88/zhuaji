@@ -117,7 +117,7 @@ void main() {
     );
     expect(
       await scanDestination(controller, 'https://example.com/not-a-product'),
-      '/confirm',
+      '/confirm?plain=1',
     );
     await database.close();
   });
@@ -132,7 +132,7 @@ void main() {
     await controller.init();
     await boot(tester, controller, location: '/scan');
 
-    expect(find.text('相机没开'), findsOneWidget);
+    expect(find.text('相机没打开。可以手输条码，或选品牌。'), findsOneWidget);
     expect(find.byTooltip('手电筒'), findsOneWidget);
     expect(find.text('手输条码'), findsOneWidget);
     expect(find.text('拍包装识别'), findsOneWidget);

@@ -143,6 +143,7 @@ class _ZhuajiAppState extends State<ZhuajiApp> with WidgetsBindingObserver {
           code: state.uri.queryParameters['code'] ?? '',
           productId: int.tryParse(state.uri.queryParameters['product'] ?? ''),
           blank: state.uri.queryParameters['blank'] == '1',
+          plain: state.uri.queryParameters['plain'] == '1',
         ),
       ),
       GoRoute(

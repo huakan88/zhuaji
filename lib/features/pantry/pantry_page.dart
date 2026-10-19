@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/copy.dart';
 import '../../core/theme/app_fonts.dart';
 import '../../core/theme/app_tokens.dart';
 import '../../core/widgets/common.dart';
@@ -75,6 +76,17 @@ class _PantryPageState extends State<PantryPage> {
                 const ScanCameraButton(),
               ],
             ),
+            if (app.shareQueue.isNotEmpty) ...[
+              const SizedBox(height: 8),
+              Text(
+                shareQueueNotice(app.shareQueue.length),
+                style: zhuaji.copyWith(
+                  fontSize: 13,
+                  height: 1.35,
+                  color: AppColors.of(context).muted,
+                ),
+              ),
+            ],
             const SizedBox(height: 8),
             Wrap(
               spacing: 8,
@@ -92,8 +104,8 @@ class _PantryPageState extends State<PantryPage> {
               const SizedBox(height: 8),
               if (stocked.isEmpty)
                 EmptyHint(
-                  title: '还没有',
-                  body: '扫一袋就会出现在这里',
+                  title: '还没有粮',
+                  body: '扫包装上的条码，这袋就会出现在这里',
                   action: '扫码',
                   onAction: () => context.push('/scan'),
                 )
@@ -179,7 +191,7 @@ class _CatalogRow extends StatelessWidget {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  '${product.brand} · 未入库',
+                  '${product.brand} · 还没放进粮仓',
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: zhuaji.copyWith(
@@ -263,26 +275,34 @@ class _PantryMiss extends StatelessWidget {
   final AppController app;
   final String query;
 
-  bool get _coded =>
-      productCodeOf(query) != null || rememberedBarcode(app, query);
-
   @override
   Widget build(BuildContext context) {
+    final miss = searchMissFor(
+      query,
+      remembered: rememberedBarcode(app, query),
+    );
+    final generic = !miss.lookup && miss.title == '没有找到';
     return EmptyHint(
-      title: '没有这款',
-      body: _coded ? '手机里没有这串数字，可以再查一次' : '图鉴里也没有，可以自己添加',
-      action: _coded ? '查这个条码' : '自己添加',
-      onAction: () => _open(context),
-      secondary: _coded ? '自己添加' : null,
-      onSecondary: _coded ? () => context.push('/food') : null,
+      title: miss.lookup || generic ? '没有这款' : miss.title,
+      body: generic ? '图鉴里也没有。可以自己添加，或扫包装上的条码。' : miss.body,
+      action: generic ? '自己添加' : miss.action,
+      onAction: () {
+        if (generic) {
+          context.push('/food');
+          return;
+        }
+        if (!miss.lookup) {
+          context.push('/scan');
+          return;
+        }
+        _open(context);
+      },
+      secondary: generic ? '扫码' : '自己添加',
+      onSecondary: () => context.push(generic ? '/scan' : '/food'),
     );
   }
 
   Future<void> _open(BuildContext context) async {
-    if (!_coded) {
-      context.push('/food');
-      return;
-    }
     final route = await scanDestination(app, query);
     if (!context.mounted) return;
     context.push(route);
