@@ -358,7 +358,7 @@ class _ScanPageState extends State<ScanPage> {
                       ),
                       const SizedBox(height: 12),
                       FilledButton(
-                        onPressed: () => context.push('/food?shot=1&bag=1'),
+                        onPressed: () => context.push('/pack?shot=1'),
                         style: FilledButton.styleFrom(
                           minimumSize: const Size.fromHeight(48),
                         ),

@@ -1,6 +1,8 @@
 package com.maokangji.maokangji
 
 import android.content.Intent
+import android.net.Uri
+import android.provider.Settings
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
@@ -12,6 +14,19 @@ class MainActivity : FlutterActivity() {
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
         channel = MethodChannel(flutterEngine.dartExecutor.binaryMessenger, channelName)
+        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "zhuaji/settings")
+            .setMethodCallHandler { call, result ->
+                if (call.method == "open") {
+                    val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+                        data = Uri.fromParts("package", packageName, null)
+                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    }
+                    startActivity(intent)
+                    result.success(null)
+                } else {
+                    result.notImplemented()
+                }
+            }
         channel?.setMethodCallHandler { call, result ->
             when (call.method) {
                 "update" -> {

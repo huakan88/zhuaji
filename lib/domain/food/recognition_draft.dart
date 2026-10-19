@@ -36,6 +36,8 @@ class RecognitionDraft {
     this.productId,
     this.pantryId,
     this.addBag = false,
+    this.marks = const {},
+    this.failure = '',
   });
 
   /// `code:<barcodeKey>`, `photo:<path>`, or `latest` when nothing else identifies it.
@@ -60,6 +62,12 @@ class RecognitionDraft {
   final int? pantryId;
   final bool addBag;
 
+  /// Field key → `recognized` / `review` / `missing` / `edited`.
+  final Map<String, String> marks;
+
+  /// `camera`, `empty`, `low`, or empty when the form has a read.
+  final String failure;
+
   bool get unfinished => kind != 'facts';
 
   bool get isBlank =>
@@ -70,7 +78,8 @@ class RecognitionDraft {
       ingredients.trim().isEmpty &&
       (photoPath == null || photoPath!.isEmpty) &&
       production == null &&
-      expiry == null;
+      expiry == null &&
+      failure.trim().isEmpty;
 
   String get title {
     final named = [
@@ -84,7 +93,8 @@ class RecognitionDraft {
 
   String get resumeRoute {
     final params = <String>[
-      if (barcode.trim().isNotEmpty) 'code=${Uri.encodeComponent(barcode.trim())}',
+      if (barcode.trim().isNotEmpty)
+        'code=${Uri.encodeComponent(barcode.trim())}',
       'draft=${Uri.encodeComponent(id)}',
       if (addBag && kind != 'confirm') 'bag=1',
       if (productId != null && kind == 'confirm') 'product=$productId',
@@ -93,6 +103,7 @@ class RecognitionDraft {
     ];
     final query = params.join('&');
     if (kind == 'confirm') return '/confirm?$query';
+    if (kind == 'ocr' || kind == 'pack') return '/pack?$query';
     return '/food?$query';
   }
 
@@ -118,6 +129,8 @@ class RecognitionDraft {
     'productId': productId,
     'pantryId': pantryId,
     'addBag': addBag,
+    'marks': marks,
+    'failure': failure,
   };
 
   factory RecognitionDraft.fromJson(Map<dynamic, dynamic> json) {
@@ -134,13 +147,17 @@ class RecognitionDraft {
       formKey: '${json['formKey'] ?? ''}',
       customForm: '${json['customForm'] ?? ''}',
       ingredients: '${json['ingredients'] ?? ''}',
-      photoPath: json['photoPath'] is String ? json['photoPath'] as String : null,
+      photoPath: json['photoPath'] is String
+          ? json['photoPath'] as String
+          : null,
       production: DateTime.tryParse('${json['production'] ?? ''}'),
       expiry: DateTime.tryParse('${json['expiry'] ?? ''}'),
       expiryFromOcr: json['expiryFromOcr'] == true,
       productId: _asInt(json['productId']),
       pantryId: _asInt(json['pantryId']),
       addBag: json['addBag'] == true,
+      marks: _marks(json['marks']),
+      failure: '${json['failure'] ?? ''}',
     );
   }
 
@@ -173,6 +190,8 @@ class RecognitionDraft {
       productId: incoming.productId ?? productId,
       pantryId: incoming.pantryId ?? pantryId,
       addBag: incoming.addBag || addBag,
+      marks: incoming.marks.isEmpty ? marks : incoming.marks,
+      failure: incoming.failure.trim().isEmpty ? failure : incoming.failure,
     );
   }
 }
@@ -180,6 +199,17 @@ class RecognitionDraft {
 int? _asInt(Object? value) {
   if (value is int) return value;
   return int.tryParse('$value');
+}
+
+Map<String, String> _marks(Object? raw) {
+  if (raw is! Map) return const {};
+  final out = <String, String>{};
+  for (final entry in raw.entries) {
+    final value = '${entry.value}'.trim();
+    if (value.isEmpty) continue;
+    out['${entry.key}'] = value;
+  }
+  return out;
 }
 
 String recognitionDraftId({String barcode = '', String? photoPath}) {
@@ -236,7 +266,10 @@ List<RecognitionDraft> dropRecognitionDraft(
   List<RecognitionDraft> drafts,
   String id,
 ) {
-  return [for (final draft in drafts) if (draft.id != id) draft];
+  return [
+    for (final draft in drafts)
+      if (draft.id != id) draft,
+  ];
 }
 
 FoodForm formFromDraft(RecognitionDraft draft) {

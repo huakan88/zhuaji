@@ -32,6 +32,7 @@ import 'features/pantry/catalog_page.dart';
 import 'features/pantry/confirm_page.dart';
 import 'features/pantry/lookup_page.dart';
 import 'features/pantry/food_form_page.dart';
+import 'features/pantry/pack_confirm_page.dart';
 import 'features/pantry/pantry_page.dart';
 import 'features/pantry/recipes_page.dart';
 import 'features/pantry/scan_page.dart';
@@ -218,6 +219,18 @@ class _ZhuajiAppState extends State<ZhuajiApp> with WidgetsBindingObserver {
         path: '/recipe',
         builder: (context, state) =>
             RecipeDetailPage(cardId: state.uri.queryParameters['id'] ?? ''),
+      ),
+      GoRoute(
+        path: '/pack',
+        builder: (context, state) {
+          final query = state.uri.queryParameters;
+          return PackConfirmPage(
+            barcode: query['code'] ?? '',
+            draftId: query['draft'],
+            openCamera: query['shot'] == '1',
+            openGallery: query['album'] == '1',
+          );
+        },
       ),
       GoRoute(
         path: '/food',

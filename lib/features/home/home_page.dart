@@ -9,6 +9,7 @@ import '../../core/theme/app_fonts.dart';
 import '../../core/theme/app_tokens.dart';
 import '../../core/widgets/common.dart';
 import '../../domain/dates.dart';
+import '../../domain/food/expiry_policy.dart';
 import '../../domain/models.dart';
 import '../../domain/search/global_search.dart';
 import '../../state/app_controller.dart';
@@ -243,6 +244,7 @@ class _HomePageState extends State<HomePage> {
                   ],
                 ),
               ),
+              ..._nearExpiry(context, app),
               const SizedBox(height: 24),
               SectionLabel(
                 todayTodos.isEmpty ? '今天要办' : '今天要办  ${todayTodos.length}',
@@ -401,6 +403,49 @@ class _HomePageState extends State<HomePage> {
       }
     }
     return items;
+  }
+
+  List<Widget> _nearExpiry(BuildContext context, AppController app) {
+    final near = bagsNearExpiry(app.pantry, dateOnly(app.now));
+    if (near.isEmpty) return const [];
+    final shown = near.take(3).toList();
+    final extra = near.length - shown.length;
+    final colors = AppColors.of(context);
+    return [
+      const SizedBox(height: 12),
+      const SectionLabel('临期'),
+      const SizedBox(height: 8),
+      for (final bag in shown) ...[
+        QuietCard(
+          onTap: () => context.push('/bag?id=${bag.pantryId}'),
+          child: Text(
+            nearExpiryLabel(bag),
+            style: zhuaji.copyWith(fontSize: 16, fontWeight: FontWeight.w700),
+          ),
+        ),
+        const SizedBox(height: 8),
+      ],
+      if (extra > 0)
+        Padding(
+          padding: const EdgeInsets.only(bottom: 8),
+          child: Text(
+            '另有 $extra 袋',
+            style: zhuaji.copyWith(fontSize: 12, color: colors.muted),
+          ),
+        ),
+      if (pantryHasUndatedExpiry(app.pantry))
+        Padding(
+          padding: const EdgeInsets.only(bottom: 8),
+          child: Text(
+            '没填到期日的袋子不会出现在这里，也不会提醒。',
+            style: zhuaji.copyWith(
+              fontSize: 12,
+              height: 1.4,
+              color: colors.muted,
+            ),
+          ),
+        ),
+    ];
   }
 
   String _meta(CatProfile cat, DateTime now) {

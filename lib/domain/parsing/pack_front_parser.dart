@@ -35,6 +35,7 @@ class PackRead {
     this.productionDate,
     this.expiryDate,
     this.expiryUncertain = false,
+    this.expiryInferred = false,
   });
 
   final String? brand;
@@ -48,6 +49,10 @@ class PackRead {
 
   /// An expiry label was seen, but the date was not confident enough to keep.
   final bool expiryUncertain;
+
+  /// The expiry was calculated from a printed shelf life plus a production
+  /// date, not read as its own date. The confirm form asks for a check.
+  final bool expiryInferred;
 
   bool get isEmpty =>
       brand == null &&
@@ -131,6 +136,7 @@ class PackFrontParser {
           : dateOnly(dated.productionDate!),
       expiryDate: dated.expiryDate == null ? null : dateOnly(dated.expiryDate!),
       expiryUncertain: dated.uncertain && dated.expiryDate == null,
+      expiryInferred: dated.expiryInferred && dated.expiryDate != null,
     );
   }
 
@@ -177,7 +183,9 @@ class PackFrontParser {
   PackBrand? _extra(String brand) {
     final trimmed = brand.trim();
     if (trimmed.isEmpty) return null;
-    final cjk = RegExp(r'[\u4e00-\u9fff]{2,}').allMatches(trimmed).map((m) => m.group(0)!);
+    final cjk = RegExp(r'[\u4e00-\u9fff]{2,}')
+        .allMatches(trimmed)
+        .map((m) => m.group(0)!);
     return PackBrand(trimmed, {trimmed, ...cjk}.toList());
   }
 
@@ -203,11 +211,18 @@ class PackFrontParser {
     if (best != null) return best;
     for (var i = 0; i < lines.length; i++) {
       final line = lines[i];
-      if (_noise(line) || _flavor(line) == line || _form(line) != null && line.length <= 4) {
+      if (_noise(line) ||
+          _flavor(line) == line ||
+          _form(line) != null && line.length <= 4) {
         continue;
       }
       if (RegExp(r'^[\u4e00-\u9fffA-Za-z]{2,10}$').hasMatch(line)) {
-        return _BrandHit(canonical: line, line: i, start: 0, length: line.length);
+        return _BrandHit(
+          canonical: line,
+          line: i,
+          start: 0,
+          length: line.length,
+        );
       }
     }
     return null;
@@ -224,9 +239,11 @@ class PackFrontParser {
     final candidates = <String>[];
     if (brand != null) {
       final line = lines[brand.line];
-      final rest = (line.substring(0, brand.start) + line.substring(brand.start + brand.length))
-          .replaceAll(RegExp(r'^[\s·|/\\\-]+|[\s·|/\\\-]+$'), '')
-          .trim();
+      final rest =
+          (line.substring(0, brand.start) +
+                  line.substring(brand.start + brand.length))
+              .replaceAll(RegExp(r'^[\s·|/\\\-]+|[\s·|/\\\-]+$'), '')
+              .trim();
       if (rest.length >= 2) candidates.add(rest);
     }
     for (var i = 0; i < lines.length; i++) {
@@ -260,7 +277,10 @@ class PackFrontParser {
     if (text.contains('零食') || text.contains('猫条') || text.contains('肉条')) {
       return FoodForm.treat;
     }
-    if (text.contains('湿粮') || text.contains('妙鲜包') || text.contains('餐包') || text.contains('罐头')) {
+    if (text.contains('湿粮') ||
+        text.contains('妙鲜包') ||
+        text.contains('餐包') ||
+        text.contains('罐头')) {
       return FoodForm.wet;
     }
     if (text.contains('干粮') || text.contains('猫粮') || text.contains('全价')) {
@@ -288,7 +308,9 @@ class PackFrontParser {
   }
 
   bool _noise(String line) {
-    if (_fieldLabel(line) != null || _dateLine(line) || _ingredientStart(line) != null) {
+    if (_fieldLabel(line) != null ||
+        _dateLine(line) ||
+        _ingredientStart(line) != null) {
       return true;
     }
     const keys = [
@@ -399,12 +421,21 @@ class PackFrontParser {
         final line = lines[i].trim();
         final hay = ascii ? line.toUpperCase() : line;
         final needle = ascii ? label.toUpperCase() : label;
-        var rest = line.substring(needle.length).replaceFirst(RegExp(r'^[\s:：]+'), '').trim();
+        var rest = line
+            .substring(needle.length)
+            .replaceFirst(RegExp(r'^[\s:：]+'), '')
+            .trim();
         if (ascii) {
           final index = hay.indexOf(needle);
-          rest = line.substring(index + needle.length).replaceFirst(RegExp(r'^[\s:：]+'), '').trim();
+          rest = line
+              .substring(index + needle.length)
+              .replaceFirst(RegExp(r'^[\s:：]+'), '')
+              .trim();
         }
-        if (rest.isEmpty && i + 1 < lines.length && _fieldLabel(lines[i + 1]) == null && !_dateLine(lines[i + 1])) {
+        if (rest.isEmpty &&
+            i + 1 < lines.length &&
+            _fieldLabel(lines[i + 1]) == null &&
+            !_dateLine(lines[i + 1])) {
           rest = lines[i + 1].trim();
         }
         if (rest.isNotEmpty) return rest;
@@ -431,7 +462,10 @@ class PackFrontParser {
       final hay = ascii ? head.toUpperCase() : head;
       final needle = ascii ? label.toUpperCase() : label;
       final index = hay.indexOf(needle);
-      final rest = head.substring(index + needle.length).replaceFirst(RegExp(r'^[\s:：]+'), '').trim();
+      final rest = head
+          .substring(index + needle.length)
+          .replaceFirst(RegExp(r'^[\s:：]+'), '')
+          .trim();
       if (rest.isNotEmpty) chunks.add(rest);
       for (var j = i + 1; j < lines.length; j++) {
         if (_sectionStop(lines[j]) || _fieldLabel(lines[j]) != null) break;

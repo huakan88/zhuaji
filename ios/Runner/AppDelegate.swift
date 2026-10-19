@@ -96,5 +96,18 @@ enum WidgetStore {
         result(FlutterMethodNotImplemented)
       }
     }
+    let settings = FlutterMethodChannel(
+      name: "zhuaji/settings",
+      binaryMessenger: engineBridge.applicationRegistrar.messenger()
+    )
+    settings.setMethodCallHandler { call, result in
+      if call.method == "open",
+        let url = URL(string: UIApplication.openSettingsURLString) {
+        UIApplication.shared.open(url)
+        result(nil)
+      } else {
+        result(FlutterMethodNotImplemented)
+      }
+    }
   }
 }

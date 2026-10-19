@@ -11,7 +11,7 @@
 - **粮仓**：每袋还能吃几天。本页也能搜索和扫码。
 - **猫咪**：档案、照片，以及隐私政策和用户协议。
 
-当前源码版本是 **2.20.1**（`pubspec.yaml` 的 `2.20.1+36`）。已经合并进 `main` 的最新标签是 **v2.20.1**。
+当前源码版本是 **2.20.2**（`pubspec.yaml` 的 `2.20.2+37`）。已经合并进 `main` 的最新标签仍是 **v2.20.1**。2.20.2 的标签在这一版合并进 `main` 之后再打。
 
 主仓：[huakan88/zhuaji](https://github.com/huakan88/zhuaji)。
 
@@ -32,13 +32,13 @@ flutter build apk --release --target-platform android-arm64 --no-tree-shake-icon
 
 拉取请求：日常集成在 `develop`，功能用 `feature/*`，修复用 `fix/*`。`main` 只接受合并。发版先改 `pubspec.yaml`，用 `release/x.y.z` 合并进 `main`，再打附注标签 `vX.Y.Z`。详见 [Git 工作流](docs/git-workflow.md)。
 
-GitHub Projects 和 Issues 这次都建不了（接口 403）。看板写在 [项目板](docs/project-board.md)，三列是待做、进行中、已完成。条码不在表里可以手写、到期日不再默认成一年后，这两项在 2.20.1 里已经合并进 `main`。选品牌仍会带出「室内成猫」，留在待做。
+GitHub Projects 和 Issues 这次都建不了（接口 403）。看板写在 [项目板](docs/project-board.md)，三列是待做、进行中、已完成。2.20.2 在做拍包装后的核对页。条码不在表里可以手写、到期日不再默认成一年后，这两项在 2.20.1 里已经合并进 `main`。选品牌仍会带出「室内成猫」，留在待做。
 
 固定选项旁边可以手写，写上的按原文保存。性别仍是点选。体重按千克记。日期用滚轮。浅色是浅绿底和白卡片，深色是深灰绿，默认跟随系统。猫咪页可以改成「跟随系统 / 浅色 / 深色」。照片用大圆角，没有大面积渐变。
 
 ## 版本与进度
 
-当前源码是 **2.20.1**（`pubspec.yaml` 的 `2.20.1+36`）。已经合并进 `main` 并打了附注标签的最新一版是 **v2.20.1**。[v2.20.0](https://github.com/huakan88/zhuaji/releases/tag/v2.20.0) 和 [v2.20.1](https://github.com/huakan88/zhuaji/releases/tag/v2.20.1) 都已发出。发版步骤见 [Git 工作流](docs/git-workflow.md)。
+当前源码是 **2.20.2**（`pubspec.yaml` 的 `2.20.2+37`）。已经合并进 `main` 并打了附注标签的最新一版是 **v2.20.1**。[v2.20.0](https://github.com/huakan88/zhuaji/releases/tag/v2.20.0) 和 [v2.20.1](https://github.com/huakan88/zhuaji/releases/tag/v2.20.1) 都已发出。2.20.2 还没打标签。发版步骤见 [Git 工作流](docs/git-workflow.md)。
 
 | 看什么 | 在哪 |
 | --- | --- |
@@ -50,6 +50,8 @@ GitHub Projects 和 Issues 这次都建不了（接口 403）。看板写在 [�
 仓库说明用这一句：花爪：猫健康记录与粮品扫码助手。登录后在仓库页的 About 齿轮里贴上。要让没登录的人也能打开，仓库主人在 **Settings → General → Danger zone → Change repository visibility** 里改成 Public。改成公开之后，打开仓库点 **Pin repository**，主页最多钉 6 个。还是私有时，头像菜单 **Your repositories**，筛选 Private，才能看到。
 
 下面从 2.18 起是页面上能看到的变化。完整条目在变更记录里。
+
+2.20.2 拍包装之后先到核对页，再点「存进粮仓」。品牌、品名、规格、配料、生产日期和到期日都能手改，并标上识别、请核对或未识别。条码不在表里时，拍包装进同一张表。相机没打开、没认出字或看不清，可以重拍或手填。到期日没读到就留空，这袋不会提醒临期，也不会猜成一年后。今天页给有真实到期日的袋子一张临期卡。配料前几位按原文标出，不做风险评分。认字在手机上完成，照片不上传，也不设会员。
 
 2.18 把用户看得到的名字改成花爪。启动图标、启动页、空状态、没有照片时的头像，以及协议页上的标志，都用同一张奶油色绒毛肉垫（粉色肉垫，深绿色底）。包名仍是 `com.maokangji.maokangji`。通知栏小图标仍是白色剪影，避免状态栏显示成彩色方块。
 

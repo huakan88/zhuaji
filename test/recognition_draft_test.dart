@@ -62,48 +62,45 @@ void main() {
     expect(draft.ingredients, '鸡肉');
     expect(draft.expiry, isNull);
     expect(draft.toSyncJson()['kind'], 'ocr');
+    expect(draft.resumeRoute, contains('/pack?'));
     expect(again.openDrafts, hasLength(1));
   });
 
-  test('a pending correction opens confirm and does not ask the network', () async {
-    const code = '6900000000007';
-    controller.barcodeFetch = (_) async {
-      fail('a pending correction must not ask the network');
-    };
-    controller.shareQueue = [
-      SharePending.waiting(
-        const BarcodeRecord(
-          code: code,
-          found: true,
-          brand: '伯纳天纯',
-          name: '全价成猫粮',
-          quantity: '2kg',
-          ingredients: '鸡',
-          nutrients: [],
-          source: 'user',
+  test(
+    'a pending correction opens confirm and does not ask the network',
+    () async {
+      const code = '6900000000007';
+      controller.barcodeFetch = (_) async {
+        fail('a pending correction must not ask the network');
+      };
+      controller.shareQueue = [
+        SharePending.waiting(
+          const BarcodeRecord(
+            code: code,
+            found: true,
+            brand: '伯纳天纯',
+            name: '全价成猫粮',
+            quantity: '2kg',
+            ingredients: '鸡',
+            nutrients: [],
+            source: 'user',
+          ),
+          DateTime.utc(2026, 10, 17),
         ),
-        DateTime.utc(2026, 10, 17),
-      ),
-    ];
-    final route = await scanDestination(controller, code);
-    expect(route, contains('/confirm?'));
-    expect(route, isNot(contains('/lookup')));
-    expect(controller.findBarcode(code)?.brand, '伯纳天纯');
-    expect(controller.findBarcode(code)?.name, '全价成猫粮');
-  });
+      ];
+      final route = await scanDestination(controller, code);
+      expect(route, contains('/confirm?'));
+      expect(route, isNot(contains('/lookup')));
+      expect(controller.findBarcode(code)?.brand, '伯纳天纯');
+      expect(controller.findBarcode(code)?.name, '全价成猫粮');
+    },
+  );
 
   testWidgets('a new bag does not prefill expiry a year ahead', (tester) async {
-    await boot(
-      tester,
-      controller,
-      location: '/food?bag=1&code=6900000000007',
-    );
+    await boot(tester, controller, location: '/food?bag=1&code=6900000000007');
     expect(find.text('条码 6900000000007'), findsOneWidget);
     await revealText(tester, '没认出到期日，请手写。不会自动记成一年后。');
-    expect(
-      find.text('没认出到期日，请手写。不会自动记成一年后。'),
-      findsOneWidget,
-    );
+    expect(find.text('没认出到期日，请手写。不会自动记成一年后。'), findsOneWidget);
     expect(find.textContaining('2027年10月'), findsNothing);
     expect(find.text('请手写'), findsWidgets);
   });
@@ -129,15 +126,20 @@ void main() {
     expect(find.text('最近识别'), findsOneWidget);
     expect(find.text('伯纳天纯 全价成猫粮'), findsOneWidget);
     await tapText(tester, '伯纳天纯 全价成猫粮');
-    expect(find.text('条码 $code'), findsOneWidget);
+    expect(find.text('存进粮仓'), findsOneWidget);
+    expect(find.text('重拍'), findsOneWidget);
+    expect(find.text('手填'), findsOneWidget);
+    expect(find.text('请核对'), findsWidgets);
     final values = tester
         .widgetList<TextField>(find.byType(TextField))
         .map((field) => field.controller?.text)
         .toList();
+    expect(values, contains(code));
     expect(values, contains('伯纳天纯'));
     expect(values, contains('全价成猫粮'));
     expect(values, contains('鸡肉'));
     await revealText(tester, '2027年3月15日');
     expect(find.text('2027年3月15日'), findsOneWidget);
+    expect(find.textContaining('不会猜成一年后'), findsNothing);
   });
 }
